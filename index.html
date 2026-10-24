@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OptiLab – Badania Operacyjne</title>
+<!-- Ikona skrótu: favicon + ikona iOS (wbudowane), manifest dla Androida/PC (pliki obok index.html) -->
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAkFBMVEX///78+/f6+fb39vPx8e7w8O3w7+zv7+zu7uvs7Orp6efd397Q0tLFycq2u72qr7Oiqa2WnaOHkJd7hY1zfYZqdX9daXRSX2tLWGVDUV88S1k7SVg6SVc6SFc5SFc5SFY5R1Y4R1Y4R1U3R1U4RlU3RlU2RVQ1RFMzQlIwQFAuPU0rO0sqOkopOkonOEgdLkByq1zuAAAECUlEQVR42u2X23arNhCGsXEaDAJxkATIWLZSoyOH93+7CozTJI69V2gvutbuXGBg6f8YjaSZsdf+Q/N+E0BzM74OIGw3m+01XwHgsk5hOhvE+rQCoCp/M9vWy/pmFSAM9pOF27xbCdgFr872m38PwI9sNYA3DRPamrWAi+p6eywRlm+rAAdZFWkchR5QfBWAmtgLk3i3zZZwrPCgtGUY+sSwlUEUA9nGScTFfRDFzZ4BDtbpeQRve/IdcNIlWCzC5vgwBp3TG+zhZQYfAcS/2s4r7COAMU7Phixi4nIPeA1m2/voW0AQbNCIt7FQLa0lb+8Bu9fZ9ttvAUGwza961krF258CrvpNbNQ0ed7+FHDTq5KK70/jFRAEC+B0S4NsBuwXvcZJqfhjQPDiBzPgoPtuSYQT4GXWe4kqcnJqH3uw9/eRHziAUWhJg2nGJg/8Wa9JVpj2MSDwQ6LhJnQAC73tNQ1GjQO47yMvMagoqtv6fwMo/bDsqY19HxmT+uGcB3eg0dXuqscpVo/T+smQsBxhWCngOQDc7KcVCfwJUEz6HmXkyzH5BOC6JCPcBJGog8J+ADDRTHqLE2z45UlhOckh9YrKjweM9EdA0zt9lWdYnZ/VRt7a1MutxR4c+MEugL0fHYY5fiivFX8C4G+Tvj8e+sLVH7oA3L6Y568xIqrlT6oz57PeJYmmz7wpBtv9oi/c94sMd6fn5f2mby/cJhs8pt7+j0UPXfyRYk/7A65n/6/3QsW7SoJtuOhrlBLLnzYYroLv8uF2ApmiUXSuI3836y2GWPz5vEPhqkbm7zk2utyBrgxn/WXaf+LXLc6n3qOxZJMM9eD0VZpi2fJfAz7HeF7M6fvmlCPdXn7eZE2LCTfQXITg4rKmSzu5A52aZ77fA/jxOI0/McZ4y1qK3Kvpwa3LbcR8w+YB9wCm+l67EdqlMcl0Z8fOvFlnbWvEkl6NEwozDbhP69xWRVFaLghCqDakwKggCiOM2IXMmdglR6K4pBghTNXXwsJMHiVJlBsBQBIDWiQgSjKdRhGkB1BOq8xMvKulLsPEDXgvTQvgbEhUDUMVYQvqcYzzYczTUR+mK6czgBkcw3RQJB5GDYg+fwI0Q5YOlE5XkBZZRKTN0o42XQbtBFCMH7sEK1CbMozjKNZfptAMeTIqNSbZAGIIiZ5ZTbN4UHVa6fIFZi/5SEBJyvi94bvlA0mjrKqyqNagHAfNnUtwaFgNk5pRgKuy7GGS5xlQBFRVHWfDlwbjrKvEha/SAhJFTy3r8qxjErp3tE1ADFKa0KEfElwD9wTpfX+geko7143L94ZnukjpfuTU9zApDs1ZMeHeSCsvdxuJMynZk60r5n299FZH/rv96fof8F8H/AUUpftul9XDNwAAAABJRU5ErkJggg==">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#374655">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OptiLab">
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+<style>
+/* ===== Motyw: papier milimetrowy + granat tuszu ===== */
+:root{--ink:#1b2a4e;--paper:#f4f0e6;--card:#fdfcf8;--line:#c9cbd8;--accent:#1b2a4e;--link:#1a6fd6;--pivot:#ffb703;--hl:#fff1c2;--err:#c0261b;--ok:#2e7d32}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--paper);
+ background-image:linear-gradient(rgba(27,42,78,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(27,42,78,.05) 1px,transparent 1px);background-size:24px 24px;padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+h1,h2,h3,h4{margin:.2em 0}h2{font-size:1.1rem}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;max-width:1100px;margin:0 auto;padding:14px 16px 6px}
+header{align-items:center}header h1{font-size:1.5rem;margin:0}#tabname{flex:1}
+#tabname{color:#6b7390}
+button,select,input{font:inherit;min-height:44px;border:1.5px solid var(--line);border-radius:12px;padding:6px 10px;background:#fff;color:var(--ink)}
+button{cursor:pointer;background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+button.ghost{background:#fff;color:var(--ink);border-color:var(--line)}
+button:disabled{opacity:.4;cursor:not-allowed}
+input{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+input.num{width:64px;text-align:right}
+:focus-visible{outline:3px solid var(--pivot);outline-offset:1px}
+.app{max-width:1100px;margin:0 auto;padding:8px 12px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:16px}
+.crow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}
+.crow label{white-space:nowrap}
+.hint{font-size:.85rem;color:#5b6b82}
+/* Zakładki: przewijany poziomo pasek (działa też na telefonie) */
+/* Dolny pasek zakładek (jak w aplikacji mobilnej) */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;overflow-x:auto;scrollbar-width:none;background:var(--card);border-top:1.5px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1 0 auto;min-width:92px;padding:0 14px;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:64px;border:0;border-radius:0;background:transparent;color:#6b7390;font-size:.8rem}
+nav button svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav button[aria-selected=true]{color:var(--ink)}
+nav button.soon{opacity:.6}
+.credit{text-align:center;font-size:.7rem;color:rgba(27,42,78,.35);margin:18px 0 0}
+/* Błąd przy polu: czerwona ramka + komunikat w tym samym wierszu */
+.fmsg{flex-basis:100%;color:var(--err);font-weight:600;font-size:.9rem}
+.note{color:#6b7390}
+/* Tabele przewijane palcem */
+.tw{overflow-x:auto;margin:8px 0;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums}
+td,th{border:1px solid var(--line);padding:6px 10px;text-align:right;white-space:nowrap;min-width:48px}
+th{background:#eaf0f5}
+td.pr,td.pcol{background:var(--hl)}
+td.pivot{background:var(--pivot);font-weight:700}
+.step{border-left:5px solid var(--accent);padding:4px 12px;margin:14px 0;background:#fcfdfe;border-radius:0 8px 8px 0}
+.step p{margin:.3em 0}
+/* Błędy */
+.bad{border-color:var(--err)!important;background:#fdecea!important}
+.msg{background:#fdecea;border:1.5px solid var(--err);color:#8e1b1b;padding:10px 12px;border-radius:8px;margin:8px 0}
+.sum{background:#e7f5ef;border:1.5px solid var(--ok);padding:10px 12px;border-radius:8px;margin:8px 0}
+/* Drzewo B&B */
+.tree ul{list-style:none;margin:4px 0 4px 6px;padding-left:14px;border-left:2px solid var(--line)}
+.tree li{margin:6px 0;padding:6px 8px;border-radius:8px;background:#fff;border:1px solid var(--line)}
+.tree li.int{border-color:var(--ok);background:#e7f5ef}
+.tree li.cut{border-color:#e0a0a0;background:#fbf1f1}
+#plot{width:100%;height:min(70vh,520px)}
+#print-area{display:none}
+/* ===== Raport: tylko czysty dokument ===== */
+@media print{
+ body{background:#fff}
+ header,.app,nav,.credit{display:none!important}
+ #print-area{display:block;padding:0 8px}
+ .step{break-inside:avoid}
+ .tw{overflow:visible}
+}
+</style>
+</head>
+<body>
+<header>
+ <img id="logo" alt="" width="40" height="40" style="border-radius:10px"><h1>OptiLab</h1><span id="tabname">Metoda graficzna</span>
+ <button id="btn-export" class="ghost" type="button">Eksportuj raport</button>
+</header>
+<div class="app">
+ <section id="tab-graph"><div class="card">
+  <div id="graph-top"></div>
+  <button id="btn-graph" type="button">Rysuj i rozwiąż</button>
+  <div id="plot"></div><div id="out-graph"></div>
+ </div></section>
+ <section id="tab-simplex" hidden><div class="card">
+  <div id="simplex-top"></div>
+  <button id="btn-simplex" type="button">Rozwiąż krok po kroku</button> <button id="btn-dual" class="ghost" type="button">Zadanie dualne</button>
+  <div id="out-simplex"></div><div id="out-dual"></div>
+ </div></section>
+ <section id="tab-ilp" hidden><div class="card">
+  <div id="ilp-top"></div>
+  <button id="btn-ilp" type="button">Rozwiąż (Branch &amp; Bound)</button>
+  <div id="out-ilp" class="tree"></div>
+ </div></section>
+ <section id="tab-soon" hidden><div class="card"><h2 id="soon-title"></h2>
+  <p>Witaj użytkowniku. Niestety ten moduł nie jest jeszcze dostępny. Zostanie on dodany w przyszłych aktualizacjach programu. Pozdrawiam!</p></div></section>
+ <p class="credit">Made by Aleksander Kruszelnicki</p>
+</div>
+<nav role="tablist">
+ <button role="tab" data-tab="graph" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v16h16"/><path d="M8 15l4-5 3 3 4-6"/></svg>Wykres</button>
+ <button role="tab" data-tab="simplex" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>Simpleks</button>
+ <button role="tab" data-tab="ilp" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/><path d="M12 7v4M12 11l-6 6M12 11l6 6"/></svg>Całkowite</button>
+</nav>
+<div id="print-area"></div>
+
+<script>
+/* =====================================================================
+   1. NARZĘDZIA
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const BIGM = 1e6;                       // stała „dużego M" dla zmiennych sztucznych
+// Formatowanie liczb: max 4 miejsca po przecinku, bez krzaków przy dużych/małych wartościach
+const fmt = v => {
+  if (Math.abs(v) < 1e-9) return '0';
+  if (Math.abs(v) >= 1e9) return v.toExponential(2).replace('.', ',');
+  return String(Math.round(v * 1e4) / 1e4).replace('.', ',');
+};
+const last = {};                        // ostatnie wyniki do raportu
+let lastModel = null;
+
+/* =====================================================================
+   2. FORMULARZ I WALIDACJA „W LOCIE"
+   ===================================================================== */
+// Każdy moduł ma własny formularz i własny stan (teksty wpisane przez użytkownika)
+const MODS = ['graph', 'simplex', 'ilp'], MAXN = 12, MAXC = 12;
+const T0 = k => k === 'ilp' ? 'i' : 'c';
+const TYPES = {simplex: [['c', '≥ 0'], ['u', 'dowolna']], ilp: [['c', 'ciągła'], ['i', 'całkowita'], ['b', 'binarna'], ['u', 'dowolna']]};
+const defModel = k => ({n: 2, maxi: true, c: ['3', '5'], t: [T0(k), T0(k)],
+  rows: [{a:['1','0'],rel:'<=',b:'4'}, {a:['0','2'],rel:'<=',b:'12'}, {a:['3','2'],rel:'<=',b:'18'}]});
+const models = {}; MODS.forEach(k => models[k] = defModel(k));
+let sharedData = null;                       // zapasowa kopia, gdy przeglądarka zablokuje schowek
+const flash = (btn, txt, bad) => {           // chwilowy komunikat na samym przycisku
+  const o = btn.dataset.o || btn.textContent; btn.dataset.o = o; btn.textContent = txt; btn.classList.toggle('bad', !!bad);
+  setTimeout(() => { btn.textContent = o; btn.classList.remove('bad'); }, 1800);
+};
+function renderForm(k) {
+  const md = models[k], n = md.n, p = k + '-';
+  let h = `<div class="crow"><select id="${p}maxi"><option value="1">Maksymalizuj</option><option value="0">Minimalizuj</option></select><span>Z =</span>`;
+  for (let j = 0; j < n; j++)
+    h += `<input class="num" id="${p}c${j}" data-num inputmode="decimal" value="${md.c[j] ?? ''}" aria-label="współczynnik x${j+1}"><label for="${p}c${j}">x${j+1}${j<n-1?' +':''}</label>`;
+  h += '</div>';
+  if (TYPES[k]) {                            // wiersz z typami zmiennych
+    h += '<div class="crow"><span class="hint">Typ zmiennych:</span>';
+    for (let j = 0; j < n; j++) h += `<label for="${p}t${j}">x${j+1}</label><select id="${p}t${j}">${TYPES[k].map(([v, l]) => `<option value="${v}" ${md.t[j] === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
+    h += '</div>';
+  }
+  h += '<h3>Ograniczenia</h3>';
+  md.rows.forEach((r, i) => {
+    h += `<div class="crow">`;
+    for (let j = 0; j < n; j++)
+      h += `<input class="num" id="${p}a${i}_${j}" data-num inputmode="decimal" value="${r.a[j] ?? ''}" aria-label="ograniczenie ${i+1}, x${j+1}"><label for="${p}a${i}_${j}">x${j+1}${j<n-1?' +':''}</label>`;
+    h += `<select id="${p}rel${i}" aria-label="znak">${['<=','>=','='].map(s=>`<option value="${s}" ${r.rel===s?'selected':''}>${s==='<='?'≤':s==='>='?'≥':'='}</option>`).join('')}</select>
+      <input class="num" id="${p}b${i}" data-num inputmode="decimal" value="${r.b}" aria-label="prawa strona ${i+1}">
+      <button type="button" class="ghost" data-del="${i}" aria-label="usuń ograniczenie ${i+1}">✕</button></div>`;
+  });
+  $('#' + p + 'form').innerHTML = h;
+  $('#' + p + 'maxi').value = md.maxi ? '1' : '0';
+  $('#' + p + 'nvars').value = n;
+  $('#' + p + 'addc').disabled = md.rows.length >= MAXC;
+}
+function sync(k) {                           // przepisuje pola do modelu
+  const md = models[k], p = k + '-';
+  md.maxi = $('#' + p + 'maxi').value === '1';
+  md.c = Array.from({length: md.n}, (_, j) => $('#' + p + 'c' + j).value);
+  md.t = Array.from({length: md.n}, (_, j) => $('#' + p + 't' + j)?.value ?? T0(k));
+  md.rows = md.rows.map((_, i) => ({
+    a: Array.from({length: md.n}, (_, j) => $('#' + p + `a${i}_${j}`).value),
+    rel: $('#' + p + 'rel' + i).value, b: $('#' + p + 'b' + i).value }));
+}
+function initModule(k) {
+  const p = k + '-', md = () => models[k];
+  $('#' + p + 'top').innerHTML = `<div class="crow"><label for="${p}nvars">Zmienne</label>
+    <select id="${p}nvars">${Array.from({length: MAXN - 1}, (_, i) => `<option>${i + 2}</option>`).join('')}</select>
+    <button id="${p}addc" class="ghost" type="button">+ ograniczenie</button>
+    <button id="${p}copy" class="ghost" type="button">Kopiuj dane</button>
+    <button id="${p}paste" class="ghost" type="button">Wklej dane</button></div>
+    <div id="${p}form"></div><p class="hint">Zmienne są nieujemne (x ≥ 0). Przecinek lub kropka jako separator. „Kopiuj dane" i „Wklej dane" przenoszą zadanie między modułami.</p>`;
+  const f = $('#' + p + 'form');
+  // Blokada liter: zostają cyfry, jeden minus na początku i jeden separator dziesiętny
+  f.addEventListener('input', e => {
+    if (!e.target.hasAttribute('data-num')) return;
+    let v = e.target.value.replace(/[^0-9,.\-]/g, '').replace(/(?!^)-/g, '');
+    const q = v.search(/[.,]/);
+    if (q >= 0) v = v.slice(0, q + 1) + v.slice(q + 1).replace(/[.,]/g, '');
+    e.target.value = v; e.target.classList.remove('bad'); e.target.closest('.crow')?.querySelector('.fmsg')?.remove();
+  });
+  f.addEventListener('click', e => {
+    const d = e.target.dataset.del; if (d === undefined) return;
+    if (md().rows.length <= 1) return flash(e.target, '!', true);
+    sync(k); md().rows.splice(+d, 1); renderForm(k);
+  });
+  $('#' + p + 'addc').onclick = () => { sync(k); md().rows.push({a: Array(md().n).fill('0'), rel: '<=', b: '0'}); renderForm(k); };
+  $('#' + p + 'nvars').onchange = e => {
+    clearErr(); sync(k); const n = +e.target.value, fit = arr => Array.from({length: n}, (_, j) => arr[j] ?? '0');
+    md().n = n; md().c = fit(md().c); md().t = Array.from({length: n}, (_, j) => md().t[j] ?? T0(k)); md().rows.forEach(r => r.a = fit(r.a)); renderForm(k);
+  };
+  $('#' + p + 'copy').onclick = async e => {
+    sync(k); const txt = JSON.stringify({optilab: 1, ...md()}); sharedData = txt;
+    try { await navigator.clipboard.writeText(txt); } catch (_) {}
+    flash(e.target, 'Skopiowano ✓');
+  };
+  $('#' + p + 'paste').onclick = async e => {
+    let txt = null; try { txt = await navigator.clipboard.readText(); } catch (_) {}
+    const load = t => {                      // walidacja wklejonych danych
+      const d = JSON.parse(t); if (!d.optilab || !Array.isArray(d.c) || !Array.isArray(d.rows) || !d.rows.length) throw 0;
+      const n = Math.min(MAXN, Math.max(2, d.c.length));
+      return {n, maxi: !!d.maxi, c: Array.from({length: n}, (_, j) => String(d.c[j] ?? '0')),
+        t: Array.from({length: n}, (_, j) => (TYPES[k] || [['c']]).some(([v]) => v === d.t?.[j]) ? d.t[j] : T0(k)),
+        rows: d.rows.slice(0, MAXC).map(r => ({a: Array.from({length: n}, (_, j) => String(r.a?.[j] ?? '0')),
+          rel: ['<=', '>=', '='].includes(r.rel) ? r.rel : '<=', b: String(r.b ?? '0')}))};
+    };
+    let m = null; try { m = load(txt); } catch (_) { try { m = load(sharedData); } catch (_) {} }
+    if (!m) return flash(e.target, 'Brak skopiowanych danych', true);
+    clearErr(); models[k] = m; renderForm(k); flash(e.target, 'Wklejono ✓');   // liczba zmiennych ustawia się sama
+  };
+  renderForm(k);
+}
+/* Odczyt i walidacja. Błąd => czerwone pola + komunikat edukacyjny, zwraca null */
+const clearErr = () => {
+  document.querySelectorAll('.bad').forEach(x => x.classList.remove('bad'));
+  document.querySelectorAll('.fmsg').forEach(x => x.remove());
+};
+let K = 'graph';                             // moduł, którego dotyczy bieżący błąd
+/* Błąd = czerwone pole + komunikat w wierszu tego pola. Zwraca null. */
+function fail(out, msg, ids = [], keep = false) {
+  clearErr();
+  ids.forEach(id => $('#' + K + '-' + id)?.classList.add('bad'));
+  const row = ids.length ? $('#' + K + '-' + ids[0])?.closest('.crow') : null;
+  if (row) row.insertAdjacentHTML('beforeend', `<div class="fmsg">Błąd: ${msg}</div>`);
+  if (!keep) $(out).innerHTML = '';
+  row?.scrollIntoView({block: 'center'});
+  return null;
+}
+function readModel(k) {
+  K = k; const out = '#out-' + k, p = k + '-'; clearErr(); sync(k);
+  const md = models[k], bad = [];
+  const num = id => {
+    const s = $('#' + p + id).value.trim().replace(',', '.'), v = Number(s);
+    if (s === '' || s === '-' || s === '.' || !isFinite(v) || Math.abs(v) > 1e9) { bad.push(id); return NaN; }
+    return v;
+  };
+  const n = md.n, m = md.rows.length;
+  const c = Array.from({length: n}, (_, j) => num('c' + j));
+  const A = md.rows.map((_, i) => Array.from({length: n}, (_, j) => num(`a${i}_${j}`)));
+  const b = md.rows.map((_, i) => num('b' + i)), rel = md.rows.map(r => r.rel);
+  if (bad.length) return fail(out, 'wpisz w zaznaczonych polach poprawne liczby (np. 3 lub -2,5; maks. 10⁹).', bad);
+  if (c.every(v => v === 0)) return fail(out, 'funkcja celu ma same zera – nie ma czego optymalizować.', c.map((_, j) => 'c' + j));
+  for (let i = 0; i < m; i++) if (A[i].every(v => v === 0)) {
+    const ok = rel[i] === '<=' ? 0 <= b[i] : rel[i] === '>=' ? 0 >= b[i] : b[i] === 0;
+    if (!ok) return fail(out, `ograniczenie ${i+1} ma same zera po lewej stronie, więc 0 ${rel[i]} ${fmt(b[i])} nigdy nie jest prawdą.`, [`a${i}_0`, 'b' + i]);
+  }
+  lastModel = {n, c, A, rel, b, maxi: md.maxi, t: md.t.slice()};
+  return lastModel;
+}
+// Opis ograniczenia/celu słowami
+const term = (a, j, first, pf = 'x') => (a < 0 ? '−' : first ? '' : '+') + (first ? '' : ' ') + (Math.abs(a) === 1 ? '' : fmt(Math.abs(a))) + pf + (j + 1);
+const expr = (a, pf) => a.map((v, j) => v === 0 ? '' : term(v, j, false, pf)).filter(Boolean).join(' ').replace(/^\+ /, '') || '0';
+const sign = r => r === '<=' ? '≤' : r === '>=' ? '≥' : '=';
+
+/* =====================================================================
+   3. SOLVER SIMPLEKS (tablicowy, metoda dużego M) Z ZAPISEM KROKÓW
+   Obsługuje ograniczenia ≤, ≥, =. Minimalizację zamienia na maksymalizację −Z.
+   ===================================================================== */
+function solveLP(c, A0, rel0, b0, maxi, rec, vn) {
+  const n = c.length, m = A0.length;
+  const A = A0.map(r => r.slice()), b = b0.slice(), rel = rel0.slice(), flip = Array(m).fill(false);
+  // Prawe strony muszą być ≥ 0: mnożymy wiersz przez −1 i odwracamy znak
+  for (let i = 0; i < m; i++) if (b[i] < 0) {
+    A[i] = A[i].map(v => -v); b[i] = -b[i]; flip[i] = true; rel[i] = rel[i] === '<=' ? '>=' : rel[i] === '>=' ? '<=' : '=';
+  }
+  const names = vn ? vn.slice() : Array.from({length: n}, (_, j) => 'x' + (j + 1)), basis = [], extra = [];
+  let N = n, hasArt = false;
+  for (let i = 0; i < m; i++) {
+    if (rel[i] === '<=') { extra.push({i, col: N, v: 1}); names.push('s' + (i+1)); basis[i] = N++; }
+    else {
+      if (rel[i] === '>=') { extra.push({i, col: N, v: -1}); names.push('e' + (i+1)); N++; }
+      extra.push({i, col: N, v: 1, art: true}); names.push('a' + (i+1)); basis[i] = N++; hasArt = true;
+    }
+  }
+  const basis0 = basis.slice();
+  const T = Array.from({length: m + 1}, () => Array(N + 1).fill(0));
+  for (let i = 0; i < m; i++) { for (let j = 0; j < n; j++) T[i][j] = A[i][j]; T[i][N] = b[i]; }
+  extra.forEach(e => T[e.i][e.col] = e.v);
+  for (let j = 0; j < n; j++) T[m][j] = maxi ? -c[j] : c[j];
+  extra.filter(e => e.art).forEach(e => { T[m][e.col] = BIGM; });
+  for (let i = 0; i < m; i++) if (names[basis[i]][0] === 'a')           // zerujemy M w wierszu Z
+    for (let j = 0; j <= N; j++) T[m][j] -= BIGM * T[i][j];
+  const snap = (text, pr = -1, pc = -1) => rec.push({T: T.map(r => r.slice()), basis: basis.slice(), names, pr, pc, text, b0: basis0, fl: flip});
+  snap(`Tablica początkowa. Zamieniamy nierówności na równania: dodajemy zmienne zapasu (s), nadwyżki (e) i sztuczne (a). Zmienne bazowe: ${basis.map(k => names[k]).join(', ')}.` +
+       (hasArt ? ` Zmienne sztuczne karzemy dużą stałą M = 10⁶ (metoda dużego M).` : '') +
+       (maxi ? '' : ' Minimalizację Z zamieniamy na maksymalizację −Z (w wierszu Z widać więc −Z).'));
+  for (let it = 1; it <= 200; it++) {
+    let pc = -1, mn = -1e-9;
+    for (let j = 0; j < N; j++) if (T[m][j] < mn) { mn = T[m][j]; pc = j; }
+    if (pc < 0) break;                                                  // optimum
+    let pr = -1, best = Infinity; const ratios = [];
+    for (let i = 0; i < m; i++) if (T[i][pc] > 1e-9) {
+      const q = T[i][N] / T[i][pc]; ratios.push(`${names[basis[i]]}: ${fmt(T[i][N])}/${fmt(T[i][pc])} = ${fmt(q)}`);
+      if (q < best - 1e-12) { best = q; pr = i; }
+    }
+    if (pr < 0) { snap(`Kolumna ${names[pc]} nie ma dodatnich elementów, więc zmienną ${names[pc]} można zwiększać w nieskończoność bez łamania ograniczeń. Problem jest nieograniczony.`, -1, pc); return {status: 'unbounded', pc}; }
+    const p = T[pr][pc];
+    snap(`Iteracja ${it}. Kolumna wejściowa: ${names[pc]} – najbardziej ujemna wartość w wierszu Z (${fmt(T[m][pc])}), więc wprowadzenie tej zmiennej najbardziej poprawia funkcję celu. ` +
+         `Test ilorazów (prawa strona ÷ element kolumny): ${ratios.join('; ')}. Najmniejszy iloraz (${fmt(best)}) ma wiersz zmiennej ${names[basis[pr]]} – ona opuszcza bazę. ` +
+         `Element centralny = ${fmt(p)}. Dzielimy wiersz przez ${fmt(p)}, potem zerujemy resztę kolumny ${names[pc]}.`, pr, pc);
+    for (let j = 0; j <= N; j++) T[pr][j] /= p;
+    for (let i = 0; i <= m; i++) if (i !== pr) { const f = T[i][pc]; for (let j = 0; j <= N; j++) T[i][j] -= f * T[pr][j]; }
+    basis[pr] = pc;
+  }
+  const x = Array(n).fill(0);
+  basis.forEach((k, i) => { if (k < n) x[k] = T[i][N]; });
+  if (basis.some((k, i) => names[k][0] === 'a' && T[i][N] > 1e-7)) {
+    snap('W bazie została zmienna sztuczna o dodatniej wartości – ograniczenia wzajemnie się wykluczają. Brak rozwiązania dopuszczalnego.');
+    return {status: 'infeasible'};
+  }
+  snap('Wszystkie wartości w wierszu Z są nieujemne – rozwiązanie jest optymalne. Wartości zmiennych bazowych czytamy z kolumny prawych stron, pozostałe zmienne są równe 0.');
+  return {status: 'optimal', x, z: maxi ? T[m][N] : -T[m][N]};
+}
+/* Typy zmiennych: c = ≥0, i = całkowita, b = binarna, u = dowolna (x = x⁺ − x⁻), n = ≤0 (tylko w dualnym) */
+const TL = {c: '≥ 0', i: 'całkowita ≥ 0', b: 'binarna', u: 'dowolna', n: '≤ 0'};
+const typesLine = M => `<li>${M.t.every(t => t === 'c') ? 'x ≥ 0' : M.t.map((t, j) => `x${j+1} ${TL[t]}`).join(', ')}</li>`;
+function expand(M) {
+  const cols = [], vn = [];
+  M.t.forEach((t, j) => { cols.push([j, t === 'n' ? -1 : 1]); vn.push('x' + (j + 1) + (t === 'u' ? '⁺' : t === 'n' ? '′' : '')); });
+  M.t.forEach((t, j) => { if (t === 'u') { cols.push([j, -1]); vn.push('x' + (j + 1) + '⁻'); } });
+  return {cols, vn, c: cols.map(([j, s]) => s * M.c[j]), A: M.A.map(r => cols.map(([j, s]) => s * r[j]))};
+}
+/* Rozwiązuje model z typami zmiennych; extra = dodatkowe granice {j, rel, b} (dla Branch & Bound) */
+function solveM(M, extra = [], rec = []) {
+  const E = expand(M), A = E.A.map(r => r.slice()), rel = M.rel.slice(), b = M.b.slice();
+  extra.forEach(e => { A.push(E.cols.map(([j, s]) => j === e.j ? s : 0)); rel.push(e.rel); b.push(e.b); });
+  const r = solveLP(E.c, A, rel, b, M.maxi, rec, E.vn);
+  if (r.status === 'optimal') { const x = Array(M.n).fill(0); E.cols.forEach(([j, s], k) => x[j] += s * r.x[k]); r.x = x; }
+  return r;
+}
+/* Zadanie dualne (reguły przekształceń SOB) */
+const dualOf = M => { const mx = M.maxi; return {n: M.A.length, c: M.b.slice(), maxi: !mx, A: M.c.map((_, j) => M.A.map(r => r[j])), b: M.c.slice(),
+  rel: M.t.map(t => t === 'u' ? '=' : mx ? '>=' : '<='), t: M.rel.map(r => r === '=' ? 'u' : r === (mx ? '<=' : '>=') ? 'c' : 'n')}; };
+const dualHTML = D => `<p><b>${D.maxi ? 'Maksymalizuj' : 'Minimalizuj'}</b> W = ${expr(D.c, 'y')}</p><ul>${D.A.map((a, j) => `<li>${expr(a, 'y')} ${sign(D.rel[j])} ${fmt(D.b[j])}</li>`).join('')}<li>${D.t.map((t, i) => `y${i+1} ${t === 'c' ? '≥ 0' : t === 'n' ? '≤ 0' : 'dowolne'}`).join(', ')}</li></ul>`;
+function tableHTML(s) {
+  const m = s.T.length - 1, N = s.T[0].length - 1;
+  let h = '<div class="tw"><table><tr><th>Baza</th>' + s.names.map(x => `<th>${x}</th>`).join('') + '<th>Prawa str.</th></tr>';
+  for (let i = 0; i <= m; i++) {
+    h += `<tr><th>${i < m ? s.names[s.basis[i]] : 'Z'}</th>`;
+    for (let j = 0; j <= N; j++) {
+      const cls = i === s.pr && j === s.pc ? 'pivot' : i === s.pr ? 'pr' : j === s.pc ? 'pcol' : '';
+      h += `<td class="${cls}">${fmt(s.T[i][j])}</td>`;
+    }
+    h += '</tr>';
+  }
+  return h + '</table></div>';
+}
+function infoHTML(M) {
+  const rows = M.A.map((a, i) => `<li>${expr(a)} ${sign(M.rel[i])} ${fmt(M.b[i])}</li>`).join('');
+  return `<p><b>${M.maxi ? 'Maksymalizuj' : 'Minimalizuj'}</b> Z = ${expr(M.c)}</p><ul>${rows}${typesLine(M)}</ul>`;
+}
+const failLP = (out, r, M, keep) => r.status === 'unbounded'
+  ? fail(out, 'Problem nieograniczony – funkcję celu można poprawiać w nieskończoność. Sprawdź, czy brakuje ograniczenia z góry dla zmiennych o dodatnich współczynnikach celu.', M.c.map((_, j) => 'c' + j), keep)
+  : fail(out, 'Brak obszaru dopuszczalnego – ograniczenia wzajemnie się wykluczają (np. x ≥ 5 oraz x ≤ 3). Zmień znak lub prawą stronę w jednym z ograniczeń.', M.b.map((_, i) => 'b' + i), keep);
+
+/* =====================================================================
+   4. ZAKŁADKA: SIMPLEKS
+   ===================================================================== */
+/* Raport końcowy jak w QSB: koszty zredukowane, luzy, ceny dualne i zakresy analizy wrażliwości.
+   Zakresy liczymy z końcowej tablicy (baza ma pozostać optymalna). */
+function qsbReport(M, r, rec) {
+  const s = rec[rec.length - 1], T = s.T, m = M.A.length, n = M.n, N = T[0].length - 1; let alt = false;
+  const rg = (lo, hi) => `${isFinite(lo) ? fmt(lo) : '−∞'} … ${isFinite(hi) ? fmt(hi) : '+∞'}`;
+  let h = '<h3>Raport końcowy i analiza wrażliwości</h3><div class="tw"><table><tr><th>Zmienna</th><th>Wartość</th><th>Współcz. celu</th><th>Wkład w Z</th><th>Koszt zredukowany</th><th>Zakres współcz. celu</th></tr>';
+  for (let j = 0; j < n; j++) {
+    const row = s.basis.indexOf(j), rc = row < 0 ? Math.max(0, T[m][j]) : 0;
+    let lo = -Infinity, hi = row < 0 ? rc : Infinity;                    // zmiana współczynnika w postaci „max"
+    if (row < 0 && rc < 1e-6) alt = true;
+    if (row >= 0) for (let k = 0; k < N; k++) if (!s.basis.includes(k) && s.names[k][0] !== 'a') {
+      const al = T[row][k], d = T[m][k];
+      if (al > 1e-9) lo = Math.max(lo, -d / al); else if (al < -1e-9) hi = Math.min(hi, d / -al);
+    }
+    const c = M.c[j], [a, b] = M.maxi ? [c + lo, c + hi] : [c - hi, c - lo];
+    h += `<tr><th>x${j+1}</th><td>${fmt(r.x[j])}</td><td>${fmt(c)}</td><td>${fmt(c * r.x[j])}</td><td>${fmt(rc)}</td><td>${M.t[j] === 'u' ? '–' : rg(a, b)}</td></tr>`;
+  }
+  h += '</table></div><div class="tw"><table><tr><th>Ograniczenie</th><th>Lewa str.</th><th>Znak</th><th>Prawa str.</th><th>Luz / nadwyżka</th><th>Cena dualna</th><th>Zakres prawej strony</th></tr>';
+  M.A.forEach((a, i) => {
+    const lhs = a.reduce((t, v, j) => t + v * r.x[j], 0), b2 = M.b.slice(); b2[i] += 1e-4;
+    const q = solveM({...M, b: b2}), sp = q.status === 'optimal' ? (q.z - r.z) / 1e-4 : NaN;
+    let lo = -Infinity, hi = Infinity;                                   // kolumna B⁻¹ dla i-tego ograniczenia
+    for (let k = 0; k < m; k++) { const u = T[k][s.b0[i]], be = T[k][N];
+      if (u > 1e-9) lo = Math.max(lo, -be / u); else if (u < -1e-9) hi = Math.min(hi, be / -u); }
+    if (s.fl[i]) [lo, hi] = [-hi, -lo];
+    h += `<tr><th>Ogr. ${i+1}</th><td>${fmt(lhs)}</td><td>${sign(M.rel[i])}</td><td>${fmt(M.b[i])}</td><td>${fmt(Math.abs(M.b[i] - lhs))}</td><td>${isNaN(sp) ? '–' : fmt(sp)}</td><td>${rg(M.b[i] + lo, M.b[i] + hi)}</td></tr>`;
+  });
+  h += '</table></div><p class="hint">Cena dualna: o ile zmieni się Z, gdy prawa strona wzrośnie o 1. Koszt zredukowany: o ile pogorszy się Z po wymuszeniu 1 jednostki zmiennej spoza bazy. Zakresy: w tych granicach obecna baza pozostaje optymalna.</p>';
+  return h + (alt ? '<p class="note">Uwaga: zmienna spoza bazy ma koszt zredukowany 0 – mogą istnieć alternatywne rozwiązania optymalne.</p>' : '');
+}
+/* Zadanie dualne: zapis + rozwiązanie (kontrola: W_opt = Z_opt) */
+$('#btn-dual').onclick = () => {
+  const M = readModel('simplex'); if (!M) return;
+  const D = dualOf(M), r = solveM(D);
+  let h = '<h3>Zadanie dualne</h3>' + dualHTML(D);
+  h += r.status === 'optimal' ? `<div class="sum"><b>Wynik dualny:</b> ${r.x.map((v, i) => `y${i+1} = ${fmt(v)}`).join(', ')}; W<sub>opt</sub> = <b>${fmt(r.z)}</b>. Z twierdzenia o dualności W<sub>opt</sub> = Z<sub>opt</sub> zadania pierwotnego.</div>`
+    : `<p class="note">Zadanie dualne ${r.status === 'unbounded' ? 'jest nieograniczone, więc pierwotne nie ma rozwiązań dopuszczalnych' : 'jest sprzeczne, więc pierwotne jest nieograniczone lub sprzeczne'}.</p>`;
+  $('#out-dual').innerHTML = h; last.dual = h;
+};
+$('#btn-simplex').onclick = () => {
+  const out = '#out-simplex', M = readModel('simplex'); if (!M) return;
+  const rec = [], r = solveM(M, [], rec);
+  let h = infoHTML(M);
+  rec.forEach((s, k) => h += `<div class="step"><h4>Krok ${k + 1}</h4><p>${s.text}</p>${tableHTML(s)}</div>`);
+  if (r.status !== 'optimal') { $(out).innerHTML = h; last.simplex = h; failLP(out, r, M, true); return; }
+  h += `<div class="sum"><b>Wynik:</b> ${r.x.map((v, j) => `x${j+1} = ${fmt(v)}`).join(', ')}; Z<sub>opt</sub> = <b>${fmt(r.z)}</b></div>`;
+  h += qsbReport(M, r, rec);
+  $(out).innerHTML = h; last.simplex = h;
+};
+
+/* =====================================================================
+   5. ZAKŁADKA: METODA GRAFICZNA (2 zmienne)
+   Wierzchołki = przecięcia par prostych (w tym osi), które spełniają wszystkie ograniczenia.
+   ===================================================================== */
+$('#btn-graph').onclick = () => {
+  const out = '#out-graph', M = readModel('graph'); if (!M) return;
+  if (M.n !== 2) return fail(out, 'metoda graficzna działa dla dokładnie 2 zmiennych. Ustaw liczbę zmiennych na 2 albo użyj zakładki Simpleks.', ['nvars']);
+  const L = M.A.map((a, i) => ({a: a[0], b: a[1], r: M.b[i], rel: M.rel[i], name: 'Ogr. ' + (i + 1)}));
+  const all = [...L, {a: 1, b: 0, r: 0, rel: '>='}, {a: 0, b: 1, r: 0, rel: '>='}];
+  const ok = (x, y) => all.every(l => { const v = l.a * x + l.b * y;
+    return l.rel === '<=' ? v <= l.r + 1e-7 : l.rel === '>=' ? v >= l.r - 1e-7 : Math.abs(v - l.r) < 1e-7; });
+  let P = [];
+  for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) {
+    const p = all[i], q = all[j], d = p.a * q.b - q.a * p.b; if (Math.abs(d) < 1e-12) continue;
+    const x = (p.r * q.b - q.r * p.b) / d, y = (p.a * q.r - q.a * p.r) / d;
+    if (ok(x, y) && !P.some(u => Math.abs(u[0] - x) < 1e-6 && Math.abs(u[1] - y) < 1e-6)) P.push([x, y]);
+  }
+  if (!P.length) return fail(out, 'Brak obszaru dopuszczalnego – żaden punkt nie spełnia wszystkich ograniczeń naraz. Sprawdź znaki nierówności i prawe strony.', M.b.map((_, i) => 'b' + i));
+  const cx = P.reduce((s, p) => s + p[0], 0) / P.length, cy = P.reduce((s, p) => s + p[1], 0) / P.length;
+  P.sort((p, q) => Math.atan2(p[1] - cy, p[0] - cx) - Math.atan2(q[1] - cy, q[0] - cx));
+  const Z = P.map(p => M.c[0] * p[0] + M.c[1] * p[1]);
+  const zopt = M.maxi ? Math.max(...Z) : Math.min(...Z);
+  const Lmax = Math.max(1, ...P.flat()) * 1.4;
+  const lineTr = (l, color, dash, name) => {                              // prosta + etykieta z równaniem
+    const pts = []; let lx = [], ly = [];
+    if (Math.abs(l.b) > 1e-12) for (let k = 0; k <= 40; k++) { const x = Lmax * k / 40, y = (l.r - l.a * x) / l.b; lx.push(x); ly.push(y); if (y >= 0 && y <= Lmax) pts.push([x, y]); }
+    else { lx = [l.r / l.a, l.r / l.a]; ly = [0, Lmax]; pts.push([lx[0], Lmax * .5]); }
+    const lab = pts[Math.floor(pts.length / 2)] || [null, null];
+    return [{x: lx, y: ly, mode: 'lines', name, line: {color, dash, width: 2}, hoverinfo: 'name'},
+            {x: [lab[0]], y: [lab[1]], mode: 'text', text: [`${name}: ${expr([l.a, l.b])} ${sign(l.rel)} ${fmt(l.r)}`], textposition: 'top right', showlegend: false, hoverinfo: 'skip', textfont: {color}}];
+  };
+  const pal = ['#d62828', '#1d4ed8', '#7b2cbf', '#e76f51', '#0b7a75', '#6b705c', '#bc6c25', '#264653'];
+  let tr = [{x: [...P.map(p => p[0]), P[0][0]], y: [...P.map(p => p[1]), P[0][1]], fill: 'toself', fillcolor: 'rgba(26,111,214,.22)', line: {color: 'rgba(26,111,214,.9)', width: 1}, name: 'Obszar dopuszczalny', hoverinfo: 'skip'}];
+  L.forEach((l, i) => tr.push(...lineTr(l, pal[i % 8], 'solid', l.name)));
+  if (Math.abs(M.c[0]) + Math.abs(M.c[1]) > 0) tr.push(lineTr({a: M.c[0], b: M.c[1], r: zopt}, '#111', 'dash', 'Z = ' + fmt(zopt))[0]);
+  tr.push({x: P.map(p => p[0]), y: P.map(p => p[1]), customdata: Z, mode: 'markers', name: 'Wierzchołki',
+    marker: {size: Z.map(z => Math.abs(z - zopt) < 1e-7 ? 16 : 10), color: Z.map(z => Math.abs(z - zopt) < 1e-7 ? '#ffb703' : '#1b2a4e'), line: {color: '#fff', width: 2}},
+    hovertemplate: '(%{x:.3f}; %{y:.3f})<br>Z = %{customdata:.3f}<extra>Wierzchołek</extra>'});
+  Plotly.newPlot('plot', tr, {xaxis: {title: 'x₁', range: [0, Lmax]}, yaxis: {title: 'x₂', range: [0, Lmax]}, legend: {orientation: 'h', y: -0.25}, margin: {l: 45, r: 10, t: 10, b: 40}}, {responsive: true, displaylogo: false});
+  const chk = solveM(M);
+  let h = infoHTML(M) + '<div class="tw"><table><tr><th>Wierzchołek</th><th>x₁</th><th>x₂</th><th>Z</th></tr>' +
+    P.map((p, i) => `<tr><th>W${i+1}</th><td>${fmt(p[0])}</td><td>${fmt(p[1])}</td><td class="${Math.abs(Z[i] - zopt) < 1e-7 ? 'pivot' : ''}">${fmt(Z[i])}</td></tr>`).join('') + '</table></div>';
+  if (chk.status === 'unbounded') { h += '<p class="note">Obszar jest nieograniczony – wierzchołki poniżej nie są optimum.</p>'; }
+  else h += `<div class="sum"><b>Wynik:</b> optimum w wierzchołku (${fmt(P[Z.findIndex(z => Math.abs(z - zopt) < 1e-7)][0])}; ${fmt(P[Z.findIndex(z => Math.abs(z - zopt) < 1e-7)][1])}), Z<sub>opt</sub> = <b>${fmt(zopt)}</b>. Wierzchołek optymalny jest wyróżniony na złoto.</div>`;
+  $(out).innerHTML = h; last.graph = h;
+  if (chk.status === 'unbounded') failLP(out, chk, M, true);
+};
+
+/* =====================================================================
+   6. ZAKŁADKA: PROGRAMOWANIE CAŁKOWITOLICZBOWE – BRANCH & BOUND
+   Węzeł = relaksacja LP z dodatkowymi granicami zmiennych. Wybieramy pierwszą
+   ułamkową zmienną x_j i dzielimy na x_j ≤ ⌊v⌋ oraz x_j ≥ ⌊v⌋+1.
+   ===================================================================== */
+$('#btn-ilp').onclick = () => {
+  const out = '#out-ilp', M = readModel('ilp'); if (!M) return;
+  const sg = M.maxi ? 1 : -1, n = M.n; let bestW = -Infinity, best = null, id = 0, trunc = false;
+  const isInt = M.t.map(t => t === 'i' || t === 'b');
+  function visit(lb, ub, label) {
+    const node = {id: ++id, label, kids: []};
+    if (id > 200) { trunc = true; node.res = 'Przerwano: limit 200 węzłów.'; return node; }
+    const ex = [];
+    for (let j = 0; j < n; j++) {
+      if (lb[j] > -Infinity && !(lb[j] === 0 && M.t[j] !== 'u')) ex.push({j, rel: '>=', b: lb[j]});
+      if (ub[j] < Infinity) ex.push({j, rel: '<=', b: ub[j]});
+    }
+    const r = solveM(M, ex);
+    if (r.status === 'unbounded' && id === 1) { node.res = 'Relaksacja LP jest nieograniczona.'; node.unb = true; return node; }
+    if (r.status !== 'optimal') { node.cls = 'cut'; node.res = 'Brak rozwiązań dopuszczalnych – gałąź odcięta.'; return node; }
+    node.info = `x = (${r.x.map(fmt).join('; ')}), Z = ${fmt(r.z)}`;
+    if (sg * r.z <= bestW + 1e-9) { node.cls = 'cut'; node.res = `Odcięty: nawet bez wymogu całkowitości Z = ${fmt(r.z)} nie bije najlepszego całkowitego (${fmt(sg * bestW)}).`; return node; }
+    const j = r.x.findIndex((v, k) => isInt[k] && Math.abs(v - Math.round(v)) > 1e-6);
+    if (j < 0) { bestW = sg * r.z; best = r.x.map((v, k) => isInt[k] ? Math.round(v) : v); node.cls = 'int'; node.res = `Rozwiązanie całkowite – nowy rekord Z = ${fmt(r.z)}.`; return node; }
+    const f = Math.floor(r.x[j] + 1e-9);
+    node.res = `x${j+1} = ${fmt(r.x[j])} jest ułamkiem. Odcinamy pas między ${f} a ${f + 1} i dzielimy na x${j+1} ≤ ${f} oraz x${j+1} ≥ ${f + 1}.`;
+    const u2 = ub.slice(); u2[j] = f; node.kids.push(visit(lb, u2, `x${j+1} ≤ ${f}`));
+    const l2 = lb.slice(); l2[j] = f + 1; node.kids.push(visit(l2, ub, `x${j+1} ≥ ${f + 1}`));
+    return node;
+  }
+  const root = visit(M.t.map(t => t === 'u' ? -Infinity : 0), M.t.map(t => t === 'b' ? 1 : Infinity), '');
+  if (root.unb) return failLP(out, {status: 'unbounded'}, M);
+  const li = nd => `<li class="${nd.cls || ''}"><b>Węzeł ${nd.id}</b> ${nd.label ? '[' + nd.label + ']' : '(relaksacja LP problemu)'}${nd.info ? ': ' + nd.info : ''}<br>${nd.res}` +
+    (nd.kids.length ? '<ul>' + nd.kids.map(li).join('') + '</ul>' : '') + '</li>';
+  let h = infoHTML(M) + '<p>Zmienne całkowite i binarne dzielimy metodą Branch &amp; Bound; każdy węzeł to LP rozwiązane simpleksem.</p><ul>' + li(root) + '</ul>';
+  if (best === null) { $(out).innerHTML = h; last.ilp = h; fail(out, 'Brak rozwiązania całkowitego spełniającego wszystkie ograniczenia.', M.b.map((_, i) => 'b' + i), true); return; }
+  h += `<div class="sum"><b>Wynik:</b> ${best.map((v, j) => `x${j+1} = ${fmt(v)}`).join(', ')}; Z<sub>opt</sub> = <b>${fmt(sg * bestW)}</b>${trunc ? ' (przerwano po 200 węzłach – wynik może nie być optymalny)' : ''}</div>`;
+  $(out).innerHTML = h; last.ilp = h;
+};
+
+/* =====================================================================
+   7. ZAKŁADKI I EKSPORT RAPORTU (druk do PDF przez @media print)
+   ===================================================================== */
+const TITLES = {graph: 'Metoda graficzna', simplex: 'Simpleks', ilp: 'Całkowitoliczbowe'};
+/* Moduły zapowiedziane (lista z oryginalnego QSB) – na razie bez funkcji, tylko komunikat */
+const SOON = [['net', 'Modele sieciowe'], ['pert', 'PERT / CPM'], ['goal', 'Programowanie celowe'], ['dp', 'Programowanie dynamiczne'],
+  ['qp', 'Programowanie kwadratowe'], ['nlp', 'Programowanie nieliniowe'], ['queue', 'Kolejki'], ['qsim', 'Symulacja kolejek'],
+  ['inv', 'Zapasy'], ['fc', 'Prognozowanie'], ['dec', 'Analiza decyzji'], ['mk', 'Procesy Markowa'], ['agg', 'Planowanie zagregowane'],
+  ['mrp', 'MRP'], ['job', 'Harmonogramowanie zadań'], ['loc', 'Lokalizacja i układ'], ['qc', 'Karty kontrolne'], ['acc', 'Odbiór statystyczny']];
+const SOON_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 3"/><path d="M9 12h.01M12 12h.01M15 12h.01"/></svg>';
+SOON.forEach(([id, name]) => $('nav').insertAdjacentHTML('beforeend', `<button role="tab" class="soon" data-tab="${id}" aria-selected="false">${SOON_ICON}${name}</button>`));
+function goTab(t) {
+  const soon = SOON.find(x => x[0] === t), title = soon ? soon[1] : TITLES[t];
+  document.querySelectorAll('nav button').forEach(x => x.setAttribute('aria-selected', x.dataset.tab === t));
+  [...Object.keys(TITLES), 'soon'].forEach(k => $('#tab-' + k).hidden = k !== (soon ? 'soon' : t));
+  $('#soon-title').textContent = title; $('#tabname').textContent = title; window.scrollTo(0, 0);
+  $('nav button[aria-selected=true]').scrollIntoView({inline: 'center', block: 'nearest'});
+  if (t === 'graph') Plotly.Plots.resize('plot');
+}
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => goTab(b.dataset.tab));
+$('#logo').src = $('link[rel=icon]').href;     // logo w nagłówku = ta sama ikona
+$('#btn-export').onclick = async () => {
+  if (!lastModel || !(last.graph || last.simplex || last.ilp)) {
+    const eb = $('#btn-export'); eb.classList.add('bad'); eb.textContent = 'Najpierw rozwiąż problem';
+    setTimeout(() => { eb.classList.remove('bad'); eb.textContent = 'Eksportuj raport'; }, 2500); return; }
+  let h = `<h1>Raport z obliczeń</h1><p>${new Date().toLocaleDateString('pl-PL')}</p><h2>Dane wejściowe</h2>${infoHTML(lastModel)}`;
+  if (last.graph) {
+    const img = await Plotly.toImage('plot', {format: 'png', width: 900, height: 560});
+    h += `<h2>Metoda graficzna</h2><img src="${img}" style="max-width:100%">${last.graph}`;
+  }
+  if (last.simplex) h += `<h2>Metoda simpleks</h2>${last.simplex}`;
+  if (last.dual) h += `<h2>Zadanie dualne</h2>${last.dual}`;
+  if (last.ilp) h += `<h2>Programowanie całkowitoliczbowe</h2><div class="tree">${last.ilp}</div>`;
+  $('#print-area').innerHTML = h; window.print();
+};
+
+MODS.forEach(initModule);
+</script>
+</body>
+</html>
