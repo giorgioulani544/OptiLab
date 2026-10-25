@@ -1,0 +1,91 @@
+/* ===== Motyw: papier milimetrowy + granat tuszu ===== */
+:root{--ink:#1b2a4e;--paper:#f4f0e6;--card:#fdfcf8;--line:#c9cbd8;--accent:#1b2a4e;--link:#1a6fd6;--pivot:#ffb703;--hl:#fff1c2;--err:#c0261b;--ok:#2e7d32}
+*{box-sizing:border-box}
+html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+sub{font-size:.72em;line-height:0}
+body{margin:0;font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--paper);
+ background-image:linear-gradient(rgba(27,42,78,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(27,42,78,.05) 1px,transparent 1px);background-size:24px 24px;padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+h1,h2,h3,h4{margin:.2em 0}h2{font-size:1.1rem}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;max-width:1200px;margin:0 auto;padding:14px 16px 6px}
+header{align-items:center}header h1{font-size:1.5rem;margin:0}#tabname{flex:1}
+#tabname{color:#6b7390}
+button,select,input{font:inherit;min-height:44px;border:1.5px solid var(--line);border-radius:12px;padding:6px 10px;background:#fff;color:var(--ink)}
+button{cursor:pointer;background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+button.ghost{background:#fff;color:var(--ink);border-color:var(--line)}
+button:disabled{opacity:.4;cursor:not-allowed}
+input{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+input.num{width:64px;max-width:100%;padding:6px 8px;text-align:right}
+:focus-visible{outline:3px solid var(--pivot);outline-offset:1px}
+.app{max-width:1200px;margin:0 auto;padding:8px 12px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:16px}
+.crow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}
+.crow label{white-space:nowrap}
+.hint{font-size:.85rem;color:#5b6b82}
+/* Zakładki: przewijany poziomo pasek (działa też na telefonie) */
+/* Dolny pasek zakładek (jak w aplikacji mobilnej) */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;overflow-x:auto;scrollbar-width:none;background:var(--card);border-top:1.5px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1 0 auto;min-width:92px;padding:0 14px;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:64px;border:0;border-radius:0;background:transparent;color:#6b7390;font-size:.8rem}
+nav button svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav button[aria-selected=true]{color:var(--ink)}
+nav button.soon{opacity:.6}
+.credit{text-align:center;font-size:.7rem;color:rgba(27,42,78,.35);margin:18px 0 0}
+/* Błąd przy polu: czerwona ramka + komunikat w tym samym wierszu */
+.fmsg{flex-basis:100%;color:var(--err);font-weight:600;font-size:.9rem}
+.note{color:#6b7390}
+/* Tabele przewijane palcem */
+.tw{overflow-x:auto;margin:8px 0;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums}
+td,th{border:1px solid var(--line);padding:6px 10px;text-align:right;white-space:nowrap;min-width:48px}
+th{background:#eaf0f5}
+td.pr,td.pcol{background:var(--hl)}
+td.pivot{background:var(--pivot);font-weight:700}
+.step{border-left:5px solid var(--accent);padding:4px 12px;margin:14px 0;background:#fcfdfe;border-radius:0 8px 8px 0}
+.step p{margin:.3em 0}
+/* Błędy */
+.bad{border-color:var(--err)!important;background:#fdecea!important}
+.msg{background:#fdecea;border:1.5px solid var(--err);color:#8e1b1b;padding:10px 12px;border-radius:8px;margin:8px 0}
+.sum{background:#e7f5ef;border:1.5px solid var(--ok);padding:10px 12px;border-radius:8px;margin:8px 0}
+/* Drzewo B&B */
+.tree ul{list-style:none;margin:4px 0 4px 6px;padding-left:14px;border-left:2px solid var(--line)}
+.tree li{margin:6px 0;padding:6px 8px;border-radius:8px;background:#fff;border:1px solid var(--line)}
+.tree li.int{border-color:var(--ok);background:#e7f5ef}
+.tree li.cut{border-color:#e0a0a0;background:#fbf1f1}
+#plot{width:100%;height:min(60vh,460px);touch-action:none}
+/* Duże ekrany: dane po lewej, wyniki po prawej; czcionka bazowa pozostaje sztywna */
+@media(min-width:1000px){
+ body{font-size:15px}
+ .split{display:grid;grid-template-columns:minmax(380px,440px) minmax(0,1fr);column-gap:20px;align-items:start;grid-auto-rows:min-content}
+ .split>[id$="-top"]{grid-column:1;grid-row:1/span 30}
+ .split>:not([id$="-top"]){grid-column:2;min-width:0}
+ .split>button,.split>div>button{justify-self:start}
+ #plot{height:520px}
+}
+@media(pointer:fine){button,select,input{min-height:36px}nav button{min-height:56px}}
+details.adv{margin:12px 0;border:1.5px dashed var(--line);border-radius:12px;padding:2px 12px}
+details.adv>summary{cursor:pointer;color:var(--link);font-weight:600;min-height:40px;display:flex;align-items:center}
+details.adv[open]>summary{margin-bottom:6px}
+#print-area{display:none}
+#print-area table{font-size:8.5pt}
+#print-area td,#print-area th{padding:2px 5px;min-width:0}
+/* ===== Raport: tylko czysty dokument ===== */
+@page{size:A4 portrait;margin:12mm}
+@media print{
+ *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ body{background:#fff;padding:0;font-size:10pt}
+ header,.app,nav,.credit{display:none!important}
+ #print-area{display:block}
+ h1,h2,h3,h4{break-after:avoid}
+ .step,.sum,img,li{break-inside:avoid}
+ img{max-width:100%;height:auto}
+ .tw{overflow:visible}
+ table{break-inside:auto}
+ tr{break-inside:avoid}
+ /* Kolory w PDF: oprócz print-color-adjust dublujemy tło „wewnętrznym cieniem" (drukuje się nawet bez opcji „Grafika tła") */
+ th{box-shadow:inset 0 0 0 999px #eaf0f5}
+ td.pr,td.pcol{background:var(--hl)!important;box-shadow:inset 0 0 0 999px var(--hl)}
+ td.pivot{background:var(--pivot)!important;box-shadow:inset 0 0 0 999px var(--pivot);border:2px solid #8a5a00;font-weight:700}
+ .sum{box-shadow:inset 0 0 0 999px #e7f5ef}
+ .tree li.int{box-shadow:inset 0 0 0 999px #e7f5ef}
+ .tree li.cut{box-shadow:inset 0 0 0 999px #fbf1f1}
+ .step{border-left:5px solid var(--accent)}
+}
