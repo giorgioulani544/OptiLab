@@ -13,7 +13,7 @@ const fmt = v => {
   return String(Math.round(v * 1e4) / 1e4).replace('.', ',');
 };
 const sub = n => `<sub>${n}</sub>`;   // x<sub>1</sub> (Plotly też obsługuje <sub>)
-const grow = t => { t.style.width = Math.max(64, t.value.length * 10 + 26) + 'px'; };   // pole rośnie z liczbą cyfr
+const grow = t => { t.style.width = Math.max(window.innerWidth <= 480 ? 52 : 64, t.value.length * 10 + 26) + 'px'; };   // pole rośnie z liczbą cyfr (węższe na telefonie)   // pole rośnie z liczbą cyfr
 const last = {};                        // ostatnie wyniki do raportu
 let lastModel = null;
 

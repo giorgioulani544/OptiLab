@@ -64,6 +64,63 @@ td.pivot{background:var(--pivot);font-weight:700}
 details.adv{margin:12px 0;border:1.5px dashed var(--line);border-radius:12px;padding:2px 12px}
 details.adv>summary{cursor:pointer;color:var(--link);font-weight:600;min-height:40px;display:flex;align-items:center}
 details.adv[open]>summary{margin-bottom:6px}
+/* Modele sieciowe: edytor macierzy, tabele transportowe, rysunek sieci */
+table.mx td,table.mx th{padding:4px;min-width:0}
+table.mx input.nm{min-width:44px;font-family:inherit;text-align:left}
+table.mx tr>th:first-child{position:sticky;left:0;z-index:1}
+@media(max-width:600px){input.nm{padding:6px}}
+table.mx td.xc{background:#f3f1ea}
+input.forb,td.forb{background:repeating-linear-gradient(45deg,#fdecea 0 5px,#fff 5px 10px)}
+table.tt td{position:relative;min-width:60px;padding:16px 8px 4px;vertical-align:bottom}
+table.tt .cc{position:absolute;top:2px;left:5px;font-size:.72em;color:#7b8296}
+table.tt .dd{font-size:.82em;color:#7b8296}
+table.tt .sg{position:absolute;top:1px;right:4px;font-weight:700;color:var(--err)}
+table.tt td.out{opacity:.4}
+table.tt .dm{font-style:italic;color:#5b6b82}
+svg.netsvg{width:100%;max-width:760px;height:auto;display:block;margin:8px 0}
+@media(max-width:600px){svg.netsvg{min-width:540px}}
+td.tl{text-align:left;white-space:normal;min-width:180px}
+svg.netsvg .nd{fill:var(--card);stroke:var(--ink);stroke-width:1.5}
+svg.netsvg .nd.dummy{stroke-dasharray:5 4;fill:#f3f1ea}
+svg.netsvg text{font:12px system-ui,sans-serif;fill:var(--ink)}
+svg.netsvg .sub{font-size:10.5px;fill:#5b6b82}
+svg.netsvg .ed{stroke:var(--link);fill:none}
+svg.netsvg .ed.dummy{stroke:#9aa3b5;stroke-dasharray:5 4}
+svg.netsvg .ah{fill:var(--link)}
+svg.netsvg .el{font-size:11px;font-weight:700;paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round}
+input.nm{width:72px;min-width:44px;font-family:inherit;text-align:left}
+table.am td{text-align:center;min-width:48px;padding:8px 6px}
+td.cov{background:#e4e9f2}
+td.cov2{background:#c5d0e4}
+td.mn{color:var(--err);font-weight:600}
+td.diag{color:#9aa3b5;text-align:center}
+table.elist select{min-width:84px}
+table.lab td{white-space:nowrap;padding:8px 8px 6px}
+tr.sel th,tr.sel td{background:#fff6d8}
+svg.netsvg .ed.other{stroke:#b5bccb}
+svg.netsvg .ed.tree{stroke:var(--link)}
+svg.netsvg .ed.path{stroke:var(--ink);stroke-width:3.5px}
+svg.netsvg .ed.neg{stroke:var(--err);stroke-width:3px}
+svg.netsvg .ah.other{fill:#b5bccb}
+svg.netsvg .ah.path{fill:var(--ink)}
+svg.netsvg .ah.neg{fill:var(--err)}
+svg.netsvg .el.other{fill:#7b8296;font-weight:500}
+svg.netsvg .nd.src{fill:#e7f5ef;stroke:var(--ok);stroke-width:2.5}
+svg.netsvg .nd.dst{fill:#fff1c2;stroke:#8a5a00;stroke-width:2.5}
+svg.netsvg .nd.sside{fill:#e7f5ef}
+label.chk{display:inline-flex;align-items:center;gap:4px;margin-right:10px;min-height:36px}
+label.chk input{width:18px;height:18px;min-height:0}
+/* Telefon: zwarty nagłówek (przycisk eksportu w jednej linii z logo), mniejsze marginesy – wiersz ograniczenia z 2 zmiennymi mieści się w jednej linii */
+@media(max-width:480px){
+ #tabname{display:none}
+ header{padding:10px 10px 4px}
+ .app{padding:6px}
+ .card{padding:12px 10px}
+ .crow{gap:4px}
+ select{padding:6px 4px}
+}
+/* Metoda graficzna: przyciski powiększania pokazujemy dopiero, gdy jest wykres */
+#plot:empty + .crow,#plot:empty + .crow + .hint{display:none}
 #print-area{display:none}
 #print-area table{font-size:8.5pt}
 #print-area td,#print-area th{padding:2px 5px;min-width:0}
@@ -88,4 +145,9 @@ details.adv[open]>summary{margin-bottom:6px}
  .tree li.int{box-shadow:inset 0 0 0 999px #e7f5ef}
  .tree li.cut{box-shadow:inset 0 0 0 999px #fbf1f1}
  .step{border-left:5px solid var(--accent)}
+ svg.netsvg{break-inside:avoid;max-width:100%}
+ td.forb{box-shadow:inset 0 0 0 999px #fdecea}
+ td.cov{box-shadow:inset 0 0 0 999px #e4e9f2}
+ td.cov2{box-shadow:inset 0 0 0 999px #c5d0e4}
+ tr.sel td,tr.sel th{box-shadow:inset 0 0 0 999px #fff6d8}
 }

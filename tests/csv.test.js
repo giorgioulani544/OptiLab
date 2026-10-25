@@ -1,0 +1,26 @@
+// Import/eksport CSV: formaty z Excela (; i przecinek dziesiętny), tabulator, przecinek, błędy z numerem wiersza
+const {load} = require('./helpers');
+const c = load(['js/csv.js']);
+let ok = 0, bad = 0; const t = (n, v) => { v ? ok++ : (bad++, console.log('BŁĄD:', n)); };
+const err = (txt, re) => { try { c.parseLPcsv(txt); return false; } catch (e) { return re.test(e.message); } };
+let d = c.parseLPcsv('\uFEFF;x1;x2;znak;prawa strona\r\nmax;3;5;;\r\nograniczenie 1;1;0;<=;4\r\nograniczenie 2;0;2;<=;12\r\nograniczenie 3;3;2;≤;18\r\n');
+t('Excel (;): max, 2 zmienne, 3 ograniczenia', d.maxi === true && d.c.join() === '3,5' && d.rows.length === 3 && d.rows[2].rel === '<=');
+d = c.parseLPcsv('min;2,5;3\nA;1;1;>=;4,5\n');
+t('przecinek dziesiętny', d.maxi === false && d.c[0] === '2.5' && d.rows[0].b === '4.5');
+d = c.parseLPcsv('max\t1\t2\nr\t1\t1\t=\t4');
+t('tabulator', d.rows[0].rel === '=' && d.rows[0].b === '4');
+d = c.parseLPcsv('max,1.5,2\nr,1,,<=,4');
+t('przecinek jako separator i pusta komórka = 0', d.c[0] === '1.5' && d.rows[0].a[1] === '0');
+d = c.parseLPcsv('max;5;4\ntyp;całkowita;b\nr;6;4;<=;24');
+t('wiersz typów', d.t.join() === 'i,b');
+t('błąd: zły znak (z numerem wiersza)', err('max;1;1\nr;1;1;<>;3', /wiersz 2: nieznany znak/));
+t('błąd: tekst zamiast liczby', err('max;1;1\nr;1;abc;<=;3', /wiersz 2: „abc" nie jest liczbą/));
+t('błąd: za mało komórek', err('max;1;1\nr;1;<=', /wiersz 2: oczekiwano 2 współczynników/));
+t('błąd: brak funkcji celu', err(';x1\nr;1;<=;3\ns;1;<=;4', /wiersz 2: przed ograniczeniami/));
+t('błąd: brak ograniczeń', err('max;1;1', /brak ograniczeń/));
+t('błąd: pusty plik', err('  \n', /pusty/));
+const md = {maxi: false, c: ['2', '3.5'], t: ['i', 'c'], rows: [{a: ['1', '1'], rel: '>=', b: '4'}, {a: ['1', '2'], rel: '=', b: '6.25'}]};
+const back = c.parseLPcsv(c.toLPcsv(md));
+t('eksport → import bez zmian', back.maxi === false && back.c.join() === '2,3.5' && back.t.join() === 'i,c' && back.rows[1].rel === '=' && back.rows[1].b === '6.25');
+t('eksport dla polskiego Excela (; i przecinek)', /^\uFEFF;x1;x2;znak;prawa strona\r\nmin;2;3,5\r\n/.test(c.toLPcsv(md)));
+console.log(`Testy CSV: ${ok} OK, ${bad} błędów`); process.exit(bad ? 1 : 0);

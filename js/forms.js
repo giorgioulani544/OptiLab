@@ -4,7 +4,7 @@
    2. FORMULARZ I WALIDACJA „W LOCIE"
    ===================================================================== */
 // Każdy moduł ma własny formularz i własny stan (teksty wpisane przez użytkownika)
-const MODS = ['graph', 'simplex', 'ilp'], MAXN = 12, MAXC = 12;
+const MODS = ['graph', 'simplex', 'ilp'], MAXN = 30, MAXC = 30;   // większe zadania wygodnie wczytać z CSV
 const T0 = k => k === 'ilp' ? 'i' : 'c';
 const TYPES = {simplex: [['c', '≥ 0'], ['u', 'dowolna']], ilp: [['c', 'ciągła'], ['i', 'całkowita'], ['b', 'binarna'], ['u', 'dowolna']]};
 const defModel = k => ({n: 2, maxi: true, c: ['3', '5'], t: [T0(k), T0(k)],
@@ -52,6 +52,23 @@ function sync(k) {                           // przepisuje pola do modelu
     a: Array.from({length: md.n}, (_, j) => $('#' + p + `a${i}_${j}`).value),
     rel: $('#' + p + 'rel' + i).value, b: $('#' + p + 'b' + i).value }));
 }
+/* Walidacja i normalizacja danych (ze schowka, pliku lub przykładu); liczba zmiennych i typy ustawiają się same. Rzuca wyjątek przy złych danych. */
+function parseModel(k, input) {
+  const d = typeof input === 'string' ? JSON.parse(input) : input;
+  if (!d || !d.optilab || !Array.isArray(d.c) || !Array.isArray(d.rows) || !d.rows.length) throw new Error('format');
+  if (d.c.length > MAXN) throw new Error(`za dużo zmiennych (${d.c.length}) – maksimum to ${MAXN}.`);
+  if (d.rows.length > MAXC) throw new Error(`za dużo ograniczeń (${d.rows.length}) – maksimum to ${MAXC}.`);
+  const n = Math.min(MAXN, Math.max(2, d.c.length));
+  return {n, maxi: !!d.maxi, c: Array.from({length: n}, (_, j) => String(d.c[j] ?? '0')),
+    t: Array.from({length: n}, (_, j) => (TYPES[k] || [['c']]).some(([v]) => v === d.t?.[j]) ? d.t[j] : T0(k)),
+    rows: d.rows.slice(0, MAXC).map(r => ({a: Array.from({length: n}, (_, j) => String(r.a?.[j] ?? '0')),
+      rel: ['<=', '>=', '='].includes(r.rel) ? r.rel : '<=', b: String(r.b ?? '0')}))};
+}
+/* Pobranie pliku wygenerowanego w przeglądarce (działa też na iPhonie – plik trafia do „Pliki") */
+function download(text, name, type) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = name;
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
 function initModule(k) {
   const p = k + '-', md = () => models[k];
   $('#' + p + 'top').innerHTML = `<div class="crow"><label for="${p}nvars">Zmienne</label>
@@ -93,21 +110,38 @@ function initModule(k) {
   };
   $('#' + p + 'paste').onclick = async e => {
     let txt = null; try { txt = await navigator.clipboard.readText(); } catch (_) {}
-    const load = t => {                      // walidacja wklejonych danych
-      const d = JSON.parse(t); if (!d.optilab || !Array.isArray(d.c) || !Array.isArray(d.rows) || !d.rows.length) throw 0;
-      const n = Math.min(MAXN, Math.max(2, d.c.length));
-      return {n, maxi: !!d.maxi, c: Array.from({length: n}, (_, j) => String(d.c[j] ?? '0')),
-        t: Array.from({length: n}, (_, j) => (TYPES[k] || [['c']]).some(([v]) => v === d.t?.[j]) ? d.t[j] : T0(k)),
-        rows: d.rows.slice(0, MAXC).map(r => ({a: Array.from({length: n}, (_, j) => String(r.a?.[j] ?? '0')),
-          rel: ['<=', '>=', '='].includes(r.rel) ? r.rel : '<=', b: String(r.b ?? '0')}))};
-    };
-    let m = null; try { m = load(txt); } catch (_) { try { m = load(sharedData); } catch (_) {} }
+    let m = null; try { m = parseModel(k, txt); } catch (_) { try { m = parseModel(k, sharedData); } catch (_) {} }
     if (!m) return flash(e.target, 'Brak skopiowanych danych', true);
     clearErr(); models[k] = m; renderForm(k); flash(e.target, 'Wklejono ✓');   // liczba zmiennych ustawia się sama
   };
+  // Przykłady oraz zapis/wczytanie z pliku (w „Opcjach zaawansowanych")
+  const exOpts = EXAMPLES.map((ex, i) => (k === 'graph' && ex.c.length !== 2) ? '' : `<option value="${i}">${ex.name}</option>`).join('');
+  $('#' + p + 'advbody').innerHTML = `<div class="crow"><label for="${p}ex">Przykład</label><select id="${p}ex"><option value="">– wybierz –</option>${exOpts}</select></div>
+    <div class="crow"><button id="${p}open" class="ghost" type="button">Wczytaj z pliku (.json / .csv)</button><input type="file" id="${p}file" accept=".json,.csv,.txt,application/json,text/csv" hidden></div>
+    <div class="crow"><button id="${p}save" class="ghost" type="button">Zapisz (.json)</button><button id="${p}csv" class="ghost" type="button">Eksport do Excela (.csv)</button></div>
+    <p class="hint">CSV z Excela: wiersz „max" lub „min" ze współczynnikami celu, a pod nim wiersze ograniczeń (etykieta; współczynniki; znak; prawa strona). Najprościej wyeksportuj obecne zadanie, popraw je w Excelu i wczytaj z powrotem.</p>`;
+  const apply = m => { clearErr(); models[k] = m; renderForm(k); $('#out-' + k).innerHTML = ''; };   // nowe dane: czyścimy stary wynik
+  $('#' + p + 'ex').onchange = e => { if (e.target.value === '') return; apply(parseModel(k, exampleToData(EXAMPLES[+e.target.value]))); e.target.value = ''; };
+  $('#' + p + 'save').onclick = e => {
+    sync(k); const blob = new Blob([JSON.stringify({optilab: 1, ...md()}, null, 1)], {type: 'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `optilab-${k}-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); flash(e.target, 'Zapisano ✓');
+  };
+  $('#' + p + 'open').onclick = () => $('#' + p + 'file').click();
+  $('#' + p + 'csv').onclick = e => { sync(k); download(toLPcsv(md()), `optilab-${k}-${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv'); flash(e.target, 'Zapisano ✓'); };
+  $('#' + p + 'file').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return; const btn = $('#' + p + 'open');
+    try {
+      const txt = await f.text();                       // JSON (zapis OptiLab) albo CSV (Excel) – rozpoznajemy po treści
+      apply(parseModel(k, txt.trim().startsWith('{') ? txt : parseLPcsv(txt))); flash(btn, 'Wczytano ✓');
+    } catch (err) {                                    // błąd pokazujemy przy przycisku, z numerem wiersza dla CSV
+      K = k; fail('#out-' + k, 'nie udało się wczytać pliku „' + f.name + '" – ' + (err instanceof SyntaxError ? 'plik JSON jest uszkodzony.' : err.message === 'format' ? 'to nie jest zadanie zapisane w OptiLab.' : err.message), ['open'], true);
+    }
+    e.target.value = '';
+  };
   renderForm(k);
   // przenosimy dodatkowe kontrolki modułu do „Opcji zaawansowanych"
-  const extra = {graph: ['g-int-wrap'], simplex: ['btn-dual', 'par-box'], ilp: ['ilp-opts']}[k]; extra.forEach(id => $('#' + p + 'advbody').append($('#' + id)));
+  const extra = {graph: ['g-int-wrap'], simplex: ['method-box', 'btn-dual', 'par-box'], ilp: ['ilp-opts']}[k]; extra.forEach(id => $('#' + p + 'advbody').append($('#' + id)));
 }
 /* Odczyt i walidacja. Błąd => czerwone pola + komunikat edukacyjny, zwraca null */
 const clearErr = () => {
@@ -143,6 +177,6 @@ function readModel(k) {
     const ok = rel[i] === '<=' ? 0 <= b[i] : rel[i] === '>=' ? 0 >= b[i] : b[i] === 0;
     if (!ok) return fail(out, `ograniczenie ${i+1} ma same zera po lewej stronie, więc 0 ${rel[i]} ${fmt(b[i])} nigdy nie jest prawdą.`, [`a${i}_0`, 'b' + i]);
   }
-  lastModel = {n, c, A, rel, b, maxi: md.maxi, t: md.t.slice()};
+  lastModel = {n, c, A, rel, b, maxi: md.maxi, t: md.t.slice(), method: k === 'simplex' ? ($('#simplex-method')?.value || 'M') : 'M'};
   return lastModel;
 }

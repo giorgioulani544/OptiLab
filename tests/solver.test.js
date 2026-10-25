@@ -19,4 +19,5 @@ r = S({n: 2, c: [1, 0], A: [[1, -1]], rel: ['<='], b: [1], maxi: true}); t('nieo
 r = S({n: 2, c: [126428, 50000], A: [[1, 1], [1, 0]], rel: ['>=', '<='], b: [300000, 200000], maxi: false}); t('duże liczby: Z=1,5e10', near(r.z / 1e10, 1.5));
 r = S({n: 2, c: [1, 2], A: [[1, 1]], rel: ['='], b: [4], maxi: true}); t('ograniczenie równościowe: Z=8', near(r.z, 8));
 r = S(W, [{j: 1, rel: '<=', b: 3}]); t('dodatkowa granica x2≤3: Z=27', near(r.z, 27));
+r = S({n: 2, c: [1, 1], A: [[1, 0], [1, 0]], rel: ['<=', '>='], b: [3, 5], maxi: true}); t('sprzeczne i x₂ swobodne: infeasible (nie unbounded)', r.status === 'infeasible');
 console.log(`Testy solvera: ${ok} OK, ${bad} błędów`); process.exit(bad ? 1 : 0);

@@ -5,11 +5,12 @@ const TL = {c: '≥ 0', i: 'całkowita ≥ 0', b: 'binarna', u: 'dowolna', n: '�
 const typesLine = M => `<li>${M.t.every(t => t === 'c') ? 'x ≥ 0' : M.t.map((t, j) => `x${sub(j+1)} ${TL[t]}`).join(', ')}</li>`;
 const dualHTML = D => `<p><b>${D.maxi ? 'Maksymalizuj' : 'Minimalizuj'}</b> W = ${expr(D.c, 'y')}</p><ul>${D.A.map((a, j) => `<li>${expr(a, 'y')} ${sign(D.rel[j])} ${fmt(D.b[j])}</li>`).join('')}<li>${D.t.map((t, i) => `y${sub(i+1)} ${t === 'c' ? '≥ 0' : t === 'n' ? '≤ 0' : 'dowolne'}`).join(', ')}</li></ul>`;
 function tableHTML(s) {
-  const m = s.T.length - 1, N = s.T[0].length - 1;
-  let h = '<div class="tw"><table><tr><th>Baza</th>' + s.names.map(x => `<th>${x}</th>`).join('') + '<th>Prawa str.</th></tr>';
+  const m = s.T.length - 1, N = s.T[0].length - 1, show = j => !(s.hide || []).includes(j);   // w fazie II kolumny sztuczne są pomijane
+  let h = '<div class="tw"><table><tr><th>Baza</th>' + s.names.map((x, j) => show(j) ? `<th>${x}</th>` : '').join('') + '<th>Prawa str.</th></tr>';
   for (let i = 0; i <= m; i++) {
-    h += `<tr><th>${i < m ? s.names[s.basis[i]] : 'Z'}</th>`;
+    h += `<tr><th>${i < m ? s.names[s.basis[i]] : (s.zl || 'Z')}</th>`;
     for (let j = 0; j <= N; j++) {
+      if (j < N && !show(j)) continue;
       const cls = i === s.pr && j === s.pc ? 'pivot' : i === s.pr ? 'pr' : j === s.pc ? 'pcol' : '';
       h += `<td class="${cls}">${fmt(s.T[i][j])}</td>`;
     }

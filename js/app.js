@@ -4,6 +4,11 @@
    7. ZAKŁADKI I EKSPORT RAPORTU (druk do PDF przez @media print)
    ===================================================================== */
 const TITLES = {graph: 'Metoda graficzna', simplex: 'Simpleks', ilp: 'Całkowitoliczbowe'};
+MODULES.forEach(md => {                       // moduły z rejestru: zakładka + sekcja (przed listą „wkrótce")
+  TITLES[md.id] = md.title;
+  $('nav').insertAdjacentHTML('beforeend', `<button role="tab" data-tab="${md.id}" aria-selected="false">${md.icon}${md.title}</button>`);
+  $('#tab-soon').insertAdjacentHTML('beforebegin', `<section id="tab-${md.id}" hidden>${md.html}</section>`);
+});
 SOON.forEach(([id, name]) => $('nav').insertAdjacentHTML('beforeend', `<button role="tab" class="soon" data-tab="${id}" aria-selected="false">${SOON_ICON}${name}</button>`));
 function goTab(t) {
   const soon = SOON.find(x => x[0] === t), title = soon ? soon[1] : TITLES[t];
@@ -16,11 +21,12 @@ function goTab(t) {
 document.querySelectorAll('nav button').forEach(b => b.onclick = () => goTab(b.dataset.tab));
 $('#logo').src = $('link[rel=icon]').href;     // logo w nagłówku = ta sama ikona
 $('#btn-export').onclick = async () => {
-  if (!lastModel || !(last.graph || last.simplex || last.ilp)) {
+  const lp = lastModel && (last.graph || last.simplex || last.ilp);
+  if (!lp && !MODULES.some(md => last[md.id])) {
     const eb = $('#btn-export'); eb.classList.add('bad'); eb.textContent = 'Najpierw rozwiąż problem';
     setTimeout(() => { eb.classList.remove('bad'); eb.textContent = 'Eksportuj raport'; }, 2500); return; }
-  let h = `<h1>Raport z obliczeń</h1><p>${new Date().toLocaleDateString('pl-PL')}</p><h2>Dane wejściowe</h2>${infoHTML(lastModel)}`;
-  if (last.graph) {
+  let h = `<h1>Raport z obliczeń</h1><p>${new Date().toLocaleDateString('pl-PL')}</p>${lp ? '<h2>Dane wejściowe</h2>' + infoHTML(lastModel) : ''}`;
+  if (lp && last.graph) {
     const img = await Plotly.toImage('plot', {format: 'png', width: 900, height: 560});
     h += `<h2>Metoda graficzna</h2><img src="${img}" style="max-width:100%">${last.graph}`;
   }
@@ -28,6 +34,7 @@ $('#btn-export').onclick = async () => {
   if (last.dual) h += `<h2>Zadanie dualne</h2>${last.dual}`;
   if (last.par) h += `<h2>Analiza parametryczna</h2>${last.par}`;
   if (last.ilp) h += `<h2>Programowanie całkowitoliczbowe</h2><div class="tree">${last.ilp}</div>`;
+  MODULES.forEach(md => { if (last[md.id]) h += `<h2>${md.title}</h2>${last[md.id]}`; });
   const pa = $('#print-area'); pa.innerHTML = h;
   // Zmierz tabele w szerokości A4 (~690 px) i zmniejsz zbyt szerokie, żeby nic nie było ucięte
   pa.querySelectorAll('details').forEach(d => d.open = true);
@@ -37,3 +44,4 @@ $('#btn-export').onclick = async () => {
 };
 
 MODS.forEach(initModule);
+MODULES.forEach(md => md.init && md.init());
