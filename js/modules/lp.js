@@ -22,32 +22,18 @@ function altOptimum(M, s) {
   return null;
 }
 function qsbReport(M, r, rec) {
-  const s = rec[rec.length - 1], T = s.T, m = M.A.length, n = M.n, N = T[0].length - 1; let alt = false;
-  const rg = (lo, hi) => `${isFinite(lo) ? fmt(lo) : '−∞'} … ${isFinite(hi) ? fmt(hi) : '+∞'}`;
+  const S = lpSensitivity(M, r, rec), rg = (lo, hi) => `${isFinite(lo) ? fmt(lo) : '−∞'} … ${isFinite(hi) ? fmt(hi) : '+∞'}`;   // obliczenia: js/solver.js
+  let alt = S.vars.some(v => !v.basic && v.rc < 1e-6);
   let h = '<details class="adv"><summary>Raport końcowy i analiza wrażliwości</summary><div class="tw"><table><tr><th>Zmienna</th><th>Wartość</th><th>Współcz. celu</th><th>Wkład w Z</th><th>Koszt zredukowany</th><th>Zakres współcz. celu</th></tr>';
-  for (let j = 0; j < n; j++) {
-    const row = s.basis.indexOf(j), rc = row < 0 ? Math.max(0, T[m][j]) : 0;
-    let lo = -Infinity, hi = row < 0 ? rc : Infinity;                    // zmiana współczynnika w postaci „max"
-    if (row < 0 && rc < 1e-6) alt = true;
-    if (row >= 0) for (let k = 0; k < N; k++) if (!s.basis.includes(k) && s.names[k][0] !== 'a') {
-      const al = T[row][k], d = T[m][k];
-      if (al > 1e-9) lo = Math.max(lo, -d / al); else if (al < -1e-9) hi = Math.min(hi, d / -al);
-    }
-    const c = M.c[j], [a, b] = M.maxi ? [c + lo, c + hi] : [c - hi, c - lo];
-    h += `<tr><th>x${sub(j+1)}</th><td>${fmt(r.x[j])}</td><td>${fmt(c)}</td><td>${fmt(c * r.x[j])}</td><td>${fmt(rc)}</td><td>${M.t[j] === 'u' ? '–' : rg(a, b)}</td></tr>`;
-  }
+  S.vars.forEach((v, j) => { const c = M.c[j];
+    h += `<tr><th>x${sub(j+1)}</th><td>${fmt(r.x[j])}</td><td>${fmt(c)}</td><td>${fmt(c * r.x[j])}</td><td>${fmt(v.rc)}</td><td>${M.t[j] === 'u' ? '–' : rg(v.lo, v.hi)}</td></tr>`; });
   h += '</table></div><div class="tw"><table><tr><th>Ograniczenie</th><th>Lewa str.</th><th>Znak</th><th>Prawa str.</th><th>Luz / nadwyżka</th><th>Cena dualna</th><th>Zakres prawej strony</th></tr>';
-  M.A.forEach((a, i) => {
-    const lhs = a.reduce((t, v, j) => t + v * r.x[j], 0), b2 = M.b.slice(); b2[i] += 1e-4;
-    const q = solveM({...M, b: b2}), sp = q.status === 'optimal' ? (q.z - r.z) / 1e-4 : NaN;
-    let lo = -Infinity, hi = Infinity;                                   // kolumna B⁻¹ dla i-tego ograniczenia
-    for (let k = 0; k < m; k++) { const u = T[k][s.b0[i]], be = T[k][N];
-      if (u > 1e-9) lo = Math.max(lo, -be / u); else if (u < -1e-9) hi = Math.min(hi, be / -u); }
-    if (s.fl[i]) [lo, hi] = [-hi, -lo];
-    h += `<tr><th>Ogr. ${i+1}</th><td>${fmt(lhs)}</td><td>${sign(M.rel[i])}</td><td>${fmt(M.b[i])}</td><td>${fmt(Math.abs(M.b[i] - lhs))}</td><td>${isNaN(sp) ? '–' : fmt(sp)}</td><td>${rg(M.b[i] + lo, M.b[i] + hi)}</td></tr>`;
+  S.rows.forEach((q, i) => {
+    h += `<tr><th>Ogr. ${i+1}</th><td>${fmt(q.lhs)}</td><td>${sign(M.rel[i])}</td><td>${fmt(M.b[i])}</td><td>${fmt(Math.abs(M.b[i] - q.lhs))}</td><td>${fmt(q.y)}</td><td>${rg(q.lo, q.hi)}</td></tr>`;
   });
-  h += '</table></div><p class="hint">Cena dualna: o ile zmieni się Z, gdy prawa strona wzrośnie o 1. Koszt zredukowany: o ile pogorszy się Z po wymuszeniu 1 jednostki zmiennej spoza bazy. Zakresy: w tych granicach obecna baza pozostaje optymalna.</p>';
-  const ax = altOptimum(M, s); alt = alt || !!ax;
+  h += '</table></div><p class="hint">Cena dualna: o ile zmieni się Z, gdy prawa strona wzrośnie o 1. Koszt zredukowany: o ile pogorszy się Z po wymuszeniu 1 jednostki zmiennej spoza bazy. Zakresy: w tych granicach obecna baza pozostaje optymalna.</p>' +
+    (r.degenerate ? '<p class="note">Rozwiązanie jest zdegenerowane (któraś zmienna bazowa ma wartość 0). Ceny dualne mogą wtedy nie być jednoznaczne – przy zwiększaniu i przy zmniejszaniu prawej strony mogą być różne – a niektóre zakresy kurczą się do jednej wartości.</p>' : '');
+  const ax = altOptimum(M, S.s); alt = alt || !!ax;
   return h + (alt ? '<p class="note">Uwaga: zmienna spoza bazy ma koszt zredukowany 0 – ' + (ax ? 'istnieją' : 'mogą istnieć') + ' alternatywne rozwiązania optymalne.' +
     (ax ? ` Drugie rozwiązanie optymalne: ${ax.map((v, j) => `x${sub(j+1)} = ${fmt(v)}`).join(', ')} (to samo Z = ${fmt(r.z)}); każda kombinacja wypukła obu rozwiązań też jest optymalna.` : '') + '</p>' : '') + '</details>';
 }
@@ -81,6 +67,7 @@ $('#btn-par').onclick = () => {
     d = Array(len).fill(0); d[idx] = 1; base[idx] = 0; label = `${what}<sub>${idx + 1}</sub>`;
   }
   const R = parametric(M, what, base, d, lo, hi);
+  if (R.error === 'limit') return fail(out, 'analizy nie dokończono – simpleks przekroczył limit iteracji dla któregoś parametru, więc wynik byłby niewiarygodny. Zawęź zakres albo sprawdź dane.', ['par-from', 'par-to'], true);
   if (R.error) return fail(out, 'zadanie nie ma rozwiązań dopuszczalnych, więc analiza parametryczna nie ma sensu.', M.b.map((_, i) => 'b' + i), true);
   const xs = x => '(' + x.map(fmt).join('; ') + ')', badTxt = what === 'b' ? 'brak rozwiązania dopuszczalnego' : 'zadanie nieograniczone';
   let h = `<h3>Analiza parametryczna: ${label} od ${fmt(lo)} do ${fmt(hi)}</h3>${caption}<div class="tw"><table><tr><th>Przedział ${label}</th><th>Z jako funkcja ${label}</th><th>Plan x${what === 'b' ? ' (początek → koniec)' : ''}</th></tr>`;
@@ -104,6 +91,7 @@ $('#btn-dual').onclick = () => {
   const D = dualOf(M), r = solveM(D);
   let h = '<h3>Zadanie dualne</h3>' + dualHTML(D);
   h += r.status === 'optimal' ? `<div class="sum"><b>Wynik dualny:</b> ${r.x.map((v, i) => `y${sub(i+1)} = ${fmt(v)}`).join(', ')}; W<sub>opt</sub> = <b>${fmt(r.z)}</b>. Z twierdzenia o dualności W<sub>opt</sub> = Z<sub>opt</sub> zadania pierwotnego.</div>`
+    : r.status === 'limit' ? '<p class="msg">Zadania dualnego nie rozwiązano – przekroczono limit iteracji simpleksu, więc wynik byłby niewiarygodny.</p>'
     : `<p class="note">Zadanie dualne ${r.status === 'unbounded' ? 'jest nieograniczone, więc pierwotne nie ma rozwiązań dopuszczalnych' : 'jest sprzeczne, więc pierwotne jest nieograniczone lub sprzeczne'}.</p>`;
   $('#out-dual').innerHTML = h; last.dual = h;
 };
@@ -226,49 +214,18 @@ $('#btn-graph').onclick = () => {
    ===================================================================== */
 $('#btn-ilp').onclick = () => {
   const out = '#out-ilp', M = readModel('ilp'); if (!M) return;
-  const sg = M.maxi ? 1 : -1, n = M.n, LIMIT = 1000, rule = $('#ilp-branch').value, dfs = $('#ilp-search').value === 'dfs';
-  const isInt = M.t.map(t => t === 'i' || t === 'b');
-  let bestW = -Infinity, best = null, id = 0, trunc = false;
-  /* mk: tworzy węzeł (granice zmiennych lb/ub) i rozwiązuje jego relaksację LP */
-  const mk = (lb, ub, label) => {
-    const node = {id: ++id, label, kids: [], lb, ub}, ex = [];
-    for (let j = 0; j < n; j++) {
-      if (lb[j] > -Infinity && !(lb[j] === 0 && M.t[j] !== 'u')) ex.push({j, rel: '>=', b: lb[j]});
-      if (ub[j] < Infinity) ex.push({j, rel: '<=', b: ub[j]});
-    }
-    const r = solveM(M, ex); node.r = r;
-    if (r.status === 'unbounded' && id === 1) { node.res = 'Relaksacja LP jest nieograniczona.'; node.unb = true; return node; }
-    if (r.status !== 'optimal') { node.cls = 'cut'; node.res = 'Brak rozwiązań dopuszczalnych – gałąź odcięta.'; return node; }
-    node.info = `x = (${r.x.map(fmt).join('; ')}), Z = ${fmt(r.z)}`;
-    if (sg * r.z <= bestW + 1e-9) { node.cls = 'cut'; node.res = `Odcięty: nawet bez wymogu całkowitości Z = ${fmt(r.z)} nie bije najlepszego całkowitego (${fmt(sg * bestW)}).`; return node; }
-    if (!r.x.some((v, k) => isInt[k] && Math.abs(v - Math.round(v)) > 1e-6)) {
-      bestW = sg * r.z; best = r.x.map((v, k) => isInt[k] ? Math.round(v) : v); node.cls = 'int'; node.res = `Rozwiązanie całkowite – nowy rekord Z = ${fmt(r.z)}.`; return node;
-    }
-    node.open = true; return node;
-  };
-  const root = mk(M.t.map(t => t === 'u' ? -Infinity : 0), M.t.map(t => t === 'b' ? 1 : Infinity), '');
-  if (root.unb) return failLP(out, {status: 'unbounded'}, M);
-  const open = root.open ? [root] : [];
-  while (open.length) {
-    if (id >= LIMIT) { trunc = true; break; }
-    let k = open.length - 1;                                  // DFS: ostatni węzeł; najlepsza granica: największe Z (w postaci „max")
-    if (!dfs) open.forEach((q, i) => { if (sg * q.r.z > sg * open[k].r.z) k = i; });
-    const nd = open.splice(k, 1)[0]; nd.open = false;
-    if (sg * nd.r.z <= bestW + 1e-9) { nd.cls = 'cut'; nd.res = 'Odcięty po znalezieniu lepszego rozwiązania całkowitego.'; continue; }
-    let j = -1, mf = 1e-6;                                    // wybór zmiennej do podziału
-    nd.r.x.forEach((v, q) => { if (!isInt[q]) return; const f = Math.abs(v - Math.round(v));
-      if (rule === 'first' ? (j < 0 && f > 1e-6) : f > mf) { j = q; mf = f; } });
-    const v = nd.r.x[j], f = Math.floor(v + 1e-9), u2 = nd.ub.slice(), l2 = nd.lb.slice(); u2[j] = f; l2[j] = f + 1;
-    nd.res = `x${sub(j+1)} = ${fmt(v)} jest ułamkiem. Odcinamy pas między ${f} a ${f + 1} i dzielimy na x${sub(j+1)} ≤ ${f} oraz x${sub(j+1)} ≥ ${f + 1}.`;
-    const A1 = mk(nd.lb, u2, `x${sub(j+1)} ≤ ${f}`), B1 = mk(l2, nd.ub, `x${sub(j+1)} ≥ ${f + 1}`);
-    nd.kids.push(A1, B1);
-    [B1, A1].forEach(c => { if (c.open) open.push(c); });    // DFS zaczyna od gałęzi „≤"
-  }
-  open.forEach(q => { q.res = 'Nieodwiedzony (przerwano – limit węzłów).'; });
+  const R = ilpSolve(M, {rule: $('#ilp-branch').value, search: $('#ilp-search').value});   // obliczenia: js/ilp-solver.js
+  if (R.status === 'unbounded_relax') return fail(out, 'relaksacja LP (zadanie bez wymogu całkowitości) jest nieograniczona. Wtedy zadanie całkowitoliczbowe jest nieograniczone albo nie ma rozwiązań całkowitych – Branch & Bound tego nie rozstrzygnie. Dodaj ograniczenie z góry dla zmiennych o dodatnich współczynnikach celu.', M.c.map((_, j) => 'c' + j));
+  if (R.status === 'limit') return failLP(out, {status: 'limit'}, M);
   const li = nd => `<li class="${nd.cls || ''}"><b>Węzeł ${nd.id}</b> ${nd.label ? '[' + nd.label + ']' : '(relaksacja LP problemu)'}${nd.info ? ': ' + nd.info : ''}<br>${nd.res}` +
     (nd.kids.length ? '<ul>' + nd.kids.map(li).join('') + '</ul>' : '') + '</li>';
-  let h = infoHTML(M) + `<p>Branch &amp; Bound: ${dfs ? 'przeszukiwanie w głąb' : 'najlepsza granica'}, podział po zmiennej ${rule === 'first' ? 'pierwszej ułamkowej' : 'najbardziej ułamkowej'}. Każdy węzeł to LP rozwiązane simpleksem.</p><ul>` + li(root) + '</ul>';
-  if (best === null) { $(out).innerHTML = h; last.ilp = h; fail(out, 'Brak rozwiązania całkowitego spełniającego wszystkie ograniczenia.', M.b.map((_, i) => 'b' + i), true); return; }
-  h += `<div class="sum"><b>Wynik:</b> ${best.map((v, j) => `x${sub(j+1)} = ${fmt(v)}`).join(', ')}; Z<sub>opt</sub> = <b>${fmt(sg * bestW)}</b>. Liczba węzłów: ${id}.${trunc ? ' Przerwano po ' + LIMIT + ' węzłach – wynik może nie być optymalny.' : ''}</div>`;
+  let h = infoHTML(M) + `<p>Branch &amp; Bound: ${R.dfs ? 'przeszukiwanie w głąb' : 'najlepsza granica'}, podział po zmiennej ${R.rule === 'first' ? 'pierwszej ułamkowej' : 'najbardziej ułamkowej'}. Każdy węzeł to LP rozwiązane simpleksem.</p><ul>` + li(R.root) + '</ul>';
+  const why = [R.trunc ? `przeszukiwanie przerwano po ${R.limit} węzłach` : '', R.stopped ? 'simpleks przekroczył limit iteracji w jednym z węzłów' : '',
+    R.warn.length ? `w węzłach ${R.warn.join(', ')} relaksacja LP była nieograniczona i nie dało się ich ani odciąć, ani podzielić` : ''].filter(Boolean).join('; ');
+  const sol = () => `${R.best.map((v, j) => `x${sub(j+1)} = ${fmt(v)}`).join(', ')}; Z<sub>opt</sub> = <b>${fmt(R.bestZ)}</b>`;
+  if (R.status === 'optimal') h += `<div class="sum"><b>Wynik:</b> ${sol()}. Liczba węzłów: ${R.count}.</div>`;
+  else if (R.status === 'uncertain') h += `<div class="sum"><b>Najlepsze znalezione rozwiązanie:</b> ${sol()}.</div><p class="msg">Uwaga: ${why}. To rozwiązanie jest całkowite i dopuszczalne, ale <b>nie ma gwarancji, że jest optymalne</b>.</p>`;
+  else if (R.status === 'unknown') h += `<p class="msg">Nie znaleziono rozwiązania całkowitego, ale ${why} – <b>nie wiadomo, czy takie rozwiązanie istnieje</b>.</p>`;
   $(out).innerHTML = h; last.ilp = h;
+  if (R.status === 'infeasible') fail(out, 'Brak rozwiązania całkowitego spełniającego wszystkie ograniczenia (wszystkie gałęzie odcięte).', M.b.map((_, i) => 'b' + i), true);
 };

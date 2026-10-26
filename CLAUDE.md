@@ -5,13 +5,14 @@ Autor: Aleksander Kruszelnicki. Stopka: „Made by Aleksander Kruszelnicki”. J
 Hosting: GitHub Pages (statyczne pliki, bez backendu i bez bundlera). Wykresy: Plotly z CDN.
 
 ## Struktura i zasady kodu
-- Klasyczne skrypty (NIE moduły ES), wspólny zasięg globalny. Kolejność `<script>` w `index.html` ma znaczenie: core → solver → parametric → render → examples → csv → forms → registry → modules/lp → net/netui → net/transport-solver → modules/transport → net/assignment-solver → modules/assignment → net/shortestpath-solver → modules/shortestpath → net/maxflow-solver → modules/maxflow → app.
+- Klasyczne skrypty (NIE moduły ES), wspólny zasięg globalny. Kolejność `<script>` w `index.html` ma znaczenie: core → solver → parametric → ilp-solver → render → examples → csv → forms → registry → modules/lp → net/netui → net/transport-solver → modules/transport → net/assignment-solver → modules/assignment → net/shortestpath-solver → modules/shortestpath → net/maxflow-solver → modules/maxflow → app.
 - `js/solver.js`, `js/parametric.js` to czysta matematyka bez DOM (testowalna w Node). Logika liczenia nie może zależeć od DOM.
 - Nowy moduł = plik w `js/modules/` z `registerModule({id, title, icon, html, init})` + linia `<script>` w `index.html` (po registry.js, przed app.js) + usunięcie z listy SOON. Zakładka, sekcja i eksport PDF (`last[id]`) powstają automatycznie.
 - Modele sieciowe korzystają ze wspólnych komponentów `js/net/netui.js`: `matrixHTML/matrixSync/matrixWire` (edytor macierzy, M = trasa zakazana), `netFail` (błąd pod tabelą), `networkSVG/bipartiteSVG` (rysunek sieci), `netToolsHTML/netToolsWire` (kopiuj/wklej, przykłady, .json, .csv), `matrixToCSV/matrixFromCSV`. Raport modułu to czysta funkcja zwracająca HTML (testowalna).
 - Po każdej zmianie plików `.css`/`.js` podnieś `?v=N` w `index.html` (cache na GitHub Pages).
 - `python3 tools/bundle.py` skleja wszystko w jeden plik (podgląd/wgrywanie z telefonu).
-- Testy: `for t in tests/*.test.js; do node $t; done` – muszą przechodzić przed commitem. Nowa funkcja liczeniowa = nowy test (najlepiej porównanie z wynikiem z WinQSB lub podręcznika).
+- Testy: `for t in tests/*.test.js; do node $t; done` – muszą przechodzić przed commitem. `tests/reference.test.js` jest niezależny od kodu OptiLab (wartości z literatury, przegląd wierzchołków, pełne przeszukiwanie) – nie zmieniaj go, żeby „pasował” do kodu.
+- Solver LP: domyślnie metoda dwufazowa (duże M tylko jako opcja dydaktyczna – bywa niedokładne przy różnych skalach liczb). Statusy: optimal | unbounded | infeasible | limit; `limit` nigdy nie jest traktowany jak optimum. Przy powtórzeniu bazy simpleks przechodzi na regułę Blanda. Ceny dualne `r.y` liczone z tablicy, analiza wrażliwości w `lpSensitivity()` (solver.js), Branch & Bound w `js/ilp-solver.js`. Nowa funkcja liczeniowa = nowy test (najlepiej porównanie z wynikiem z WinQSB lub podręcznika).
 
 ## Decyzje UX (ustalone z autorem)
 - Prostota: laik ma widzieć tylko to, co musi wypełnić. Funkcje dodatkowe tylko w „Opcjach zaawansowanych” (zwijane `details.adv`).

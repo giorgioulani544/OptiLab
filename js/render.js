@@ -22,6 +22,8 @@ function infoHTML(M) {
   const rows = M.A.map((a, i) => `<li>${expr(a)} ${sign(M.rel[i])} ${fmt(M.b[i])}</li>`).join('');
   return `<p><b>${M.maxi ? 'Maksymalizuj' : 'Minimalizuj'}</b> Z = ${expr(M.c)}</p><ul>${rows}${typesLine(M)}</ul>`;
 }
-const failLP = (out, r, M, keep) => r.status === 'unbounded'
+const failLP = (out, r, M, keep) => r.status === 'limit'
+  ? fail(out, `przekroczono limit iteracji simpleksu${r.maxIt ? ' (' + r.maxIt + ')' : ''} – obliczenia przerwano, więc wynik nie jest wiarygodny. Sprawdź dane (bardzo duże lub bardzo małe liczby?) albo spróbuj metody dwufazowej.`, M.c.map((_, j) => 'c' + j), keep)
+  : r.status === 'unbounded'
   ? fail(out, 'Problem nieograniczony – funkcję celu można poprawiać w nieskończoność. Sprawdź, czy brakuje ograniczenia z góry dla zmiennych o dodatnich współczynnikach celu.', M.c.map((_, j) => 'c' + j), keep)
   : fail(out, 'Brak obszaru dopuszczalnego – ograniczenia wzajemnie się wykluczają (np. x ≥ 5 oraz x ≤ 3). Zmień znak lub prawą stronę w jednym z ograniczeń.', M.b.map((_, i) => 'b' + i), keep);

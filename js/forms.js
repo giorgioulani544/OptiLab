@@ -177,6 +177,6 @@ function readModel(k) {
     const ok = rel[i] === '<=' ? 0 <= b[i] : rel[i] === '>=' ? 0 >= b[i] : b[i] === 0;
     if (!ok) return fail(out, `ograniczenie ${i+1} ma same zera po lewej stronie, więc 0 ${rel[i]} ${fmt(b[i])} nigdy nie jest prawdą.`, [`a${i}_0`, 'b' + i]);
   }
-  lastModel = {n, c, A, rel, b, maxi: md.maxi, t: md.t.slice(), method: k === 'simplex' ? ($('#simplex-method')?.value || 'M') : 'M'};
+  lastModel = {n, c, A, rel, b, maxi: md.maxi, t: md.t.slice(), method: k === 'simplex' ? ($('#simplex-method')?.value || '2F') : '2F'};
   return lastModel;
 }

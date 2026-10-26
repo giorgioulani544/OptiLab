@@ -5,16 +5,20 @@
    a punkty załamania jako przecięcia prostych stycznych (nachylenia: d·y dla b, d·x dla c). */
 function parametric(M, mode, base, d, lo, hi) {
   const mk = th => { const m2 = {...M, b: M.b.slice(), c: M.c.slice()}, v = base.map((q, i) => q + th * d[i]); if (mode === 'b') m2.b = v; else m2.c = v; return m2; };
-  const solveAt = th => solveM(mk(th));
+  let hit = false;                                                      // simpleks przekroczył limit iteracji → wynik analizy niewiarygodny
+  const solveAt = th => { const r = solveM(mk(th)); if (r.status === 'limit') hit = true; return r; };
   const close = (u, v) => Math.abs(u - v) <= 1e-9 * (1 + Math.abs(u) + Math.abs(v));
   const badStatus = mode === 'b' ? 'infeasible' : 'unbounded';
-  if (solveM(M).status === 'infeasible') return {error: 'infeasible', segments: []};
+  const st0 = solveM(M).status;
+  if (st0 === 'limit') return {error: 'limit', segments: []};
+  if (st0 === 'infeasible') return {error: 'infeasible', segments: []};
   /* 1) przedział θ, w którym istnieje rozwiązanie: 'b' – dopuszczalność pierwotna, 'c' – dopuszczalność dualna */
   const D = mode === 'c' ? dualOf(M) : null;
   const A0 = mode === 'b' ? M.A : D.A, rel0 = mode === 'b' ? M.rel : D.rel, t0 = mode === 'b' ? M.t : D.t, nn = t0.length;
   const P = {n: nn + 1, c: [...Array(nn).fill(0), 1], A: A0.map((r, i) => [...r, -d[i]]), rel: rel0.slice(), b: base.slice(), t: [...t0, 'u']};
   const up = solveM({...P, maxi: true}), dn = solveM({...P, maxi: false});
   const segments = [];
+  if (up.status === 'limit' || dn.status === 'limit') return {error: 'limit', segments: []};
   if (up.status === 'infeasible' || dn.status === 'infeasible') return {segments: [{start: lo, end: hi, status: badStatus}]};
   const L = Math.max(lo, dn.status === 'unbounded' ? -Infinity : dn.z), H = Math.min(hi, up.status === 'unbounded' ? Infinity : up.z);
   if (!(H - L > 1e-12 * (1 + Math.abs(hi - lo)))) return {segments: [{start: lo, end: hi, status: badStatus}]};
@@ -25,7 +29,7 @@ function parametric(M, mode, base, d, lo, hi) {
     const r = solveAt(th); if (r.status !== 'optimal') return null;
     let s;
     if (mode === 'c') s = d.reduce((t, v, j) => t + v * r.x[j], 0);
-    else { const q = solveM(dualOf(mk(th))); if (q.status !== 'optimal') return null; s = d.reduce((t, v, i) => t + v * q.x[i], 0); }
+    else { const q = solveM(dualOf(mk(th))); if (q.status === 'limit') hit = true; if (q.status !== 'optimal') return null; s = d.reduce((t, v, i) => t + v * q.x[i], 0); }
     return {th, z: r.z, s};
   };
   const val = (ln, th) => ln.z + ln.s * (th - ln.th), pieces = [];
@@ -50,6 +54,7 @@ function parametric(M, mode, base, d, lo, hi) {
     if (l && close(l.beta, beta) && close(l.alpha, alpha)) l.end = p.end; else merged.push({start: p.start, end: p.end, status: 'optimal', alpha, beta});
   });
   merged.forEach(g => { const e = (g.end - g.start) * 1e-7; g.x0 = solveAt(g.start + e).x; g.x1 = solveAt(g.end - e).x; });
+  if (hit) return {error: 'limit', segments: []};
   segments.push(...merged);
   if (H < hi) segments.push({start: H, end: hi, status: badStatus});
   return {segments};

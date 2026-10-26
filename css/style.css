@@ -50,6 +50,8 @@ td.pivot{background:var(--pivot);font-weight:700}
 .tree li{margin:6px 0;padding:6px 8px;border-radius:8px;background:#fff;border:1px solid var(--line)}
 .tree li.int{border-color:var(--ok);background:#e7f5ef}
 .tree li.cut{border-color:#e0a0a0;background:#fbf1f1}
+.tree li.warn{border-color:#d9a400;background:#fff8e1}
+p.msg{background:#fdecea;border:1.5px solid var(--err);color:#8e1b1b;padding:10px 12px;border-radius:8px}
 #plot{width:100%;height:min(60vh,460px);touch-action:none}
 /* Duże ekrany: dane po lewej, wyniki po prawej; czcionka bazowa pozostaje sztywna */
 @media(min-width:1000px){
@@ -144,6 +146,8 @@ label.chk input{width:18px;height:18px;min-height:0}
  .sum{box-shadow:inset 0 0 0 999px #e7f5ef}
  .tree li.int{box-shadow:inset 0 0 0 999px #e7f5ef}
  .tree li.cut{box-shadow:inset 0 0 0 999px #fbf1f1}
+ .tree li.warn{box-shadow:inset 0 0 0 999px #fff8e1}
+ p.msg{box-shadow:inset 0 0 0 999px #fdecea}
  .step{border-left:5px solid var(--accent)}
  svg.netsvg{break-inside:avoid;max-width:100%}
  td.forb{box-shadow:inset 0 0 0 999px #fdecea}

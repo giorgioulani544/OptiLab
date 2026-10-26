@@ -9,6 +9,7 @@ index.html              powłoka: nagłówek, dolny pasek zakładek, sekcje modu
 css/style.css           wszystkie style (w tym druk do PDF)
 js/core.js              narzędzia wspólne (formatowanie liczb, indeksy <sub>)
 js/solver.js            matematyka bez DOM: simpleks, typy zmiennych, dual (testowalne)
+js/ilp-solver.js        Branch & Bound (statusy węzłów, limity, wynik niepewny) – bez DOM, testowalne
 js/parametric.js        analiza parametryczna: dokładne punkty załamania (bez DOM, testowalne)
 js/render.js            HTML tablic, opisu zadania, zadania dualnego
 js/examples.js          przykładowe zadania (wystarczy dopisać wiersz)
