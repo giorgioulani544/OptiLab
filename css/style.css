@@ -134,10 +134,14 @@ label.chk input{width:18px;height:18px;min-height:0}
  header,.app,nav,.credit{display:none!important}
  #print-area{display:block}
  h1,h2,h3,h4{break-after:avoid}
- .step,.sum,img,li{break-inside:avoid}
+ .sum,img,li{break-inside:avoid}
+ .step{break-inside:auto}
+ .step>h4,.step>p,h3,h4{break-after:avoid}
+ p{orphans:3;widows:3}
  img{max-width:100%;height:auto}
- .tw{overflow:visible}
- table{break-inside:auto}
+ .tw{overflow:visible;break-inside:avoid}
+ table{break-inside:avoid}
+ thead{display:table-header-group}
  tr{break-inside:avoid}
  /* Kolory w PDF: oprócz print-color-adjust dublujemy tło „wewnętrznym cieniem" (drukuje się nawet bez opcji „Grafika tła") */
  th{box-shadow:inset 0 0 0 999px #eaf0f5}

@@ -10,7 +10,9 @@ MODULES.forEach(md => {                       // moduły z rejestru: zakładka +
   $('#tab-soon').insertAdjacentHTML('beforebegin', `<section id="tab-${md.id}" hidden>${md.html}</section>`);
 });
 SOON.forEach(([id, name]) => $('nav').insertAdjacentHTML('beforeend', `<button role="tab" class="soon" data-tab="${id}" aria-selected="false">${SOON_ICON}${name}</button>`));
+let curTab = 'graph';                          // bieżąca zakładka – eksport raportu dotyczy tylko jej
 function goTab(t) {
+  curTab = t;
   const soon = SOON.find(x => x[0] === t), title = soon ? soon[1] : TITLES[t];
   document.querySelectorAll('nav button').forEach(x => x.setAttribute('aria-selected', x.dataset.tab === t));
   [...Object.keys(TITLES), 'soon'].forEach(k => $('#tab-' + k).hidden = k !== (soon ? 'soon' : t));
@@ -21,25 +23,33 @@ function goTab(t) {
 document.querySelectorAll('nav button').forEach(b => b.onclick = () => goTab(b.dataset.tab));
 $('#logo').src = $('link[rel=icon]').href;     // logo w nagłówku = ta sama ikona
 $('#btn-export').onclick = async () => {
-  const lp = lastModel && (last.graph || last.simplex || last.ilp);
-  if (!lp && !MODULES.some(md => last[md.id])) {
-    const eb = $('#btn-export'); eb.classList.add('bad'); eb.textContent = 'Najpierw rozwiąż problem';
-    setTimeout(() => { eb.classList.remove('bad'); eb.textContent = 'Eksportuj raport'; }, 2500); return; }
-  let h = `<h1>Raport z obliczeń</h1><p>${new Date().toLocaleDateString('pl-PL')}</p>${lp ? '<h2>Dane wejściowe</h2>' + infoHTML(lastModel) : ''}`;
-  if (lp && last.graph) {
+  // Raport obejmuje WYŁĄCZNIE bieżącą zakładkę (wcześniej łączył wyniki ze wszystkich zakładek)
+  const t = curTab, sec = [];
+  if (t === 'graph' && last.graph) {
     const img = await Plotly.toImage('plot', {format: 'png', width: 900, height: 560});
-    h += `<h2>Metoda graficzna</h2><img src="${img}" style="max-width:100%">${last.graph}`;
+    sec.push(['Metoda graficzna', `<img src="${img}" style="max-width:100%">${last.graph}`]);
   }
-  if (last.simplex) h += `<h2>Metoda simpleks</h2>${last.simplex}`;
-  if (last.dual) h += `<h2>Zadanie dualne</h2>${last.dual}`;
-  if (last.par) h += `<h2>Analiza parametryczna</h2>${last.par}`;
-  if (last.ilp) h += `<h2>Programowanie całkowitoliczbowe</h2><div class="tree">${last.ilp}</div>`;
-  MODULES.forEach(md => { if (last[md.id]) h += `<h2>${md.title}</h2>${last[md.id]}`; });
-  const pa = $('#print-area'); pa.innerHTML = h;
-  // Zmierz tabele w szerokości A4 (~690 px) i zmniejsz zbyt szerokie, żeby nic nie było ucięte
+  if (t === 'simplex') { if (last.simplex) sec.push(['Metoda simpleks', last.simplex]); if (last.dual) sec.push(['Zadanie dualne', last.dual]); if (last.par) sec.push(['Analiza parametryczna', last.par]); }
+  if (t === 'ilp' && last.ilp) sec.push(['Programowanie całkowitoliczbowe', `<div class="tree">${last.ilp}</div>`]);
+  const md = MODULES.find(x => x.id === t); if (md && last[md.id]) sec.push([md.title, last[md.id]]);
+  if (!sec.length) {
+    const eb = $('#btn-export'); eb.classList.add('bad'); eb.textContent = 'Najpierw rozwiąż zadanie w tej zakładce';
+    setTimeout(() => { eb.classList.remove('bad'); eb.textContent = 'Eksportuj raport'; }, 2500); return;
+  }
+  const pa = $('#print-area');
+  pa.innerHTML = `<h1>Raport z obliczeń – ${TITLES[t]}</h1><p>${new Date().toLocaleDateString('pl-PL')}</p>` + sec.map(([ti, body]) => `<h2>${ti}</h2>${body}`).join('');
   pa.querySelectorAll('details').forEach(d => d.open = true);
+  // Nagłówek tabeli jako <thead>: gdy długa tabela przechodzi na kolejną stronę, nagłówek powtarza się na każdej stronie
+  pa.querySelectorAll('table').forEach(tb => { const r = tb.rows[0]; if (r && !tb.tHead && [...r.cells].every(c => c.tagName === 'TH')) tb.createTHead().appendChild(r); });
+  // Szerokie tabele zmniejszamy czcionką (nie „zoom" – ten psuje dzielenie na strony w Chrome), aż zmieszczą się w A4 (~690 px)
   pa.style.cssText = 'display:block;position:absolute;left:-9999px;width:690px;font-size:10pt';
-  pa.querySelectorAll('table').forEach(t => { const w = t.scrollWidth; if (w > 690) t.style.zoom = (690 / w).toFixed(3); });
+  pa.querySelectorAll('table').forEach(tb => {
+    for (let k = 0; k < 4 && tb.scrollWidth > 690; k++) {
+      const cur = parseFloat(getComputedStyle(tb).fontSize) || 11.3;
+      tb.style.fontSize = Math.max(5, cur * 690 / tb.scrollWidth * 0.97).toFixed(2) + 'px';
+      tb.querySelectorAll('td,th').forEach(c => { c.style.padding = '1px 3px'; c.style.minWidth = '0'; });
+    }
+  });
   pa.style.cssText = ''; window.print();
 };
 

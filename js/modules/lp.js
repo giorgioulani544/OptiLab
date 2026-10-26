@@ -97,6 +97,7 @@ $('#btn-dual').onclick = () => {
 };
 $('#btn-simplex').onclick = () => {
   const out = '#out-simplex', M = readModel('simplex'); if (!M) return;
+  $('#out-dual').innerHTML = $('#out-par').innerHTML = ''; last.dual = last.par = null;   // stare wyniki mogłyby dotyczyć innych danych
   const rec = [], r = solveM(M, [], rec);
   let h = infoHTML(M);
   rec.forEach((s, k) => h += `<div class="step"><h4>Krok ${k + 1}</h4><p>${s.text}</p>${tableHTML(s)}</div>`);
