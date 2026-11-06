@@ -1,7 +1,7 @@
 # OptiLab – Badania Operacyjne
 Made by Aleksander Kruszelnicki
 
-Moduły: Metoda graficzna, Simpleks (duże M / dwufazowa, dual, analiza wrażliwości i parametryczna), Programowanie całkowitoliczbowe (Branch & Bound), Transport, Przydział, Najkrótsza ścieżka, Maksymalny przepływ.
+Moduły: Prognozowanie, Zapasy, PERT/CPM, Harmonogramowanie, Metoda graficzna, Simpleks (duże M / dwufazowa, dual, analiza wrażliwości i parametryczna), Programowanie całkowitoliczbowe (Branch & Bound), Transport, Przydział, Najkrótsza ścieżka, Maksymalny przepływ.
 
 ## Struktura
 ```
@@ -23,6 +23,17 @@ js/net/assignment-solver.js  metoda węgierska (kroki, pokrycie zer, rozwiązani
 js/modules/assignment.js     moduł Przydział
 js/net/shortestpath-solver.js  Dijkstra i Bellman-Ford (ujemne cykle, ścieżki alternatywne) – bez DOM
 js/modules/shortestpath.js   moduł Najkrótsza ścieżka (lista krawędzi lub macierz wag)
+js/stats.js             rozkłady statystyczne, odwrotne dystrybuanty, generator liczb losowych ze ziarnem
+js/viz.js               wykresy SVG: Gantt, histogram, liniowy (drukowalne)
+js/pm/cpm-solver.js     PERT/CPM: harmonogram, rezerwy, ścieżki krytyczne, PERT, skracanie (LP), Monte Carlo – bez DOM
+js/modules/cpm.js       moduł PERT/CPM
+js/pm/sched-solver.js   harmonogramowanie: reguły jednej maszyny, Johnson, CDS, Palmer, Dannenbring, NEH, LPT, McNaughton – bez DOM
+js/modules/scheduling.js  moduł Harmonogramowanie
+js/inv/inventory-solver.js  zapasy: EOQ, EPQ, braki, rabaty, zapas bezpieczeństwa, gazeciarz – bez DOM
+js/modules/inventory.js moduł Zapasy
+js/fc/forecast-solver.js    prognozowanie: 8 metod, miary błędów, dobór parametrów – bez DOM
+js/modules/forecast.js  moduł Prognozowanie
+PROGRESS.md             stan prac nad kolejnymi modułami
 js/net/maxflow-solver.js     Ford-Fulkerson / Edmonds-Karp, przekrój minimalny, superźródło – bez DOM
 js/modules/maxflow.js        moduł Maksymalny przepływ (sieć rezydualna w każdej iteracji)
 js/registry.js          rejestr modułów (registerModule) i lista modułów „wkrótce"

@@ -1,0 +1,26 @@
+// Funkcje statystyczne: wartości z tablic statystycznych (wpisane ręcznie) i własności rozkładów
+const {load} = require('./helpers');
+const c = load(['js/stats.js']), S = require('vm').runInContext('ST', c);
+let ok = 0, bad = 0; const t = (n, v) => { v ? ok++ : (bad++, console.log('BŁĄD:', n)); };
+const near = (a, b, tol = 1e-6) => Math.abs(a - b) <= tol;
+t('Γ(5) = 24, Γ(0,5) = √π', near(S.gamma(5), 24, 1e-9) && near(S.gamma(0.5), Math.sqrt(Math.PI), 1e-9));
+t('Φ(1,96) = 0,97500', near(S.normCdf(1.96), 0.9750021, 1e-6));
+t('Φ(−1) = 0,15866, Φ(0) = 0,5', near(S.normCdf(-1), 0.1586553, 1e-6) && near(S.normCdf(0), 0.5, 1e-12));
+t('Φ⁻¹(0,975) = 1,95996, Φ⁻¹(0,95) = 1,64485', near(S.normInv(0.975), 1.959964, 1e-6) && near(S.normInv(0.95), 1.644854, 1e-6));
+t('Φ⁻¹(Φ(x)) = x dla x od −6 do 6', [-6, -3.3, -1, 0.2, 2.5, 6].every(x => near(S.normInv(S.normCdf(x)), x, 1e-7)));
+t('t: kwantyl 0,975 dla 10 st. swobody = 2,22814', near(S.tInv(0.975, 10), 2.228139, 1e-5));
+t('t: kwantyl 0,95 dla 5 st. swobody = 2,01505', near(S.tInv(0.95, 5), 2.015048, 1e-5));
+t('χ²: kwantyl 0,95 dla 5 st. swobody = 11,0705', near(S.chi2Inv(0.95, 5), 11.0705, 1e-3));
+t('χ²: kwantyl 0,99 dla 1 st. swobody = 6,6349', near(S.chi2Inv(0.99, 1), 6.634897, 1e-4));
+t('Poisson λ = 1: P(X ≤ 2) = 0,919699', near(S.poissonCdf(2, 1), 0.9196986, 1e-6));
+t('dwumianowy n = 10, p = 0,5: P(X ≤ 3) = 0,171875', near(S.binomCdf(3, 10, 0.5), 0.171875, 1e-9));
+t('hipergeometryczny: suma prawdopodobieństw = 1', near([0, 1, 2, 3, 4, 5].reduce((s, k) => s + S.hyperPmf(k, 20, 7, 5), 0), 1, 1e-12));
+t('wykładniczy i Erlang (k = 1) zgodne', near(S.expCdf(2, 0.7), S.erlangCdf(2, 1, 0.7), 1e-9));
+const R1 = S.rng(7), R2 = S.rng(7), a = Array.from({length: 5}, () => R1.u()), b = Array.from({length: 5}, () => R2.u());
+t('generator: to samo ziarno → te same liczby', a.join() === b.join());
+const R = S.rng(2024), N = 200000; let m = 0, v = 0; for (let i = 0; i < N; i++) { const z = R.normal(); m += z; v += z * z; } m /= N; v = v / N - m * m;
+t('próbnik normalny: średnia ≈ 0, wariancja ≈ 1', Math.abs(m) < 0.01 && Math.abs(v - 1) < 0.02);
+let mp = 0; for (let i = 0; i < N; i++) mp += R.betaPert(2, 5, 14); mp /= N;
+t('Beta-PERT(2, 5, 14): średnia ≈ (a + 4m + b)/6 = 6', Math.abs(mp - 6) < 0.03);
+let me = 0; for (let i = 0; i < N; i++) me += R.exp(0.5); me /= N; t('próbnik wykładniczy λ = 0,5: średnia ≈ 2', Math.abs(me - 2) < 0.02);
+console.log(`Testy funkcji statystycznych: ${ok} OK, ${bad} błędów`); process.exit(bad ? 1 : 0);

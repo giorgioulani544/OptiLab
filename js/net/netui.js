@@ -186,3 +186,65 @@ function matrixFromCSV(text, o) {
   if (o.xr && !st.xr) throw new Error(`brak wiersza „${o.xr}".`);
   return st;
 }
+
+/* ---------- edytor tabeli wierszy (czynności, zadania): cols = [{key, label, type: 'name'|'text'|'num', blank}] ---------- */
+function rowTableHTML(p, cols, rows, o = {}) {
+  const inp = (c, r, i) => c.type === 'num'
+    ? `<input class="num" data-num${c.blank ? ' data-blank' : ''} inputmode="decimal" id="${p}${c.key}${i}" value="${esc(r[c.key] ?? '')}" aria-label="${esc(c.label)} ${i + 1}">`
+    : `<input class="${c.type === 'name' ? 'nm' : 'tx'}" id="${p}${c.key}${i}" value="${esc(r[c.key] ?? '')}" aria-label="${esc(c.label)} ${i + 1}"${c.ph ? ` placeholder="${esc(c.ph)}"` : ''}>`;
+  return `<div class="tw"><table class="mx rt"><tr>${cols.map(c => `<th>${c.label}</th>`).join('')}<th></th></tr>` +
+    rows.map((r, i) => '<tr>' + cols.map(c => `<td>${inp(c, r, i)}</td>`).join('') + `<td><button type="button" class="ghost" data-del="${i}" aria-label="usuń wiersz ${i + 1}">✕</button></td></tr>`).join('') +
+    `</table></div><div class="crow"><button id="${p}add" type="button" class="ghost">${o.addLabel || '+ wiersz'}</button><span class="hint">${o.count ? o.count(rows.length) : rows.length}</span></div>`;
+}
+const rowTableSync = (p, cols, rows) => rows.map((r, i) => { const o = {...r}; cols.forEach(c => { const el = $('#' + p + c.key + i); if (el) o[c.key] = el.value; }); return o; });
+/* CSV tabeli wierszy (polski Excel): najpierw wiersze „klucz;wartość" (np. tryb), potem nagłówek i dane */
+function rowsToCSV(cols, rows, meta = []) {
+  const q = s => /[;"\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s, v = (x, c) => c.type === 'num' ? String(x ?? '').replace('.', ',') : String(x ?? '');
+  return '\uFEFF' + [...meta.map(([k, x]) => [k, String(x)]), cols.map(c => c.label), ...rows.map(r => cols.map(c => v(r[c.key], c)))].map(r => r.map(x => q(String(x))).join(';')).join('\r\n') + '\r\n';
+}
+function rowsFromCSV(text, cols, metaKeys = []) {
+  const lines = String(text).replace(/^\uFEFF/, '').split(/\r?\n/), first = lines.find(l => l.trim());
+  if (!first) throw new Error('plik jest pusty.');
+  const sep = first.includes(';') ? ';' : first.includes('\t') ? '\t' : ',';
+  const split = l => { const out = []; let cur = '', qq = false; for (let i = 0; i < l.length; i++) { const ch = l[i];
+    if (qq) { if (ch === '"' && l[i + 1] === '"') { cur += '"'; i++; } else if (ch === '"') qq = false; else cur += ch; } else if (ch === '"') qq = true; else if (ch === sep) { out.push(cur.trim()); cur = ''; } else cur += ch; } out.push(cur.trim()); return out; };
+  const norm = s => s.toLowerCase().replace(/\s+/g, ' ').trim(), meta = {}, rows = []; let map = null;
+  lines.forEach((raw, k) => {
+    if (!raw.trim()) return; const c = split(raw), ln = k + 1;
+    if (!map) {
+      const hit = c.map(x => cols.findIndex(col => norm(col.label) === norm(x)));
+      if (hit.filter(x => x >= 0).length >= Math.min(2, cols.length)) { map = hit; const miss = cols.filter((col, ci) => !col.blank && col.req !== false && !hit.includes(ci)); if (miss.length) throw new Error(`wiersz ${ln}: brak kolumny „${miss[0].label}".`); return; }
+      const key = norm(c[0] || ''); if (metaKeys.includes(key)) meta[key] = c.slice(1).join(';'); else throw new Error(`wiersz ${ln}: nie rozpoznano nagłówka tabeli (oczekiwane kolumny: ${cols.map(x => x.label).join(', ')}).`);
+      return;
+    }
+    const r = {}; cols.forEach(col => { r[col.key] = ''; });
+    map.forEach((ci, pos) => { if (ci < 0) return; const col = cols[ci]; let v = (c[pos] ?? '').trim();
+      if (col.type === 'num' && v !== '') { const x = Number((sep === ',' ? v : v.replace(',', '.')).replace(/\s/g, '')); if (!isFinite(x)) throw new Error(`wiersz ${ln}: „${v}" w kolumnie „${col.label}" nie jest liczbą.`); v = String(x); }
+      r[col.key] = v; });
+    rows.push(r);
+  });
+  if (!map) throw new Error('nie znaleziono wiersza nagłówka tabeli.');
+  if (!rows.length) throw new Error('brak wierszy z danymi.');
+  return {meta, rows};
+}
+
+/* ---------- formularz parametrów liczbowych: fields = [{key, label, unit, blank, ph}] ---------- */
+const paramFormHTML = (p, fields, vals) => '<div class="pf">' + fields.map(f => `<div class="crow pfr"><label for="${p}${f.key}">${f.label}</label><input class="num" data-num${f.blank ? ' data-blank' : ''} inputmode="decimal" id="${p}${f.key}" value="${esc(vals[f.key] ?? '')}"${f.ph ? ` placeholder="${esc(f.ph)}"` : ''}>${f.unit ? `<span class="hint">${f.unit}</span>` : ''}</div>`).join('') + '</div>';
+const paramSync = (p, fields, vals) => { fields.forEach(f => { const el = $('#' + p + f.key); if (el) vals[f.key] = el.value; }); return vals; };
+/* CSV „parametr;wartość" + opcjonalna tabela (np. progi rabatowe) */
+function paramsToCSV(meta, cols = null, rows = null) {
+  const v = x => /^-?\d+(\.\d+)?$/.test(String(x)) ? String(x).replace('.', ',') : String(x);
+  return '\uFEFF' + [...meta.map(([k, x]) => `${k};${v(x)}`), ...(cols && rows && rows.length ? ['', cols.map(c => c.label).join(';'), ...rows.map(r => cols.map(c => v(r[c.key] ?? '')).join(';'))] : [])].join('\r\n') + '\r\n';
+}
+function paramsFromCSV(text, keys, cols = null) {
+  const lines = String(text).replace(/^\uFEFF/, '').split(/\r?\n/), meta = {}, rows = []; let inTable = false, map = null;
+  const num = (s, ln, what) => { const t = String(s).trim().replace(/\s/g, '').replace(',', '.'); if (t === '') return ''; const x = Number(t); if (!isFinite(x)) throw new Error(`wiersz ${ln}: „${s}" (${what}) nie jest liczbą.`); return String(x); };
+  lines.forEach((raw, k) => {
+    if (!raw.trim()) return; const c = raw.split(';').map(s => s.trim()), ln = k + 1, key = c[0].toLowerCase();
+    if (cols && !inTable && cols.some(col => col.label.toLowerCase() === key)) { inTable = true; map = c.map(x => cols.findIndex(col => col.label.toLowerCase() === x.toLowerCase())); return; }
+    if (inTable) { const r = {}; map.forEach((ci, pos) => { if (ci >= 0) r[cols[ci].key] = num(c[pos] ?? '', ln, cols[ci].label); }); rows.push(r); return; }
+    const kk = keys.find(x => x.toLowerCase() === key); if (!kk) throw new Error(`wiersz ${ln}: nieznany parametr „${c[0]}".`);
+    meta[kk] = kk === 'model' || kk.startsWith('typ') || kk.startsWith('rodzaj') ? (c[1] || '') : num(c[1] ?? '', ln, kk);
+  });
+  return {meta, rows};
+}
