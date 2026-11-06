@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OptiLab – Badania Operacyjne</title>
+<!-- Ikona skrótu: favicon + ikona iOS (wbudowane), manifest dla Androida/PC (pliki obok index.html) -->
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAkFBMVEX///78+/f6+fb39vPx8e7w8O3w7+zv7+zu7uvs7Orp6efd397Q0tLFycq2u72qr7Oiqa2WnaOHkJd7hY1zfYZqdX9daXRSX2tLWGVDUV88S1k7SVg6SVc6SFc5SFc5SFY5R1Y4R1Y4R1U3R1U4RlU3RlU2RVQ1RFMzQlIwQFAuPU0rO0sqOkopOkonOEgdLkByq1zuAAAECUlEQVR42u2X23arNhCGsXEaDAJxkATIWLZSoyOH93+7CozTJI69V2gvutbuXGBg6f8YjaSZsdf+Q/N+E0BzM74OIGw3m+01XwHgsk5hOhvE+rQCoCp/M9vWy/pmFSAM9pOF27xbCdgFr872m38PwI9sNYA3DRPamrWAi+p6eywRlm+rAAdZFWkchR5QfBWAmtgLk3i3zZZwrPCgtGUY+sSwlUEUA9nGScTFfRDFzZ4BDtbpeQRve/IdcNIlWCzC5vgwBp3TG+zhZQYfAcS/2s4r7COAMU7Phixi4nIPeA1m2/voW0AQbNCIt7FQLa0lb+8Bu9fZ9ttvAUGwza961krF258CrvpNbNQ0ed7+FHDTq5KK70/jFRAEC+B0S4NsBuwXvcZJqfhjQPDiBzPgoPtuSYQT4GXWe4kqcnJqH3uw9/eRHziAUWhJg2nGJg/8Wa9JVpj2MSDwQ6LhJnQAC73tNQ1GjQO47yMvMagoqtv6fwMo/bDsqY19HxmT+uGcB3eg0dXuqscpVo/T+smQsBxhWCngOQDc7KcVCfwJUEz6HmXkyzH5BOC6JCPcBJGog8J+ADDRTHqLE2z45UlhOckh9YrKjweM9EdA0zt9lWdYnZ/VRt7a1MutxR4c+MEugL0fHYY5fiivFX8C4G+Tvj8e+sLVH7oA3L6Y568xIqrlT6oz57PeJYmmz7wpBtv9oi/c94sMd6fn5f2mby/cJhs8pt7+j0UPXfyRYk/7A65n/6/3QsW7SoJtuOhrlBLLnzYYroLv8uF2ApmiUXSuI3836y2GWPz5vEPhqkbm7zk2utyBrgxn/WXaf+LXLc6n3qOxZJMM9eD0VZpi2fJfAz7HeF7M6fvmlCPdXn7eZE2LCTfQXITg4rKmSzu5A52aZ77fA/jxOI0/McZ4y1qK3Kvpwa3LbcR8w+YB9wCm+l67EdqlMcl0Z8fOvFlnbWvEkl6NEwozDbhP69xWRVFaLghCqDakwKggCiOM2IXMmdglR6K4pBghTNXXwsJMHiVJlBsBQBIDWiQgSjKdRhGkB1BOq8xMvKulLsPEDXgvTQvgbEhUDUMVYQvqcYzzYczTUR+mK6czgBkcw3RQJB5GDYg+fwI0Q5YOlE5XkBZZRKTN0o42XQbtBFCMH7sEK1CbMozjKNZfptAMeTIqNSbZAGIIiZ5ZTbN4UHVa6fIFZi/5SEBJyvi94bvlA0mjrKqyqNagHAfNnUtwaFgNk5pRgKuy7GGS5xlQBFRVHWfDlwbjrKvEha/SAhJFTy3r8qxjErp3tE1ADFKa0KEfElwD9wTpfX+geko7143L94ZnukjpfuTU9zApDs1ZMeHeSCsvdxuJMynZk60r5n299FZH/rv96fof8F8H/AUUpftul9XDNwAAAABJRU5ErkJggg==">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#374655">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OptiLab">
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+<link rel="stylesheet" href="css/style.css?v=12">
+</head>
+<body>
+<header>
+ <img id="logo" alt="" width="40" height="40" style="border-radius:10px"><h1>OptiLab</h1><span id="tabname">Metoda graficzna</span>
+ <button id="btn-export" class="ghost" type="button">Eksportuj raport</button>
+</header>
+<div class="app">
+ <section id="tab-graph"><div class="card split">
+  <div id="graph-top"></div>
+  <div class="crow"><button id="btn-graph" type="button">Rysuj i rozwiąż</button><label id="g-int-wrap"><input type="checkbox" id="g-int" style="width:20px;height:20px;min-height:0"> pokaż punkty całkowite</label></div>
+  <div id="plot"></div>
+  <div class="crow"><button id="z-in" class="ghost" type="button" aria-label="Przybliż">＋</button><button id="z-out" class="ghost" type="button" aria-label="Oddal">−</button>
+   <button id="z-reset" class="ghost" type="button">Reset widoku</button><button id="z-lock" class="ghost" type="button" aria-pressed="true">Przesuwanie: wł.</button></div>
+  <p class="hint">Jeden palec – przesuń, dwa palce – przybliż lub oddal (na komputerze: przeciągnij i kółko myszy). Stuknij wierzchołek, by zobaczyć współrzędne i Z. Gdy chcesz przewijać stronę, wyłącz „Przesuwanie".</p><div id="out-graph"></div>
+ </div></section>
+ <section id="tab-simplex" hidden><div class="card split">
+  <div id="simplex-top"></div>
+  <div class="crow" id="method-box"><label for="simplex-method">Zmienne sztuczne (ograniczenia ≥ i =):</label><select id="simplex-method"><option value="2F" selected>metoda dwufazowa</option><option value="M">metoda dużego M</option></select><span class="hint">Dwufazowa jest stabilniejsza numerycznie; duże M bywa niedokładne, gdy liczby w zadaniu mają bardzo różne rzędy wielkości.</span></div>
+  <div><button id="btn-simplex" type="button">Rozwiąż krok po kroku</button> <button id="btn-dual" class="ghost" type="button">Zadanie dualne</button></div>
+  <div id="par-box"><h4>Analiza parametryczna</h4>
+   <p class="hint">Sprawdź, jak zmienia się wynik, gdy jedna wartość zmienia się w zadanym zakresie.</p>
+   <div class="crow"><label for="par-what">Zmieniaj</label><select id="par-what"><option value="b">prawą stronę</option><option value="c">współczynnik celu</option></select><select id="par-idx" aria-label="Którą wartość"></select></div>
+   <div class="crow"><label for="simplex-par-from">od</label><input class="num" id="simplex-par-from" data-num inputmode="decimal" value="0"><label for="simplex-par-to">do</label><input class="num" id="simplex-par-to" data-num inputmode="decimal" value="100"><button id="btn-par" class="ghost" type="button">Policz</button></div>
+   <details class="adv"><summary>Kierunek zmian (kilka wartości naraz)</summary>
+    <p class="hint">Zamiast jednej wartości: b(θ) = b + θ·d albo c(θ) = c + θ·d. Wpisz kierunek d oddzielony średnikami (jedna liczba na każde ograniczenie lub zmienną), np. 1; 0; 2. Wtedy „od–do" dotyczy θ, a wybrana wyżej pozycja jest pomijana.</p>
+    <div class="crow"><input id="simplex-par-dir" style="width:100%" inputmode="text" placeholder="np. 1; 0; 2" aria-label="Kierunek zmian"></div></details></div>
+  <div id="out-simplex"></div><div id="out-dual"></div><div id="out-par"></div>
+ </div></section>
+ <section id="tab-ilp" hidden><div class="card split">
+  <div id="ilp-top"></div>
+  <div class="crow" id="ilp-opts"><label for="ilp-branch">Podział:</label><select id="ilp-branch"><option value="first">pierwsza ułamkowa</option><option value="most">najbardziej ułamkowa</option></select>
+   <label for="ilp-search">Przeszukiwanie:</label><select id="ilp-search"><option value="dfs">w głąb (DFS)</option><option value="best">najlepsza granica</option></select></div>
+  <button id="btn-ilp" type="button">Rozwiąż (Branch &amp; Bound)</button>
+  <div id="out-ilp" class="tree"></div>
+ </div></section>
+ <section id="tab-soon" hidden><div class="card"><h2 id="soon-title"></h2>
+  <p>Witaj użytkowniku. Niestety ten moduł nie jest jeszcze dostępny. Zostanie on dodany w przyszłych aktualizacjach programu. Pozdrawiam!</p></div></section>
+ <p class="credit">Made by Aleksander Kruszelnicki</p>
+</div>
+<nav role="tablist">
+ <button role="tab" data-tab="graph" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v16h16"/><path d="M8 15l4-5 3 3 4-6"/></svg>Wykres</button>
+ <button role="tab" data-tab="simplex" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>Simpleks</button>
+ <button role="tab" data-tab="ilp" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/><path d="M12 7v4M12 11l-6 6M12 11l6 6"/></svg>Całkowite</button>
+</nav>
+<div id="print-area"></div>
+
+<script src="js/core.js?v=12"></script>
+<script src="js/stats.js?v=12"></script>
+<script src="js/viz.js?v=12"></script>
+<script src="js/solver.js?v=12"></script>
+<script src="js/parametric.js?v=12"></script>
+<script src="js/ilp-solver.js?v=12"></script>
+<script src="js/render.js?v=12"></script>
+<script src="js/examples.js?v=12"></script>
+<script src="js/csv.js?v=12"></script>
+<script src="js/forms.js?v=12"></script>
+<script src="js/registry.js?v=12"></script>
+<script src="js/modules/lp.js?v=12"></script>
+<script src="js/net/netui.js?v=12"></script>
+<script src="js/net/transport-solver.js?v=12"></script>
+<script src="js/modules/transport.js?v=12"></script>
+<script src="js/net/assignment-solver.js?v=12"></script>
+<script src="js/modules/assignment.js?v=12"></script>
+<script src="js/net/shortestpath-solver.js?v=12"></script>
+<script src="js/modules/shortestpath.js?v=12"></script>
+<script src="js/net/maxflow-solver.js?v=12"></script>
+<script src="js/modules/maxflow.js?v=12"></script>
+<script src="js/pm/cpm-solver.js?v=12"></script>
+<script src="js/modules/cpm.js?v=12"></script>
+<script src="js/pm/sched-solver.js?v=12"></script>
+<script src="js/modules/scheduling.js?v=12"></script>
+<script src="js/inv/inventory-solver.js?v=12"></script>
+<script src="js/modules/inventory.js?v=12"></script>
+<script src="js/fc/forecast-solver.js?v=12"></script>
+<script src="js/modules/forecast.js?v=12"></script>
+<script src="js/app.js?v=12"></script>
+</body>
+</html>

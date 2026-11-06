@@ -1,0 +1,38 @@
+// Moduły PERT/CPM i Harmonogramowanie: raporty dydaktyczne, CSV, walidacja plików, bezpieczeństwo nazw, rejestracja
+const vm = require('vm'), {order, load} = require('./helpers');
+const stub = new Proxy(function () {}, {get: (t, k) => k === 'forEach' ? () => {} : k === Symbol.toPrimitive ? () => '' : stub, set: () => true, apply: () => stub});
+const c = load(order, {document: {querySelector: () => stub, querySelectorAll: () => []}, window: {scrollTo() {}}, navigator: {}, Plotly: {}, setTimeout, console});
+const get = code => vm.runInContext(code, c);
+let ok = 0, bad = 0; const t = (n, v) => { v ? ok++ : (bad++, console.log('BŁĄD:', n)); };
+const ex = k => get(`JSON.parse(JSON.stringify(CP_EXAMPLES[${k}].data))`), toP = d => { const ch = c.cpmCheck(d.acts.map(a => a.name), d.acts.map(a => a.preds));
+  return d.mode === 'pert' ? {names: d.acts.map(a => a.name), preds: ch.preds, pert: d.acts.map(a => ({a: +a.a, m: +a.m, b: +a.b}))} : {names: d.acts.map(a => a.name), preds: ch.preds, d: d.acts.map(a => +a.t)}; };
+let P = toP(ex(0)), R = c.cpmSolve(P), h = c.cpReportHTML(P, R, {tq: 47, pq: 0.95, mc: c.cpmMonteCarlo(P, R, 5000, 1), indep: true});
+t('PERT/CPM: przejście w przód i wstecz, rezerwy, ścieżka krytyczna', /Przejście w przód/.test(h) && /Przejście wstecz/.test(h) && /Rezerwa niezależna/.test(h) && /A → B → C → E → F → J → L → N/.test(h));
+t('PERT/CPM: P(T ≤ 47) = 84,13% i termin dla 95%', /P\(T ≤ 47\)<\/b> = Φ/.test(h) && /84,13%/.test(h) && /48,9346/.test(h));
+t('PERT/CPM: Gantt, sieć, histogram Monte Carlo, indeks krytyczności', /class="vzsvg"/.test(h) && /class="netsvg"/.test(h) && /Indeks krytyczności/.test(h) && /Symulacja Monte Carlo/.test(h));
+P = toP(ex(1)); R = c.cpmSolve(P); h = c.cpReportHTML(P, R, {});
+t('CPM: dwie ścieżki krytyczne opisane', R.paths.length === 2 && /Ścieżki krytyczne \(2\)/.test(h) && /więcej niż jedna ścieżka krytyczna/.test(h));
+const d2 = ex(2); P = toP(d2); R = c.cpmSolve(P); const cr = d2.acts.map(a => ({dc: +a.dc, cn: +a.cn, cc: +a.cc})), C = c.cpmCrash(P, R, cr, 14, 400);
+h = c.cpReportHTML(P, R, {crash: {...C, target: 14, cr, overhead: 400}});
+t('skracanie: plan, krzywa czas–koszt, optimum kosztu całkowitego', C.status === 'optimal' && /Skrócenie do 14/.test(h) && /Krzywa czas – koszt/.test(h) && /Optimum kosztu całkowitego/.test(h));
+t('skracanie: termin poniżej minimum → komunikat', c.cpmCrash(P, R, cr, C.Tmin - 1, 0).status === 'infeasible');
+const cy = ex(4); t('przykład z cyklem: cykl wykryty', !!c.cpmCheck(cy.acts.map(a => a.name), cy.acts.map(a => a.preds)).cycle);
+h = c.cpReportHTML({names: ['<b>x</b>', 'Y'], preds: [[], [0]], d: [2, 3]}, c.cpmSolve({names: ['<b>x</b>', 'Y'], preds: [[], [0]], d: [2, 3]}), {});
+t('PERT/CPM: nazwy bezpiecznie wyświetlane', !/<b>x<\/b>/.test(h) && /&lt;b&gt;x/.test(h));
+const cols = get('CP_CSV_COLS'), acts = ex(0).acts, csv = get(`rowsToCSV(CP_CSV_COLS, ${JSON.stringify(acts)}, [['tryb', 'pert']])`), back = get(`rowsFromCSV(${JSON.stringify(csv)}, CP_CSV_COLS, ['tryb'])`);
+t('PERT/CPM CSV: eksport → import (tryb, poprzedniki z przecinkami, liczby)', back.meta.tryb === 'pert' && back.rows.length === 14 && back.rows[7].preds === 'E, G' && back.rows[1].m === '3.5');
+let th = ''; try { get('rowsFromCSV("Czynność;Poprzedniki;Czas\\nA;;abc", CP_CSV_COLS, [])'); } catch (e) { th = e.message; } t('CSV: błąd z numerem wiersza i kolumną', /wiersz 2: „abc" w kolumnie „Czas"/.test(th));
+th = ''; try { get('cpNormalize({acts: []})'); } catch (e) { th = e.message; } t('plik bez czynności odrzucony', /brak listy czynności/.test(th));
+// harmonogramowanie
+const sx = k => get(`JSON.parse(JSON.stringify(SC_EXAMPLES[${k}].data))`);
+const I1 = (d => ({mode: 'single', names: d.jobs.map(j => j.name), p: d.jobs.map(j => +j.p), d: d.jobs.map(j => +j.d), w: d.jobs.map(j => +j.w)}))(sx(0));
+h = c.scReportHTML(I1, 'SPT'); t('jedna maszyna: porównanie reguł, najlepsze wartości, Gantt', /SPT – najkrótszy czas/.test(h) && /class="best"/.test(h) && /class="vzsvg"/.test(h) && /Średni czas przepływu/.test(h));
+h = c.scReportHTML((d => ({mode: 'single', names: d.jobs.map(j => j.name), p: d.jobs.map(j => +j.p), d: d.jobs.map(j => +j.d), w: d.jobs.map(j => +j.w)}))(sx(1)), 'MH');
+t('Moore-Hodgson: kroki usuwania zadań', /usuwamy najdłuższe zadanie/.test(h));
+const fl = (d, mode) => ({mode, names: d.jobs.map(j => j.name), P: d.jobs.map(j => j.mt.slice(0, d.three ? 3 : d.m || 2).map(Number)), m: d.three ? 3 : (d.m || 2)});
+h = c.scReportHTML(fl(sx(2), 'two')); t('Johnson: kroki i potwierdzenie optimum', /reguła Johnsona/.test(h) && /potwierdza optimum/.test(h));
+h = c.scReportHTML(fl(sx(3), 'two')); t('trzy maszyny: warunek sprawdzony', /Warunek jest spełniony/.test(h));
+h = c.scReportHTML(fl(sx(4), 'flow')); t('flow shop: CDS, Palmer, Dannenbring, NEH, optimum przeglądem', /CDS/.test(h) && /Palmer/.test(h) && /Dannenbring/.test(h) && /NEH/.test(h) && /Optimum \(przegląd/.test(h));
+h = c.scReportHTML({mode: 'par', names: sx(5).jobs.map(j => j.name), p: sx(5).jobs.map(j => +j.p), m: 3}); t('maszyny równoległe: LPT i McNaughton', /LPT/.test(h) && /McNaughton/.test(h) && /optimum/.test(h));
+t('moduły zarejestrowane, usunięte z listy „wkrótce"', get("['cpm','sched'].every(id => MODULES.some(m => m.id === id)) && !SOON.some(s => s[0] === 'pert' || s[0] === 'job')"));
+console.log(`Testy modułów PERT/CPM i Harmonogramowanie: ${ok} OK, ${bad} błędów`); process.exit(bad ? 1 : 0);
