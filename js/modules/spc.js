@@ -127,8 +127,8 @@ function qcReportHTML(X) {
   if (keep) keep.forEach((k, i) => { if (!k) flags.add(i); });
   h += VZ.control(M.stat, M.cl, M.ucl, M.lcl, {flags, sig: M.sigma, title: 'Karta ' + M.name, yLabel: M.name});
   if (L.disp) h += VZ.control(L.disp.stat, L.disp.cl, L.disp.ucl, L.disp.lcl, {flags: fd, title: 'Karta ' + L.disp.name, yLabel: L.disp.name, start: 1 + (L.disp.offset || 0)});
-  h += V.length || Vd.length ? '<h4>Sygnały rozregulowania</h4><ul>' + V.map(v => `<li class="msg">Reguła ${v.rule} (${SPC_NELSON[v.rule - 1]}): punkty ${v.idx.map(i => i + 1).join(', ')}.</li>`).join('') +
-      Vd.map(v => `<li class="msg">Karta ${L.disp.name}: punkty ${v.idx.map(i => i + 1 + (L.disp.offset || 0)).join(', ')} poza granicami – zmienność się zmieniła.</li>`).join('') + '</ul><div class="sum"><b>Proces nie jest statystycznie uregulowany</b> – działają przyczyny specjalne, które trzeba zidentyfikować.</div>'
+  h += V.length || Vd.length ? '<h4>Sygnały rozregulowania</h4><ul>' + V.slice().sort((a, b) => a.rule - b.rule || a.idx[0] - b.idx[0]).map(v => `<li class="msg">Reguła ${v.rule} (${SPC_NELSON[v.rule - 1]}): ${v.idx.length === 1 ? 'punkt' : 'punkty'} ${v.idx.map(i => i + 1).join(', ')}.</li>`).join('') +
+      Vd.map(v => `<li class="msg">Karta ${L.disp.name}: punkty ${v.idx.map(i => i + 1 + (L.disp.offset || 0)).join(', ')} poza granicami – zmienność się zmieniła.</li>`).join('') + '</ul><div class="msg"><b>Proces nie jest statystycznie uregulowany</b> – działają przyczyny specjalne, które trzeba zidentyfikować.</div>'
     : '<div class="sum"><b>Proces jest statystycznie uregulowany</b> – brak punktów poza granicami i nielosowych układów punktów (wybrane reguły Nelsona).</div>';
   if ((qcVar() || t === 'imr') && (X.LSL !== null || X.USL !== null)) {
     const all = qcVar() ? X.D.sub.flat() : X.D.x, C = spcCapability(all, L.sigmaW, X.LSL, X.USL);

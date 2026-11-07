@@ -60,6 +60,7 @@ Programowanie liniowe (graficzna, Simpleks, Całkowite), Transport, Przydział, 
 - Interfejs (2026-11-07): pasek modułów przewijany na komputerze (przeciąganie, kółko, strzałki). README przebudowane na stronę powitalną; dokumentacja techniczna w DOKUMENTACJA-TECHNICZNA.md.
 - Kolejki: priorytety (M/M/1 bez wywłaszczania), sieci Jacksona, rezygnacje. Symulacja kolejek: klasy priorytetowe.
 - Simpleks (2026-11-08): alternatywna metoda tabelaryczna (js/lp-tab.js + tabReportHTML w render.js) – tablica C_B | baza | x | b | iloraz, wiersze z_j i c_j − z_j, max i min, ≥ i = przez zmienne sztuczne z symbolicznym M, reguła Blanda; wybór w opcjach zaawansowanych Simpleksu (model.tab = true, obliczenia pomocnicze zawsze dwufazowe). Testy: przykład z materiałów z zajęć krok po kroku, zadania Z6, Z9, Z15, przegląd wierzchołków.
+- Poprawka (2026-11-08, zgłoszona z telefonu): reguły Nelsona porównują z tolerancją 1e-9 – punkt równy średniej (z błędem zaokrągleń) nie jest „po jednej stronie”; komunikat „proces nie jest uregulowany” jest czerwony; lista sygnałów posortowana wg reguł.
 - Kolejna sesja: pakiet 5 – Programowanie celowe (najpierw), potem dynamiczne, kwadratowe (fundament: linalg gotowy), nieliniowe (najpierw js/expr.js – bezpieczny parser), Lokalizacja i układ.
 - PERT/CPM: podgląd sieci AOA z czynnościami pozornymi.
 - Harmonogramowanie: job shop (reguły SPT, FIFO, MWKR, Gantt), terminy gotowości zadań.

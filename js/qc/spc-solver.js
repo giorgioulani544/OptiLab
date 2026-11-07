@@ -39,17 +39,17 @@ function spcLimits(type, D, keep = null) {
 }
 /* reguły Nelsona: zwraca listę naruszeń {rule (1..8), idx: [punkty]} */
 function spcRules(ch, active = [1, 2, 3, 4, 5, 6, 7, 8]) {
-  const x = ch.stat, N = x.length, z = x.map((v, i) => ch.sigma[i] > 0 ? (v - ch.cl[i]) / ch.sigma[i] : 0), out = [], on = r => active.includes(r);
+  const x = ch.stat, N = x.length, E = 1e-9, z = x.map((v, i) => { const d = ch.sigma[i] > 0 ? (v - ch.cl[i]) / ch.sigma[i] : 0; return Math.abs(d) < E ? 0 : d; }), out = [], on = r => active.includes(r);   // punkt na linii centralnej lub na granicy strefy (z błędem zaokrągleń) nie leży „po stronie”
   const add = (r, idx) => { const prev = out.find(o => o.rule === r && o.idx[o.idx.length - 1] >= idx[0] - 1); if (prev) idx.forEach(i => { if (!prev.idx.includes(i)) prev.idx.push(i); }); else out.push({rule: r, idx: idx.slice()}); };
   for (let i = 0; i < N; i++) {
     if (on(1) && (x[i] > ch.ucl[i] + 1e-12 || x[i] < ch.lcl[i] - 1e-12)) add(1, [i]);
-    if (on(2) && i >= 8) { const w = z.slice(i - 8, i + 1); if (w.every(v => v > 0) || w.every(v => v < 0)) add(2, [...Array(9).keys()].map(k => i - 8 + k)); }
-    if (on(3) && i >= 5) { const w = x.slice(i - 5, i + 1); let up = true, dn = true; for (let k = 1; k < 6; k++) { if (!(w[k] > w[k - 1])) up = false; if (!(w[k] < w[k - 1])) dn = false; } if (up || dn) add(3, [...Array(6).keys()].map(k => i - 5 + k)); }
-    if (on(4) && i >= 13) { const w = x.slice(i - 13, i + 1); let alt = true; for (let k = 2; k < 14; k++) if (!((w[k] - w[k - 1]) * (w[k - 1] - w[k - 2]) < 0)) alt = false; if (alt) add(4, [...Array(14).keys()].map(k => i - 13 + k)); }
-    if (on(5) && i >= 2) { const w = z.slice(i - 2, i + 1); if (w.filter(v => v > 2).length >= 2 && z[i] > 2 || w.filter(v => v < -2).length >= 2 && z[i] < -2) add(5, [i - 2, i - 1, i].filter(k => Math.abs(z[k]) > 2 && Math.sign(z[k]) === Math.sign(z[i]))); }
-    if (on(6) && i >= 4) { const w = z.slice(i - 4, i + 1); if (w.filter(v => v > 1).length >= 4 && z[i] > 1 || w.filter(v => v < -1).length >= 4 && z[i] < -1) add(6, [0, 1, 2, 3, 4].map(k => i - 4 + k).filter(k => Math.abs(z[k]) > 1 && Math.sign(z[k]) === Math.sign(z[i]))); }
-    if (on(7) && i >= 14) { const w = z.slice(i - 14, i + 1); if (w.every(v => Math.abs(v) < 1)) add(7, [...Array(15).keys()].map(k => i - 14 + k)); }
-    if (on(8) && i >= 7) { const w = z.slice(i - 7, i + 1); if (w.every(v => Math.abs(v) > 1) && w.some(v => v > 0) && w.some(v => v < 0)) add(8, [...Array(8).keys()].map(k => i - 7 + k)); }
+    if (on(2) && i >= 8) { const w = z.slice(i - 8, i + 1); if (w.every(v => v > E) || w.every(v => v < -E)) add(2, [...Array(9).keys()].map(k => i - 8 + k)); }
+    if (on(3) && i >= 5) { const w = x.slice(i - 5, i + 1); let up = true, dn = true; for (let k = 1; k < 6; k++) { if (!(w[k] > w[k - 1] + E)) up = false; if (!(w[k] < w[k - 1] - E)) dn = false; } if (up || dn) add(3, [...Array(6).keys()].map(k => i - 5 + k)); }
+    if (on(4) && i >= 13) { const w = x.slice(i - 13, i + 1); let alt = true; for (let k = 2; k < 14; k++) if (!((w[k] - w[k - 1]) * (w[k - 1] - w[k - 2]) < -E * E)) alt = false; if (alt) add(4, [...Array(14).keys()].map(k => i - 13 + k)); }
+    if (on(5) && i >= 2) { const w = z.slice(i - 2, i + 1); if (w.filter(v => v > 2 + E).length >= 2 && z[i] > 2 + E || w.filter(v => v < -2 - E).length >= 2 && z[i] < -2 - E) add(5, [i - 2, i - 1, i].filter(k => Math.abs(z[k]) > 2 + E && Math.sign(z[k]) === Math.sign(z[i]))); }
+    if (on(6) && i >= 4) { const w = z.slice(i - 4, i + 1); if (w.filter(v => v > 1 + E).length >= 4 && z[i] > 1 + E || w.filter(v => v < -1 - E).length >= 4 && z[i] < -1 - E) add(6, [0, 1, 2, 3, 4].map(k => i - 4 + k).filter(k => Math.abs(z[k]) > 1 + E && Math.sign(z[k]) === Math.sign(z[i]))); }
+    if (on(7) && i >= 14) { const w = z.slice(i - 14, i + 1); if (w.every(v => Math.abs(v) < 1 - E)) add(7, [...Array(15).keys()].map(k => i - 14 + k)); }
+    if (on(8) && i >= 7) { const w = z.slice(i - 7, i + 1); if (w.every(v => Math.abs(v) > 1 + E) && w.some(v => v > 0) && w.some(v => v < 0)) add(8, [...Array(8).keys()].map(k => i - 7 + k)); }
   }
   return out;
 }

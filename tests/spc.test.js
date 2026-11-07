@@ -29,6 +29,10 @@ t('reguła 5: 2 z 3 powyżej 2σ', has([0, 2.5, 0.5, 2.2], 5) && !has([2.5, 0, -
 t('reguła 6: 4 z 5 powyżej 1σ', has([1.5, 1.2, 0.2, 1.3, 1.8], 6) && !has([1.5, 1.2, 0.2, 0.3, 1.8], 6));
 t('reguła 7: 15 punktów w strefie ±1σ', has(Array.from({length: 15}, (_, k) => (k % 2 ? 0.3 : -0.3)), 7) && !has(Array.from({length: 14}, () => 0.3), 7));
 t('reguła 8: 8 punktów poza ±1σ po obu stronach', has([1.5, -1.5, 1.5, -1.5, 1.5, -1.5, 1.5, -1.5], 8) && !has([1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5], 8));
+// regresja (zgłoszona z ekranu telefonu): punkt dokładnie na linii centralnej (z błędem zaokrągleń 1e-15) przerywa serię reguły 2
+const xr = [10.2, 9.8, 10.1, 10.4, 9.7, 10.0, 10.3, 9.9, 10.1, 10.2, 10.5, 10.6, 10.4, 10.7, 10.5, 10.8, 10.6, 10.9, 10.7, 11.6], Lr = c.spcLimits('imr', {x: xr}), Vr = c.spcRules(Lr.main);
+t('punkt równy średniej (13.) przerywa serię: brak sygnału reguły 2 (11–12 nad linią, 13 na linii, 14–20 to tylko 7 punktów)', !Vr.some(o => o.rule === 2) && Vr.some(o => o.rule === 1 && o.idx.join() === '19') && Vr.some(o => o.rule === 6));
+t('9 punktów równych linii centralnej nie jest „po jednej stronie”', !c.spcRules({stat: Array(9).fill(5), cl: Array(9).fill(5.000000000000001), ucl: Array(9).fill(8), lcl: Array(9).fill(2), sigma: Array(9).fill(1)}).some(o => o.rule === 2));
 // faza I: punkt 30 wśród wartości ~10 zostaje usunięty, granice przeliczone bez niego
 const P1 = c.spcPhase1('imr', {x: [10, 11, 9, 10, 12, 30, 10, 11, 9, 10, 11, 10]}); t('faza I: punkt odstający usunięty, granice przeliczone', !P1.keep[5] && P1.steps.length >= 1 && P1.L.main.cl[0] < 11);
 // zdolność: μ = 10, σ = 1 (z danych), granice 7 i 13 → Cp = 1; przesunięcie do 11 → Cpk = 2/3
