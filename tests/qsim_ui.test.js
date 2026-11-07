@@ -15,6 +15,7 @@ h = c.qsReportHTML(X(EX[5].data)); t('porównanie 1 vs 2 stanowiska: różnica i
 h = c.qsReportHTML({...X(EX[0].data), P: {...X(EX[0].data).P, arr: {type: 'exp', mean: 0.9}}}); t('przeciążenie (ρ ≥ 1): ostrzeżenie w raporcie', /System jest przeciążony/.test(h));
 const csv = get(`paramsToCSV([['iaType','emp'],['svType','exp'],['svMean','1.5'],['iaTab','1:0.2|2:0.8']])`);
 t('CSV: tabela rozkładu empirycznego zapisana w jednej komórce, liczby z przecinkiem', /iaTab;1:0\.2\|2:0\.8/.test(csv) && /svMean;1,5/.test(csv));
+const qb = c.paramsFromCSV('iaType;exp\nsvType;const\nsvVal;1,5', ['iaType','svType','svVal'], null, ['iaType','svType']).meta; t('CSV: import parametrów tekstowych (rodzaj rozkładu) i liczb', qb.iaType === 'exp' && qb.svType === 'const' && qb.svVal === '1.5');
 let th = ''; try { get('qsNormalize({iaType: "xyz", svType: "exp"})'); } catch (e) { th = e.message; } t('plik z nieznanym rozkładem odrzucony', /nieznany rozkład/.test(th));
 t('moduł zarejestrowany i usunięty z listy „wkrótce"', get("MODULES.some(m => m.id === 'qsim') && !SOON.some(s => s[0] === 'qsim')"));
 console.log(`Testy modułu Symulacja kolejek: ${ok} OK, ${bad} błędów`); process.exit(bad ? 1 : 0);

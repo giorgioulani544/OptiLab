@@ -41,7 +41,7 @@ function quInit() {
   matrixWire($('#' + QUP + 'top'));
   const keys = ['model', 'lam', 'mu', 's', 'K', 'N', 'sigma', 'k', 't', 'Cs', 'Cw', 'Cb', 'base'];
   netToolsWire(QUP, {kind: 'queue', out: '#out-queue', examples: QU_EXAMPLES, normalize: quNormalize, get: () => { quSync(); return JSON.parse(JSON.stringify(QU)); }, set: d => { QU = d; quRender(); },
-    toCSV: d => paramsToCSV(keys.map(k => [k, d[k]]).filter(([, v]) => v !== '' && v !== undefined)), fromCSV: t => { const r = paramsFromCSV(t, keys); return {...r.meta, model: r.meta.model, cost: !!(r.meta.Cs && r.meta.Cw)}; }});
+    toCSV: d => paramsToCSV(keys.map(k => [k, d[k]]).filter(([, v]) => v !== '' && v !== undefined)), fromCSV: t => { const r = paramsFromCSV(t, keys, null, ['model', 'base']); return {...r.meta, model: r.meta.model, cost: !!(r.meta.Cs && r.meta.Cw)}; }});
   $('#btn-queue').onclick = quSolveUI;
   quRender();
 }

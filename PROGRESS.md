@@ -40,9 +40,9 @@ Programowanie liniowe (graficzna, Simpleks, Całkowite), Transport, Przydział, 
 ## Pakiet 4 – Decyzje i jakość
 | Moduł | Status | Uwagi |
 |---|---|---|
-| Analiza decyzji | nie zaczęty | |
-| Karty kontrolne | nie zaczęty | |
-| Odbiór statystyczny | nie zaczęty | |
+| Analiza decyzji (`dec`) | gotowy – rdzeń + rozszerzenia (2026-11-08) | tabela wypłat/kosztów: Wald, maximax, Hurwicz, Laplace, Savage, macierz żalu, EMV, EOL, EVPI, progi opłacalności (2 stany, wykres); drzewa decyzyjne (tabela węzłów, rollback, rysunek z optymalną ścieżką); Bayes i EVSI (sprawność, opłacalność badania); rozszerzenia: użyteczność wykładnicza (CE), gry o sumie zerowej (punkt siodłowy, dominacja, LP, metoda graficzna 2×n). Testy: Thompson Lumber (Render i Stair), EVSI liczone ręcznie, drzewa vs przegląd strategii, gry vs warunki optymalności. NIE zrobione: scoring wielokryterialny, tabela użyteczności. |
+| Karty kontrolne (`qc`) | gotowy – rdzeń + rozszerzenia (2026-11-08) | X̄-R, X̄-s, I-MR, p (zmienna liczebność), np, c, u; stałe d2, d3, c4 i pochodne wyznaczane całkowaniem (zgodne z tablicami Montgomery'ego); reguły Nelsona 1–8 z oznaczeniem punktów; faza I; Cp, Cpk, Pp, Ppk, ppm, histogram z rozkładem normalnym; wykres Pareto; rozszerzenia: CUSUM tabelaryczny, EWMA, ARL; wklejanie z Excela. |
+| Odbiór statystyczny (`acc`) | gotowy – rdzeń + rozszerzenia (2026-11-08) | plany (n, c): OC (dwumianowy, Poissona, hipergeometryczny), AOQ, AOQL, ATI; dobór najmniejszego planu dla AQL, α, LTPD, β (minimalność potwierdzona przeglądem); plany dwustopniowe (OC, ASN); SPRT (linie, tabela, przebieg kontroli 0/1); rozszerzenie: plan dla cech mierzalnych przy znanym σ. NIE zrobione: kontrola z poprawianiem jako osobny tryb (AOQ/ATI są w ocenie planu). |
 
 ## Pakiet 5 – Programowanie matematyczne i lokalizacja
 | Moduł | Status | Uwagi |
@@ -59,6 +59,7 @@ Programowanie liniowe (graficzna, Simpleks, Całkowite), Transport, Przydział, 
 - Prognozowanie: dekompozycja sezonowa, przedziały prognozy, Croston, zbiór uczący/testowy.
 - Interfejs (2026-11-07): pasek modułów przewijany na komputerze (przeciąganie, kółko, strzałki). README przebudowane na stronę powitalną; dokumentacja techniczna w DOKUMENTACJA-TECHNICZNA.md.
 - Kolejki: priorytety (M/M/1 bez wywłaszczania), sieci Jacksona, rezygnacje. Symulacja kolejek: klasy priorytetowe.
-- Kolejna sesja: pakiet 4 – Analiza decyzji (drzewa decyzyjne, Bayes, EVSI; gry z LP), Karty kontrolne (stałe c4, d2 wzorami; reguły Nelsona), Odbiór statystyczny.
+- Simpleks (2026-11-08): alternatywna metoda tabelaryczna (js/lp-tab.js + tabReportHTML w render.js) – tablica C_B | baza | x | b | iloraz, wiersze z_j i c_j − z_j, max i min, ≥ i = przez zmienne sztuczne z symbolicznym M, reguła Blanda; wybór w opcjach zaawansowanych Simpleksu (model.tab = true, obliczenia pomocnicze zawsze dwufazowe). Testy: przykład z materiałów z zajęć krok po kroku, zadania Z6, Z9, Z15, przegląd wierzchołków.
+- Kolejna sesja: pakiet 5 – Programowanie celowe (najpierw), potem dynamiczne, kwadratowe (fundament: linalg gotowy), nieliniowe (najpierw js/expr.js – bezpieczny parser), Lokalizacja i układ.
 - PERT/CPM: podgląd sieci AOA z czynnościami pozornymi.
 - Harmonogramowanie: job shop (reguły SPT, FIFO, MWKR, Gantt), terminy gotowości zadań.

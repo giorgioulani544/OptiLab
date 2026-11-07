@@ -88,5 +88,34 @@ const VZ = (() => {
     names.forEach((nm, i) => { s += `<circle class="sgn ${(o.cls || [])[i] || ''}" cx="${r1(pos[i].x)}" cy="${r1(pos[i].y)}" r="${R}"/><text class="sgt" x="${r1(pos[i].x)}" y="${r1(pos[i].y + 4)}" text-anchor="middle">${E(nm)}</text>`; });
     return wrap(W, H, s, o.title);
   }
-  return {gantt, hist, line, ticks, bars, stateGraph};
+  /* karta kontrolna: v – wartości, cl/ucl/lcl – tablice (granice mogą się zmieniać), o: {flags: Set indeksów, sig: tablica σ (strefy ±1σ, ±2σ), title, yLabel, start (numer pierwszego punktu)} */
+  function control(v, cl, ucl, lcl, o = {}) {
+    const n = v.length, W = 720, H = 300, L = 62, B = 34, T = 16, R = 70, st = o.start ?? 1, all = [...v, ...ucl, ...lcl].filter(isFinite);
+    const lo = Math.min(...all), hi = Math.max(...all), pad = (hi - lo) * 0.08 || 1, y0 = lo - pad, y1 = hi + pad;
+    const X = i => L + (W - L - R) * (n > 1 ? i / (n - 1) : 0.5), Y = y => T + (H - T - B) * (1 - (y - y0) / (y1 - y0)), path = arr => arr.map((y, i) => (i ? 'L' : 'M') + r1(X(i)) + ' ' + r1(Y(y))).join('');
+    const step = arr => { let d = ''; arr.forEach((y, i) => { const xa = n > 1 ? X(Math.max(0, i - 0.5)) : L, xb = n > 1 ? X(Math.min(n - 1, i + 0.5)) : W - R; d += (i ? 'L' : 'M') + r1(xa) + ' ' + r1(Y(y)) + 'L' + r1(xb) + ' ' + r1(Y(y)); }); return d; };
+    let s = `<line class="vza" x1="${L}" y1="${H - B}" x2="${W - R}" y2="${H - B}"/><line class="vza" x1="${L}" y1="${T}" x2="${L}" y2="${H - B}"/>`;
+    if (o.sig) [1, 2].forEach(k => { s += `<path class="vzzone" d="${step(cl.map((c, i) => c + k * o.sig[i]))}"/><path class="vzzone" d="${step(cl.map((c, i) => c - k * o.sig[i]))}"/>`; });
+    s += `<path class="vzlim" d="${step(ucl)}"/><path class="vzlim" d="${step(lcl)}"/><path class="vzcl" d="${step(cl)}"/><path class="vzline" d="${path(v)}"/>`;
+    v.forEach((y, i) => { const f = o.flags && o.flags.has(i); s += `<circle class="vzdot${f ? ' b' : ''}" cx="${r1(X(i))}" cy="${r1(Y(y))}" r="${f ? 5 : 3.2}"/>`; });
+    [['UCL', ucl[n - 1]], ['CL', cl[n - 1]], ['LCL', lcl[n - 1]]].forEach(([t, y]) => { s += `<text class="vzt b" x="${W - R + 6}" y="${r1(Y(y) + 4)}">${t} ${nf(Math.round(y * 1000) / 1000)}</text>`; });
+    ticks(y0, y1, 5).forEach(y => { if (y >= y0 && y <= y1) s += `<text class="vzt" x="${L - 6}" y="${r1(Y(y) + 4)}" text-anchor="end">${nf(y)}</text>`; });
+    const every = Math.max(1, Math.ceil(n / 15)); v.forEach((_, i) => { if (i % every === 0 || i === n - 1) s += `<text class="vzt" x="${r1(X(i))}" y="${H - B + 14}" text-anchor="middle">${st + i}</text>`; });
+    if (o.yLabel) s += `<text class="vzt" x="${L + 4}" y="${T + 10}">${E(o.yLabel)}</text>`;
+    return wrap(W, H, s, o.title);
+  }
+  /* Pareto: słupki malejąco + linia skumulowanego udziału (oś prawa 0–100%) */
+  function pareto(items, o = {}) {
+    const n = items.length, W = Math.max(420, Math.min(760, 90 + n * 60)), H = 300, L = 54, B = 56, T = 16, R = 50, ymax = Math.max(...items.map(x => x.v)) * 1.1, bw = (W - L - R) / n;
+    const Y = v => T + (H - T - B) * (1 - v / ymax), Yp = p => T + (H - T - B) * (1 - p);
+    let s = `<line class="vza" x1="${L}" y1="${H - B}" x2="${W - R}" y2="${H - B}"/><line class="vza" x1="${L}" y1="${T}" x2="${L}" y2="${H - B}"/><line class="vza" x1="${W - R}" y1="${T}" x2="${W - R}" y2="${H - B}"/>`;
+    s += `<line class="vzm ok" x1="${L}" y1="${r1(Yp(0.8))}" x2="${W - R}" y2="${r1(Yp(0.8))}"/><text class="vzt" x="${W - R + 4}" y="${r1(Yp(0.8) + 4)}">80%</text>`;
+    items.forEach((x, i) => { const x0 = L + i * bw + bw * 0.15, w = bw * 0.7; s += `<rect class="vzbar${x.cum - x.share < 0.8 - 1e-9 ? ' b' : ''}" x="${r1(x0)}" y="${r1(Y(x.v))}" width="${r1(w)}" height="${r1(H - B - Y(x.v))}"/>` +
+      `<text class="vzt" x="${r1(x0 + w / 2)}" y="${H - B + 14}" text-anchor="middle">${E(String(x.nm).slice(0, 12))}</text>`; });
+    s += `<path class="vzline c" d="${items.map((x, i) => (i ? 'L' : 'M') + r1(L + (i + 0.5) * bw) + ' ' + r1(Yp(x.cum))).join('')}"/>` + items.map((x, i) => `<circle class="vzdot c" cx="${r1(L + (i + 0.5) * bw)}" cy="${r1(Yp(x.cum))}" r="3.5"/>`).join('');
+    [0, 0.25, 0.5, 0.75, 1].forEach(p => { s += `<text class="vzt" x="${W - R + 4}" y="${r1(Yp(p) + 4 - (p === 0.75 ? 0 : 0))}">${p === 0.75 ? '' : Math.round(p * 100) + '%'}</text>`; });
+    ticks(0, ymax, 4).forEach(v => { if (v <= ymax) s += `<text class="vzt" x="${L - 6}" y="${r1(Y(v) + 4)}" text-anchor="end">${nf(v)}</text>`; });
+    return wrap(W, H, s, o.title);
+  }
+  return {gantt, hist, line, ticks, bars, stateGraph, control, pareto};
 })();

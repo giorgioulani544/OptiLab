@@ -100,7 +100,14 @@ $('#btn-simplex').onclick = () => {
   $('#out-dual').innerHTML = $('#out-par').innerHTML = ''; last.dual = last.par = null;   // stare wyniki mogłyby dotyczyć innych danych
   const rec = [], r = solveM(M, [], rec);
   let h = infoHTML(M);
-  rec.forEach((s, k) => h += `<div class="step"><h4>Krok ${k + 1}</h4><p>${s.text}</p>${tableHTML(s)}</div>`);
+  if (M.tab && M.t.every(t => t === 'c')) {                              // alternatywna metoda tabelaryczna (cj − zj)
+    const R = tabSolve(M); h += tabReportHTML(M, R);
+    if (R.status !== 'optimal') { $(out).innerHTML = h; last.simplex = h; failLP(out, R, M, true); return; }
+    if (r.status !== 'optimal' || Math.abs(R.z - r.z) > 1e-6 * (1 + Math.abs(r.z))) h += '<p class="msg">Uwaga: wynik tablic różni się od kontrolnego obliczenia metodą dwufazową – zgłoś ten przykład.</p>';
+  } else {
+    if (M.tab) h += '<p class="note">Alternatywna metoda tabelaryczna obsługuje zmienne nieujemne (x ≥ 0). Dla zmiennych dowolnych, całkowitych lub binarnych pokazujemy tablice metody dwufazowej.</p>';
+    rec.forEach((s, k) => h += `<div class="step"><h4>Krok ${k + 1}</h4><p>${s.text}</p>${tableHTML(s)}</div>`);
+  }
   if (r.status !== 'optimal') { $(out).innerHTML = h; last.simplex = h; failLP(out, r, M, true); return; }
   h += `<div class="sum"><b>Wynik:</b> ${r.x.map((v, j) => `x${sub(j+1)} = ${fmt(v)}`).join(', ')}; Z<sub>opt</sub> = <b>${fmt(r.z)}</b></div>`;
   h += qsbReport(M, r, rec);

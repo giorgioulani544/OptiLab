@@ -51,5 +51,13 @@ async def main():
         for tab, txt in (('queue', 'Średni czas oczekiwania w kolejce Wq'), ('markov', 'Rozkład stacjonarny'), ('qsim', 'Średnie z przedziałami ufności 95%')):
             await pg.click(f'nav button[data-tab={tab}]'); await pg.click(f'#btn-{tab}'); await pg.wait_for_timeout(200)
             print(tab + ':', 'OK' if txt in await pg.inner_html(f'#out-{tab}') else 'BŁĄD')
+        for tab, txt in (('dec', 'Macierz żalu'), ('qc', 'statystycznie uregulowany'), ('acc', 'AOQL = <b>')):
+            await pg.click(f'nav button[data-tab={tab}]'); await pg.click(f'#btn-{tab}'); await pg.wait_for_timeout(200)
+            print(tab + ':', 'OK' if txt in await pg.inner_html(f'#out-{tab}') else 'BŁĄD')
+        await pg.click('nav button[data-tab=simplex]')
+        await pg.evaluate("""() => { models.simplex = parseModel('simplex', {optilab: 1, maxi: true, c: ['30', '20'], t: ['c', 'c'], rows: [{a: ['2', '1'], rel: '<=', b: '1000'}, {a: ['3', '3'], rel: '<=', b: '2400'}, {a: ['1.5', '0'], rel: '<=', b: '600'}]}); renderForm('simplex'); document.querySelector('#simplex-method').value = 'TAB'; }""")
+        await pg.click('#btn-simplex'); await pg.wait_for_timeout(200); th = (await pg.inner_html('#out-simplex')).replace('\u00a0', '').replace(' ', '')
+        print('Alternatywna metoda tabelaryczna:', 'OK' if 'Alternatywnametodatabelaryczna' in th and '18000' in th and '400min' in th else 'BŁĄD')
+        await pg.evaluate("document.querySelector('#simplex-method').value = '2F'")
         print('Błędy JS:', errs or 'brak'); await b.close()
 asyncio.run(main())

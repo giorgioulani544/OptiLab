@@ -41,6 +41,13 @@ js/markov/markov-solver.js  łańcuchy Markowa: klasyfikacja, rozkład stacjonar
 js/modules/markov.js    moduł Procesy Markowa
 js/qsim/qsim-solver.js  symulacja zdarzeń dyskretnych kolejek, powtórzenia, przedziały ufności, wspólne liczby losowe – bez DOM
 js/modules/qsim.js      moduł Symulacja kolejek
+js/lp-tab.js            alternatywna metoda tabelaryczna simpleksu (cj − zj, kolumna ilorazów, symboliczne M) – bez DOM; raport: tabReportHTML w js/render.js
+js/dec/decision-solver.js  analiza decyzji: kryteria, EMV/EOL/EVPI, drzewa, Bayes i EVSI, użyteczność, gry (LP) – bez DOM
+js/modules/decision.js  moduł Analiza decyzji
+js/qc/spc-solver.js     karty kontrolne: stałe ze wzorów, X̄-R, X̄-s, I-MR, p, np, c, u, reguły Nelsona, faza I, zdolność, CUSUM, EWMA, ARL – bez DOM
+js/modules/spc.js       moduł Karty kontrolne
+js/qc/acceptance-solver.js  odbiór statystyczny: OC, AOQ, AOQL, ATI, dobór planu, plany dwustopniowe, SPRT, cechy mierzalne – bez DOM
+js/modules/acceptance.js  moduł Odbiór statystyczny
 js/fc/forecast-solver.js    prognozowanie: 8 metod, miary błędów, dobór parametrów – bez DOM
 js/modules/forecast.js  moduł Prognozowanie
 js/agg/agg-solver.js    planowanie zagregowane: model LP, strategie, ceny dualne – bez DOM

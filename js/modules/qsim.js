@@ -47,7 +47,7 @@ function qsInit() {
   netToolsWire(QSP, {kind: 'qsim', out: '#out-qsim', examples: QS_EXAMPLES, normalize: qsNormalize, get: () => { qsSync(); return JSON.parse(JSON.stringify(QS)); }, set: d => { QS = d; qsRender(); },
     toCSV: d => paramsToCSV(keys.map(k => [k, /Tab$/.test(k) ? d[k].map(r => `${r.v}:${r.p}`).join('|') : d[k]]).filter(([, v]) => v !== '')),
     fromCSV: t => { const lines = String(t).replace(/^\uFEFF/, '').split(/\r?\n/), tabs = {}; const rest = lines.filter(l => { const m = l.match(/^(iaTab|svTab);(.*)$/); if (m) { tabs[m[1]] = m[2]; return false; } return true; }).join('\n');
-      const r = paramsFromCSV(rest, keys.filter(k => !/Tab$/.test(k))), o = {...r.meta};
+      const r = paramsFromCSV(rest, keys.filter(k => !/Tab$/.test(k)), null, ['iaType', 'svType']), o = {...r.meta};
       Object.entries(tabs).forEach(([k, v]) => { o[k] = v.split('|').filter(Boolean).map((x, i) => { const [a, b] = x.split(':'); const na = Number(String(a).replace(',', '.')), nb = Number(String(b).replace(',', '.')); if (!isFinite(na) || !isFinite(nb)) throw new Error(`parametr ${k}, pozycja ${i + 1}: „${x}" – oczekiwano „wartość:prawdopodobieństwo".`); return {v: String(na), p: String(nb)}; }); });
       return {...o, cmp: false}; }});
   $('#btn-qsim').onclick = qsSolveUI;

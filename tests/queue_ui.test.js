@@ -12,6 +12,7 @@ h = c.quReportHTML('mms', {lam: 7, mu: 2, s: 3}); t('niestabilny system: komunik
 h = c.quReportHTML('mms', {lam: 10, mu: 3, s: 4}, {Cs: 40, Cw: 25, Cb: 0, base: 'L'}); t('analiza kosztów: tabela, optimum, wykres', /Optymalna liczba stanowisk/.test(h) && /Koszty a liczba stanowisk/.test(h));
 const csv = get(`paramsToCSV([['model','mms'],['lam','2.5'],['mu','3'],['s','2']])`), back = get(`paramsFromCSV(${JSON.stringify(csv)}, ['model','lam','mu','s'])`);
 t('CSV: eksport → import (przecinek dziesiętny)', back.meta.model === 'mms' && back.meta.lam === '2.5' && /2,5/.test(csv));
+const qb = c.paramsFromCSV('model;mms\nbase;Lq\nlam;2,5', ['model','base','lam'], null, ['model','base']).meta; t('CSV: import modelu i podstawy kosztu (tekst)', qb.model === 'mms' && qb.base === 'Lq' && qb.lam === '2.5');
 let th = ''; try { get('quNormalize({model: "xx"})'); } catch (e) { th = e.message; } t('plik z nieznanym modelem odrzucony', /nieznany model/.test(th));
 t('moduł zarejestrowany i usunięty z listy „wkrótce"', get("MODULES.some(m => m.id === 'queue') && !SOON.some(s => s[0] === 'queue')"));
 console.log(`Testy modułu Kolejki: ${ok} OK, ${bad} błędów`); process.exit(bad ? 1 : 0);

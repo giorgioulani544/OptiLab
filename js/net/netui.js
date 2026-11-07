@@ -238,15 +238,15 @@ function paramsToCSV(meta, cols = null, rows = null) {
   const v = x => /^-?\d+(\.\d+)?$/.test(String(x)) ? String(x).replace('.', ',') : String(x);
   return '\uFEFF' + [...meta.map(([k, x]) => `${k};${v(x)}`), ...(cols && rows && rows.length ? ['', cols.map(c => c.label).join(';'), ...rows.map(r => cols.map(c => v(r[c.key] ?? '')).join(';'))] : [])].join('\r\n') + '\r\n';
 }
-function paramsFromCSV(text, keys, cols = null) {
+function paramsFromCSV(text, keys, cols = null, textKeys = []) {   // textKeys – parametry tekstowe (np. model, rozkład)
   const lines = String(text).replace(/^\uFEFF/, '').split(/\r?\n/), meta = {}, rows = []; let inTable = false, map = null;
   const num = (s, ln, what) => { const t = String(s).trim().replace(/\s/g, '').replace(',', '.'); if (t === '') return ''; const x = Number(t); if (!isFinite(x)) throw new Error(`wiersz ${ln}: „${s}" (${what}) nie jest liczbą.`); return String(x); };
   lines.forEach((raw, k) => {
     if (!raw.trim()) return; const c = raw.split(';').map(s => s.trim()), ln = k + 1, key = c[0].toLowerCase();
     if (cols && !inTable && cols.some(col => col.label.toLowerCase() === key)) { inTable = true; map = c.map(x => cols.findIndex(col => col.label.toLowerCase() === x.toLowerCase())); return; }
     if (inTable) { const r = {}; map.forEach((ci, pos) => { if (ci >= 0) r[cols[ci].key] = num(c[pos] ?? '', ln, cols[ci].label); }); rows.push(r); return; }
-    const kk = keys.find(x => x.toLowerCase() === key); if (!kk) throw new Error(`wiersz ${ln}: nieznany parametr „${c[0]}".`);
-    meta[kk] = kk === 'model' || kk.startsWith('typ') || kk.startsWith('rodzaj') ? (c[1] || '') : num(c[1] ?? '', ln, kk);
+    const kk = keys.find(x => x === c[0]) || keys.find(x => x.toLowerCase() === key);   // najpierw dokładnie (np. n ≠ N) if (!kk) throw new Error(`wiersz ${ln}: nieznany parametr „${c[0]}".`);
+    meta[kk] = kk === 'model' || kk.startsWith('typ') || kk.startsWith('rodzaj') || textKeys.includes(kk) ? (c.slice(1).join(';') || '') : num(c[1] ?? '', ln, kk);
   });
   return {meta, rows};
 }

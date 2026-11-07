@@ -11,8 +11,8 @@
 </p>
 
 <p align="center">
-  ![moduły](https://img.shields.io/badge/modu%C5%82y-16%20gotowych-1f3a5f)
-  ![testy automatyczne](https://img.shields.io/badge/testy%20automatyczne-9278%20%E2%9C%93-2e7d32)
+  ![moduły](https://img.shields.io/badge/modu%C5%82y-19%20gotowych-1f3a5f)
+  ![testy automatyczne](https://img.shields.io/badge/testy%20automatyczne-10370%20%E2%9C%93-2e7d32)
   ![instalacja](https://img.shields.io/badge/instalacja-niepotrzebna-c9a227)
   ![język](https://img.shields.io/badge/j%C4%99zyk-polski-b0413e)
 </p>
@@ -31,7 +31,7 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 | | Moduł | Co potrafi |
 |---|---|---|
 | 📈 | **Metoda graficzna** | obszar dopuszczalny, wierzchołki, prosta celu, punkty całkowite |
-| 🧾 | **Simpleks** | tablice krok po kroku (dwufazowa i duże M), zadanie dualne, analiza wrażliwości i parametryczna, rozwiązania alternatywne |
+| 🧾 | **Simpleks** | tablice krok po kroku: metoda dwufazowa, duże M i alternatywna metoda tabelaryczna (C<sub>B</sub>, z<sub>j</sub>, c<sub>j</sub> − z<sub>j</sub>, kolumna ilorazów, symboliczne M), zadanie dualne, analiza wrażliwości i parametryczna, rozwiązania alternatywne |
 | 🔢 | **Programowanie całkowitoliczbowe** | metoda podziału i ograniczeń z drzewem obliczeń |
 
 ### 🕸️ Modele sieciowe
@@ -63,6 +63,13 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 | 🔗 | **Procesy Markowa** | rozkład po n krokach, rozkład stacjonarny, klasyfikacja stanów, łańcuchy pochłaniające, czasy pierwszego przejścia, czas ciągły |
 | 🎰 | **Symulacja kolejek** | symulacja zdarzeń krok po kroku, 6 rozkładów, powtórzenia z przedziałami ufności, porównanie z teorią i konfiguracji między sobą |
 
+### ✅ Decyzje i jakość
+| | Moduł | Co potrafi |
+|---|---|---|
+| 🎯 | **Analiza decyzji** | kryteria Walda, Hurwicza, Laplace'a, Savage'a, EMV, EOL, EVPI, drzewa decyzyjne z rysunkiem, twierdzenie Bayesa i EVSI, użyteczność, gry o sumie zerowej |
+| 📉 | **Karty kontrolne** | X̄-R, X̄-s, I-MR, p, np, c, u, reguły Nelsona, faza I, zdolność procesu Cp/Cpk, wykres Pareto, CUSUM, EWMA, ARL |
+| 🔍 | **Odbiór statystyczny** | krzywe OC, AOQ, AOQL, ATI, dobór planu dla AQL i LTPD, plany dwustopniowe, plan sekwencyjny SPRT, plany dla cech mierzalnych |
+
 ## 🚀 Jak zacząć
 
 1. **Otwórz aplikację** i wybierz moduł na dolnym pasku. Na komputerze pasek przewiniesz kółkiem myszy, przeciągnięciem albo strzałkami.
@@ -82,8 +89,8 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 
 ## ✅ Na wynikach można polegać
 
-- **9278 automatycznych sprawdzeń** – wszystkie przechodzą.
-- Wyniki porównujemy z **przykładami z literatury** (m.in. Hillier i Lieberman, Heizer i Render, Render i Stair, Chopra i Meindl) oraz **niezależnymi obliczeniami**: przeglądem wszystkich możliwych rozwiązań, wzorami zamkniętymi i symulacją Monte Carlo.
+- **10 370 automatycznych sprawdzeń** – wszystkie przechodzą.
+- Wyniki porównujemy z **przykładami z literatury** (m.in. Hillier i Lieberman, Heizer i Render, Render i Stair, Chopra i Meindl, Montgomery) oraz **niezależnymi obliczeniami**: przeglądem wszystkich możliwych rozwiązań, wzorami zamkniętymi i symulacją Monte Carlo.
 - Każdy moduł jest sprawdzany w prawdziwej przeglądarce na ekranie komputera i telefonu.
 - Gdy wynik nie jest pewny (np. przekroczony limit obliczeń), aplikacja mówi to wprost – **nigdy nie pokazuje niepewnego wyniku jako poprawnego**.
 
@@ -96,7 +103,7 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 
 ## 🛠️ W przygotowaniu
 
-Analiza decyzji · Karty kontrolne · Odbiór statystyczny · Programowanie celowe · Programowanie dynamiczne · Programowanie kwadratowe · Programowanie nieliniowe · Lokalizacja i układ
+Programowanie celowe · Programowanie dynamiczne · Programowanie kwadratowe · Programowanie nieliniowe · Lokalizacja i układ
 
 Docelowo OptiLab ma objąć wszystkie moduły WinQSB. Uwagi i zgłoszenia błędów są bardzo mile widziane. 🙌
 
