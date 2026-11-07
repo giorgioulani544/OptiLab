@@ -1,6 +1,7 @@
 # OptiLab – kontekst projektu dla Claude Code
 
 ## Zasady pracy (z promptu głównego – obowiązują w każdej sesji)
+- README.md to strona powitalna dla odwiedzających GitHub (emotki, ton przyjazny, ale profesjonalny). W KAŻDEJ sesji zaktualizuj: tabele modułów, odznaki (liczba gotowych modułów, liczba testów), sekcję „W przygotowaniu”. Struktura plików i informacje techniczne są w DOKUMENTACJA-TECHNICZNA.md (tam dopisuj nowe pliki).
 - Stan prac jest w PROGRESS.md: na starcie przeczytaj, kontynuuj od pierwszego niegotowego modułu (kolejność pakietów jak w PROGRESS.md), na końcu zaktualizuj.
 - Najpierw fundamenty wspólne potrzebne dla pakietu, potem moduły po kolei; każdy moduł skończ w 100% przed następnym. Rdzeń całego pakietu przed rozszerzeniami (rozszerzenia = Opcje zaawansowane). Lepiej mniej modułów w pełni gotowych niż więcej po łebkach.
 - Definicja ukończenia modułu: logika bez DOM + niezależne testy (literatura wpisana ręcznie – bez wymyślania liczb, przegląd wszystkich możliwości, wzory zamknięte, Monte Carlo ze ziarnem; NIGDY porównanie dwóch fragmentów kodu OptiLab i NIGDY dopasowywanie testów do kodu); interfejs z walidacją przy polach, kopiuj/wklej, przykłady, .json, .csv; raport dydaktyczny z krokami po polsku, kolorami i wykresami SVG; eksport PDF tylko bieżącej zakładki bez rozciętych tabel; zrzuty ekranu komputer (1280 px) i telefon (390 px) obejrzane w Playwright i usterki poprawione, PDF obejrzany; rejestracja (registerModule, usunięcie z SOON, ?v=N); README/CLAUDE/INSTRUKCJA/PROGRESS zaktualizowane; wszystkie stare testy przechodzą.
@@ -13,7 +14,7 @@ Autor: Aleksander Kruszelnicki. Stopka: „Made by Aleksander Kruszelnicki”. J
 Hosting: GitHub Pages (statyczne pliki, bez backendu i bez bundlera). Wykresy: Plotly z CDN.
 
 ## Struktura i zasady kodu
-- Klasyczne skrypty (NIE moduły ES), wspólny zasięg globalny. Kolejność `<script>` w `index.html` ma znaczenie: core → stats → viz → solver → parametric → ilp-solver → render → examples → csv → forms → registry → modules/lp → net/netui → net/transport-solver → modules/transport → net/assignment-solver → modules/assignment → net/shortestpath-solver → modules/shortestpath → net/maxflow-solver → modules/maxflow → pm/cpm-solver → modules/cpm → pm/sched-solver → modules/scheduling → inv/inventory-solver → modules/inventory → fc/forecast-solver → modules/forecast → app.
+- Klasyczne skrypty (NIE moduły ES), wspólny zasięg globalny. Kolejność `<script>` w `index.html` ma znaczenie: core → stats → viz → solver → parametric → ilp-solver → render → examples → csv → forms → registry → modules/lp → net/netui → net/transport-solver → modules/transport → net/assignment-solver → modules/assignment → net/shortestpath-solver → modules/shortestpath → net/maxflow-solver → modules/maxflow → pm/cpm-solver → modules/cpm → pm/sched-solver → modules/scheduling → inv/inventory-solver → modules/inventory → fc/forecast-solver → modules/forecast → agg/agg-solver → modules/aggplan → mrp/mrp-solver → modules/mrp → queue/queue-solver → modules/queue → markov/markov-solver → modules/markov → qsim/qsim-solver → modules/qsim → app (inv/lotsize zaraz po inv/inventory-solver; linalg zaraz po viz).
 - `js/solver.js`, `js/parametric.js` to czysta matematyka bez DOM (testowalna w Node). Logika liczenia nie może zależeć od DOM.
 - Nowy moduł = plik w `js/modules/` z `registerModule({id, title, icon, html, init})` + linia `<script>` w `index.html` (po registry.js, przed app.js) + usunięcie z listy SOON. Zakładka, sekcja i eksport PDF (`last[id]`) powstają automatycznie.
 - Modele sieciowe korzystają ze wspólnych komponentów `js/net/netui.js`: `matrixHTML/matrixSync/matrixWire` (edytor macierzy, M = trasa zakazana), `netFail` (błąd pod tabelą), `networkSVG/bipartiteSVG` (rysunek sieci), `netToolsHTML/netToolsWire` (kopiuj/wklej, przykłady, .json, .csv), `matrixToCSV/matrixFromCSV`. Raport modułu to czysta funkcja zwracająca HTML (testowalna).
@@ -36,7 +37,11 @@ Hosting: GitHub Pages (statyczne pliki, bez backendu i bez bundlera). Wykresy: P
 1. Zrobione: metoda dwufazowa (wybór w Opcjach zaawansowanych Simpleksa), import/eksport CSV, limit 30×30.
 2. Modele sieciowe – zrobione: Transport, Przydział (metoda węgierska), Najkrótsza ścieżka (Dijkstra, Bellman-Ford), Maksymalny przepływ (Edmonds-Karp, sieć rezydualna, przekrój minimalny, superźródło).
 - `layeredSVG` (netui.js) rysuje graf warstwami od startu; klasy krawędzi: tree, path, other, neg. Test w przeglądarce: `python3 tests/browser_check.py` (wymaga playwright).
-3. Zarządzanie projektem – zrobione: PERT/CPM, Harmonogramowanie. Zapasy i Prognozowanie – zrobione (rdzeń). Dalej według PROGRESS.md (pakiet 2: planowanie zagregowane, MRP).
+3. Zarządzanie projektem – zrobione: PERT/CPM, Harmonogramowanie. Pakiety 2 i 3 zrobione. Dalej według PROGRESS.md (pakiet 4: Analiza decyzji, Karty kontrolne, Odbiór statystyczny).
+- Wspólne: js/linalg.js (LA.solve, LA.inv, LA.det, LA.chol, LA.isPD, LA.mul, LA.vecMul, LA.pow); VZ.bars (wykres słupkowy), VZ.stateGraph (graf stanów: układ 'circle' albo 'line'); serie wykresu liniowego: klasy '', b, c, d, e, f, g; legenda zawija się po 4 pozycjach.
+- Dobór partii: js/inv/lotsize.js (lotSize(r, reguła, {S, H, Q, P, min, max}), LOT_RULES) – wspólny dla Zapasów i MRP.
+- Pasek modułów: na komputerze przeciąganie myszą, kółko, strzałki .navarrow (app.js); na dotyku – zwykłe przewijanie.
+- rowsToCSV: parametry liczbowe (meta) zapisywane z przecinkiem; importy zamieniają przecinek na kropkę.
 - Formularz parametrów: paramFormHTML/paramSync, CSV parametrów: paramsToCSV/paramsFromCSV (netui.js); wzory w raporcie w <div class="formula">.
 - Wspólne: js/stats.js (ST.normCdf, ST.normInv, ST.rng(seed) …), js/viz.js (VZ.gantt, VZ.hist, VZ.line), netui.js: rowTableHTML/rowTableSync (tabela wierszy), rowsToCSV/rowsFromCSV.
 - Uwaga CSS: [hidden] ma display:none!important (klasy z display:flex nie nadpiszą ukrycia).

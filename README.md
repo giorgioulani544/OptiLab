@@ -1,57 +1,109 @@
-# OptiLab – Badania Operacyjne
-Made by Aleksander Kruszelnicki
+<p align="center">
+  <img src="icon-512.png" alt="Logo OptiLab" width="120">
+</p>
 
-Moduły: Prognozowanie, Zapasy, PERT/CPM, Harmonogramowanie, Metoda graficzna, Simpleks (duże M / dwufazowa, dual, analiza wrażliwości i parametryczna), Programowanie całkowitoliczbowe (Branch & Bound), Transport, Przydział, Najkrótsza ścieżka, Maksymalny przepływ.
+<h1 align="center">OptiLab 🧮</h1>
 
-## Struktura
-```
-index.html              powłoka: nagłówek, dolny pasek zakładek, sekcje modułów
-css/style.css           wszystkie style (w tym druk do PDF)
-js/core.js              narzędzia wspólne (formatowanie liczb, indeksy <sub>)
-js/solver.js            matematyka bez DOM: simpleks, typy zmiennych, dual (testowalne)
-js/ilp-solver.js        Branch & Bound (statusy węzłów, limity, wynik niepewny) – bez DOM, testowalne
-js/parametric.js        analiza parametryczna: dokładne punkty załamania (bez DOM, testowalne)
-js/render.js            HTML tablic, opisu zadania, zadania dualnego
-js/examples.js          przykładowe zadania (wystarczy dopisać wiersz)
-js/csv.js               import/eksport CSV (Excel) – bez DOM, testowalne
-js/forms.js             formularze, walidacja, kopiuj/wklej dane, błędy przy polach
-js/modules/lp.js        moduł Programowanie liniowe (graficzna, Simpleks, Całkowite)
-js/net/netui.js         fundamenty modeli sieciowych: edytor macierzy, rysunek sieci (SVG), pliki/CSV, błędy przy polach
-js/net/transport-solver.js  zagadnienie transportowe (NW, min. element, VAM, MODI) – bez DOM, testowalne
-js/modules/transport.js moduł Transport: formularz i raport dydaktyczny
-js/net/assignment-solver.js  metoda węgierska (kroki, pokrycie zer, rozwiązania alternatywne) – bez DOM
-js/modules/assignment.js     moduł Przydział
-js/net/shortestpath-solver.js  Dijkstra i Bellman-Ford (ujemne cykle, ścieżki alternatywne) – bez DOM
-js/modules/shortestpath.js   moduł Najkrótsza ścieżka (lista krawędzi lub macierz wag)
-js/stats.js             rozkłady statystyczne, odwrotne dystrybuanty, generator liczb losowych ze ziarnem
-js/viz.js               wykresy SVG: Gantt, histogram, liniowy (drukowalne)
-js/pm/cpm-solver.js     PERT/CPM: harmonogram, rezerwy, ścieżki krytyczne, PERT, skracanie (LP), Monte Carlo – bez DOM
-js/modules/cpm.js       moduł PERT/CPM
-js/pm/sched-solver.js   harmonogramowanie: reguły jednej maszyny, Johnson, CDS, Palmer, Dannenbring, NEH, LPT, McNaughton – bez DOM
-js/modules/scheduling.js  moduł Harmonogramowanie
-js/inv/inventory-solver.js  zapasy: EOQ, EPQ, braki, rabaty, zapas bezpieczeństwa, gazeciarz – bez DOM
-js/modules/inventory.js moduł Zapasy
-js/fc/forecast-solver.js    prognozowanie: 8 metod, miary błędów, dobór parametrów – bez DOM
-js/modules/forecast.js  moduł Prognozowanie
-PROGRESS.md             stan prac nad kolejnymi modułami
-js/net/maxflow-solver.js     Ford-Fulkerson / Edmonds-Karp, przekrój minimalny, superźródło – bez DOM
-js/modules/maxflow.js        moduł Maksymalny przepływ (sieć rezydualna w każdej iteracji)
-js/registry.js          rejestr modułów (registerModule) i lista modułów „wkrótce"
-js/app.js               zakładki, eksport PDF, start (ładowany ostatni)
-tests/                  testy w Node (solver, metoda dwufazowa, parametryczna, CSV, przykłady, ładowanie, interfejs)
-tools/bundle.py         skleja projekt w jeden plik (podgląd na telefonie / wgranie z telefonu)
-manifest.webmanifest, icon-192.png, icon-512.png   ikona skrótu na telefonie/komputerze
-```
-Uruchom testy: `for t in tests/*.test.js; do node $t; done`.
-Kolejność plików w `index.html` ma znaczenie (każdy kolejny korzysta z poprzednich).
+<p align="center"><b>Badania operacyjne w przeglądarce – po polsku, krok po kroku, bez instalacji.</b></p>
 
-## Dodawanie modułu
-1. Utwórz `js/modules/nazwa.js`, który wywołuje `registerModule({id, title, icon, html, init})`. Obliczenia trzymaj w osobnym pliku bez DOM (np. `js/net/...-solver.js`), żeby dało się je testować w Node.
-2. Dodaj `<script src="...?v=N">` w `index.html` po `js/registry.js`, a przed `js/app.js`.
-3. Usuń moduł z listy `SOON` w `js/registry.js`. Zakładka, sekcja i eksport do PDF (`last[id]`) powstają automatycznie.
-4. Dopisz testy w `tests/` (najlepiej porównanie z podręcznikiem lub z innym solverem).
+<p align="center">
+  <a href="https://giorgioulani544.github.io/OptiLab/"><b>👉 Otwórz aplikację</b></a>
+</p>
 
-## Aktualizacja na GitHub Pages
-Wgraj cały folder (zachowaj podfoldery). Po zmianie pliku podnieś numer `?v=1` → `?v=2` w `index.html`,
-żeby przeglądarki nie używały starej wersji z pamięci podręcznej.
-Szczegółowa instrukcja: `INSTRUKCJA-GITHUB.md`.
+<p align="center">
+  ![moduły](https://img.shields.io/badge/modu%C5%82y-16%20gotowych-1f3a5f)
+  ![testy automatyczne](https://img.shields.io/badge/testy%20automatyczne-9278%20%E2%9C%93-2e7d32)
+  ![instalacja](https://img.shields.io/badge/instalacja-niepotrzebna-c9a227)
+  ![język](https://img.shields.io/badge/j%C4%99zyk-polski-b0413e)
+</p>
+
+---
+
+## ✨ Co to jest?
+
+**OptiLab** to darmowa aplikacja do rozwiązywania zadań z badań operacyjnych i zarządzania produkcją – nowoczesna alternatywa dla programu WinQSB. Działa w przeglądarce, na komputerze i na telefonie.
+
+Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest opisany po polsku, z tabelami, kolorowymi wyróżnieniami i wykresami. Dlatego nadaje się zarówno do rozwiązywania zadań, jak i do nauki oraz sprawdzania obliczeń wykonanych ręcznie.
+
+## 🧭 Co znajdziesz w aplikacji
+
+### 📐 Programowanie matematyczne
+| | Moduł | Co potrafi |
+|---|---|---|
+| 📈 | **Metoda graficzna** | obszar dopuszczalny, wierzchołki, prosta celu, punkty całkowite |
+| 🧾 | **Simpleks** | tablice krok po kroku (dwufazowa i duże M), zadanie dualne, analiza wrażliwości i parametryczna, rozwiązania alternatywne |
+| 🔢 | **Programowanie całkowitoliczbowe** | metoda podziału i ograniczeń z drzewem obliczeń |
+
+### 🕸️ Modele sieciowe
+| | Moduł | Co potrafi |
+|---|---|---|
+| 🚚 | **Transport** | metody startowe (NW, minimalny element, VAM), MODI z cyklem, degeneracja, trasy zakazane |
+| 🧩 | **Przydział** | metoda węgierska krok po kroku, macierze prostokątne, rozwiązania alternatywne |
+| 🛣️ | **Najkrótsza ścieżka** | Dijkstra z tabelą etykiet, Bellman-Ford, ujemne cykle |
+| 🌊 | **Maksymalny przepływ** | Edmonds-Karp, sieć rezydualna w każdej iteracji, przekrój minimalny |
+
+### 🗓️ Projekt i harmonogram
+| | Moduł | Co potrafi |
+|---|---|---|
+| ⏱️ | **PERT / CPM** | rezerwy, wszystkie ścieżki krytyczne, wykres Gantta, prawdopodobieństwo terminu, skracanie projektu z kosztem, symulacja Monte Carlo |
+| 🏭 | **Harmonogramowanie** | reguły SPT, WSPT, EDD, Moore'a-Hodgsona, reguła Johnsona, flow shop (CDS, Palmer, NEH), maszyny równoległe |
+
+### 📦 Zapasy, prognozy i planowanie produkcji
+| | Moduł | Co potrafi |
+|---|---|---|
+| 📦 | **Zapasy** | EOQ, EPQ, braki planowane, rabaty ilościowe, zapas bezpieczeństwa, model gazeciarza, dobór partii (Wagner-Whitin, Silver-Meal i inne) |
+| 🔮 | **Prognozowanie** | średnie ruchome, wygładzanie wykładnicze, Holt, Holt-Winters, regresja, miary błędów i sygnał kontrolny, automatyczny dobór parametrów |
+| 📊 | **Planowanie zagregowane** | model LP z zatrudnieniem, nadgodzinami i podwykonawstwem, porównanie strategii, ceny dualne |
+| 🔩 | **MRP** | wielopoziomowa struktura wyrobu, kody niskiego poziomu, tabele MRP, reguły doboru partii, komunikaty „przyspieszyć / opóźnić" |
+
+### 🎲 Modele probabilistyczne
+| | Moduł | Co potrafi |
+|---|---|---|
+| ⏳ | **Kolejki** | M/M/1, M/M/s, M/M/s/K (Erlang B), M/G/1, M/D/1, M/Eₖ/1, populacja skończona, diagram przejść, optymalna liczba stanowisk |
+| 🔗 | **Procesy Markowa** | rozkład po n krokach, rozkład stacjonarny, klasyfikacja stanów, łańcuchy pochłaniające, czasy pierwszego przejścia, czas ciągły |
+| 🎰 | **Symulacja kolejek** | symulacja zdarzeń krok po kroku, 6 rozkładów, powtórzenia z przedziałami ufności, porównanie z teorią i konfiguracji między sobą |
+
+## 🚀 Jak zacząć
+
+1. **Otwórz aplikację** i wybierz moduł na dolnym pasku. Na komputerze pasek przewiniesz kółkiem myszy, przeciągnięciem albo strzałkami.
+2. **Wczytaj przykład** z „Opcji zaawansowanych" albo wpisz własne dane – możesz je wkleić prosto z Excela.
+3. **Kliknij przycisk obliczeń** i przeczytaj raport z krokami. Jednym kliknięciem zapiszesz go do PDF.
+
+## 💡 Dlaczego OptiLab, a nie WinQSB?
+
+| | WinQSB | OptiLab |
+|---|---|---|
+| Uruchomienie | instalacja na Windows | przeglądarka – komputer, tablet, telefon |
+| Język | angielski | polski |
+| Wyjaśnienia | wynik i wybrane tablice | opis każdego kroku: dlaczego i skąd liczba |
+| Dane | własny format plików | kopiuj/wklej z Excela, CSV (polski Excel), JSON |
+| Raport | wydruk | PDF z bieżącego modułu, czytelne tabele i wykresy |
+| Błędy w danych | ogólny komunikat | czerwone pole i wyjaśnienie, co poprawić |
+
+## ✅ Na wynikach można polegać
+
+- **9278 automatycznych sprawdzeń** – wszystkie przechodzą.
+- Wyniki porównujemy z **przykładami z literatury** (m.in. Hillier i Lieberman, Heizer i Render, Render i Stair, Chopra i Meindl) oraz **niezależnymi obliczeniami**: przeglądem wszystkich możliwych rozwiązań, wzorami zamkniętymi i symulacją Monte Carlo.
+- Każdy moduł jest sprawdzany w prawdziwej przeglądarce na ekranie komputera i telefonu.
+- Gdy wynik nie jest pewny (np. przekroczony limit obliczeń), aplikacja mówi to wprost – **nigdy nie pokazuje niepewnego wyniku jako poprawnego**.
+
+## 📂 Praca z danymi
+
+- 📋 **Kopiuj / Wklej dane** – przenoszenie zadań między modułami i urządzeniami
+- 📊 **Excel (.csv)** – eksport i import w formacie polskiego Excela (średnik, przecinek dziesiętny)
+- 💾 **Plik .json** – zapis i wczytanie całego zadania
+- 🖨️ **PDF** – raport tylko z bieżącego modułu, tabele nie są rozcinane między stronami
+
+## 🛠️ W przygotowaniu
+
+Analiza decyzji · Karty kontrolne · Odbiór statystyczny · Programowanie celowe · Programowanie dynamiczne · Programowanie kwadratowe · Programowanie nieliniowe · Lokalizacja i układ
+
+Docelowo OptiLab ma objąć wszystkie moduły WinQSB. Uwagi i zgłoszenia błędów są bardzo mile widziane. 🙌
+
+## 👩‍💻 Dla programistów
+
+Czyste HTML, CSS i JavaScript – bez instalacji zależności i bez bundlera. Struktura plików i zasady rozwoju: [DOKUMENTACJA-TECHNICZNA.md](DOKUMENTACJA-TECHNICZNA.md). Testy: `node tests/<nazwa>.test.js` (Node 18+), test w przeglądarce: `python3 tests/browser_check.py` (Playwright).
+
+---
+
+<p align="center"><sub>Made by Aleksander Kruszelnicki</sub></p>

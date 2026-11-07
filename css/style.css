@@ -198,3 +198,21 @@ svg.netsvg .nd.crit{stroke:var(--err);stroke-width:2.5}
 .pfr label{min-width:260px}
 @media(max-width:600px){.pfr label{min-width:0;flex-basis:100%}}
 .formula{font-family:"Iowan Old Style",Georgia,serif;font-size:1.05em;background:#f7f5ef;border-left:3px solid var(--accent);padding:6px 10px;margin:6px 0;overflow-x:auto}
+/* Pasek modułów: przewijanie na komputerze */
+@media(pointer:fine){
+ nav{scrollbar-width:thin;scrollbar-color:#c3c9d6 transparent;cursor:grab}
+ nav::-webkit-scrollbar{height:6px} nav::-webkit-scrollbar-thumb{background:#c3c9d6;border-radius:3px}
+ nav.dragging{cursor:grabbing;user-select:none} nav.dragging button{pointer-events:none}
+}
+.navarrow{position:fixed;bottom:calc(10px + env(safe-area-inset-bottom));z-index:6;width:34px;height:44px;min-height:44px;padding:0;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font-size:24px;line-height:1;box-shadow:0 2px 8px rgba(20,30,50,.15)}
+.navarrow.l{left:6px} .navarrow.r{right:6px}
+@media(pointer:coarse){.navarrow{display:none!important}}
+@media print{.navarrow{display:none!important}}
+svg.vzsvg .vzbar{fill:var(--link)}
+svg.vzsvg .vzbar.b{fill:var(--err)} svg.vzsvg .vzbar.c{fill:var(--ok)} svg.vzsvg .vzbar.g{fill:#b5bccb}
+svg.vzsvg .sgn{fill:#fff;stroke:var(--ink);stroke-width:1.8} svg.vzsvg .sgn.abs{fill:#fde8e6;stroke:var(--err)} svg.vzsvg .sgn.rec{fill:#e7f5ef;stroke:var(--ok)} svg.vzsvg .sgn.tr{fill:#fff6d8;stroke:#c9a227}
+svg.vzsvg .sgt{font-weight:700;font-size:12px} svg.vzsvg .sge{fill:none;stroke:#5b6b82;stroke-width:1.5} svg.vzsvg .sge.b{stroke:var(--err)} svg.vzsvg .sge.c{stroke:var(--ok)}
+svg.vzsvg .sgah{fill:#5b6b82} svg.vzsvg .sgl{font-size:11px;font-weight:600;fill:var(--ink);paint-order:stroke;stroke:#fff;stroke-width:3px}
+svg.vzsvg .vzline.d{stroke:#e08a00} svg.vzsvg .vzline.e{stroke:#7b3fa0} svg.vzsvg .vzline.f{stroke:#00838f} svg.vzsvg .vzline.g{stroke:#8d6e63;stroke-dasharray:4 3}
+svg.vzsvg .vzdot.c{fill:var(--ok)} svg.vzsvg .vzdot.d{fill:#e08a00} svg.vzsvg .vzdot.e{fill:#7b3fa0} svg.vzsvg .vzdot.f{fill:#00838f} svg.vzsvg .vzdot.g{fill:#8d6e63}
+svg.vzsvg .vzleg.d{fill:#e08a00} svg.vzsvg .vzleg.e{fill:#7b3fa0} svg.vzsvg .vzleg.f{fill:#00838f} svg.vzsvg .vzleg.g{fill:#8d6e63}

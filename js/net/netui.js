@@ -189,7 +189,8 @@ function matrixFromCSV(text, o) {
 
 /* ---------- edytor tabeli wierszy (czynności, zadania): cols = [{key, label, type: 'name'|'text'|'num', blank}] ---------- */
 function rowTableHTML(p, cols, rows, o = {}) {
-  const inp = (c, r, i) => c.type === 'num'
+  const inp = (c, r, i) => c.type === 'sel' ? `<select id="${p}${c.key}${i}" aria-label="${esc(c.label)} ${i + 1}">${c.opts.map(([v, t]) => `<option value="${esc(v)}"${String(r[c.key]) === String(v) ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select>`
+    : c.type === 'num'
     ? `<input class="num" data-num${c.blank ? ' data-blank' : ''} inputmode="decimal" id="${p}${c.key}${i}" value="${esc(r[c.key] ?? '')}" aria-label="${esc(c.label)} ${i + 1}">`
     : `<input class="${c.type === 'name' ? 'nm' : 'tx'}" id="${p}${c.key}${i}" value="${esc(r[c.key] ?? '')}" aria-label="${esc(c.label)} ${i + 1}"${c.ph ? ` placeholder="${esc(c.ph)}"` : ''}>`;
   return `<div class="tw"><table class="mx rt"><tr>${cols.map(c => `<th>${c.label}</th>`).join('')}<th></th></tr>` +
@@ -200,7 +201,8 @@ const rowTableSync = (p, cols, rows) => rows.map((r, i) => { const o = {...r}; c
 /* CSV tabeli wierszy (polski Excel): najpierw wiersze „klucz;wartość" (np. tryb), potem nagłówek i dane */
 function rowsToCSV(cols, rows, meta = []) {
   const q = s => /[;"\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s, v = (x, c) => c.type === 'num' ? String(x ?? '').replace('.', ',') : String(x ?? '');
-  return '\uFEFF' + [...meta.map(([k, x]) => [k, String(x)]), cols.map(c => c.label), ...rows.map(r => cols.map(c => v(r[c.key], c)))].map(r => r.map(x => q(String(x))).join(';')).join('\r\n') + '\r\n';
+  const mv = x => /^-?\d+\.\d+$/.test(String(x)) ? String(x).replace('.', ',') : String(x);   // liczby w parametrach też z przecinkiem (polski Excel)
+  return '\uFEFF' + [...meta.map(([k, x]) => [k, mv(x)]), cols.map(c => c.label), ...rows.map(r => cols.map(c => v(r[c.key], c)))].map(r => r.map(x => q(String(x))).join(';')).join('\r\n') + '\r\n';
 }
 function rowsFromCSV(text, cols, metaKeys = []) {
   const lines = String(text).replace(/^\uFEFF/, '').split(/\r?\n/), first = lines.find(l => l.trim());

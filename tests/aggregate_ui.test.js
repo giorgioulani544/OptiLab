@@ -1,0 +1,20 @@
+// Moduł Planowanie zagregowane: raporty, strategie, ceny dualne, plan całkowitoliczbowy, brak planu, CSV, bezpieczeństwo etykiet
+const vm = require('vm'), {order, load} = require('./helpers');
+const stub = new Proxy(function () {}, {get: (t, k) => k === 'forEach' ? () => {} : k === Symbol.toPrimitive ? () => '' : stub, set: () => true, apply: () => stub});
+const c = load(order, {document: {querySelector: () => stub, querySelectorAll: () => []}, window: {scrollTo() {}}, navigator: {}, Plotly: {}, setTimeout, console});
+const get = code => vm.runInContext(code, c);
+let ok = 0, bad = 0; const t = (n, v) => { v ? ok++ : (bad++, console.log('BŁĄD:', n)); };
+const EX = get('JSON.parse(JSON.stringify(AG_EXAMPLES))'), keys = ['k', 'W0', 'I0', 'Iend', 'wage', 'cReg', 'cOT', 'otMax', 'cSub', 'subMax', 'cHire', 'cFire', 'h', 'b', 'hireMax', 'fireMax'];
+const toP = d => { const P = {D: d.data.map(r => +r.D)}; keys.forEach(k => { P[k] = d[k] === '' || d[k] === undefined ? null : +d[k]; }); P.Iend = P.Iend ?? 0; P.cReg = P.cReg ?? 0; return P; };
+const run = (P, intW) => ({opt: c.aggSolve(P, 'opt'), chase: c.aggSolve(P, 'chase'), level: c.aggSolve(P, 'level'), int: intW ? c.aggSolve(P, 'opt', {intW: true}) : null});
+EX.forEach(e => { const P = toP(e.data), h = c.agReportHTML(P, run(P, false), e.data.data.map(r => r.label));
+  t(`raport „${e.name}": strategie, plan, koszty, ceny dualne, wykresy`, /Porównanie strategii/.test(h) && /Plan optymalny<\/h4>/.test(h) && /Struktura kosztów/.test(h) && /Ceny dualne/.test(h) && (h.match(/class="vzsvg"/g) || []).length === 2); });
+let P = toP(EX[0].data), h = c.agReportHTML(P, run(P, true), null);
+t('Red Tomato: 422 275, plan całkowity 422 660, uwaga o ułamkowych pracownikach', /<b>422275<\/b>/.test(h.replace(/\s/g, '')) && /422660/.test(h.replace(/\s/g, '')) && /ułamkową liczbę pracowników/.test(h));
+P = {...toP(EX[1].data), otMax: 0, subMax: 0, hireMax: 0, W0: 1}; h = c.agReportHTML(P, run(P, false), null); t('brak planu dopuszczalnego → komunikat zamiast wyniku', /Nie istnieje plan/.test(h));
+h = c.agReportHTML(toP(EX[1].data), run(toP(EX[1].data), false), ['<b>x</b>', 'K2', 'K3', 'K4']); t('etykiety okresów bezpiecznie wyświetlane', !/<b>x<\/b>/.test(h) && /&lt;b&gt;x/.test(h));
+const csv = get(`rowsToCSV(AG_COLS, ${JSON.stringify(EX[0].data.data)}, [['k','40'],['otMax','2.5'],['b','5']])`), back = get(`rowsFromCSV(${JSON.stringify(csv)}, AG_COLS, ['k','otmax','b'])`);
+t('CSV: eksport → import (popyt i parametry)', back.rows.length === 6 && back.rows[3].D === '3800' && back.meta.otmax === '2,5' && back.meta.k === '40');
+let th = ''; try { get('agNormalize({data: []})'); } catch (e) { th = e.message; } t('plik bez okresów odrzucony', /brak okresów/.test(th));
+t('moduł zarejestrowany i usunięty z listy „wkrótce"', get("MODULES.some(m => m.id === 'agg') && !SOON.some(s => s[0] === 'agg')"));
+console.log(`Testy modułu Planowanie zagregowane: ${ok} OK, ${bad} błędów`); process.exit(bad ? 1 : 0);

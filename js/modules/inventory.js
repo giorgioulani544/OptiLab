@@ -1,7 +1,7 @@
 /* ===== OptiLab – moduł Zapasy =====
    Interfejs i raport dydaktyczny. Obliczenia: js/inv/inventory-solver.js. Wykresy: js/viz.js. */
 const IVP = 'inv-';
-const IV_MODELS = {eoq: 'EOQ – ekonomiczna wielkość zamówienia', epq: 'EPQ – produkcja ze skończoną wydajnością', back: 'EOQ z planowanymi brakami', disc: 'Rabaty ilościowe', rop: 'Punkt zamawiania i zapas bezpieczeństwa', news: 'Model gazeciarza (jeden okres)'};
+const IV_MODELS = {eoq: 'EOQ – ekonomiczna wielkość zamówienia', epq: 'EPQ – produkcja ze skończoną wydajnością', back: 'EOQ z planowanymi brakami', disc: 'Rabaty ilościowe', rop: 'Punkt zamawiania i zapas bezpieczeństwa', news: 'Model gazeciarza (jeden okres)', lot: 'Zapotrzebowanie zmienne w czasie (dobór partii)'};
 const IV_F = {
   D: {key: 'D', label: 'Popyt w okresie D', unit: 'szt. / okres'}, S: {key: 'S', label: 'Koszt jednego zamówienia S', unit: 'zł'}, H: {key: 'H', label: 'Koszt utrzymania jednostki H', unit: 'zł / szt. / okres'},
   c: {key: 'c', label: 'Cena jednostki (opcjonalnie)', unit: 'zł', blank: true}, L: {key: 'L', label: 'Czas dostawy (opcjonalnie)', unit: 'dni', blank: true}, days: {key: 'days', label: 'Dni roboczych w okresie (gdy podano czas dostawy)', unit: 'dni', blank: true, ph: '365'},
@@ -10,9 +10,12 @@ const IV_F = {
   mu: {key: 'mu', label: 'Średni popyt dzienny', unit: 'szt. / dzień'}, sd: {key: 'sd', label: 'Odchylenie standardowe popytu dziennego', unit: 'szt.'}, Ld: {key: 'Ld', label: 'Czas dostawy L', unit: 'dni'},
   sdL: {key: 'sdL', label: 'Odchylenie czasu dostawy (opcjonalnie)', unit: 'dni', blank: true}, alpha: {key: 'alpha', label: 'Poziom obsługi α', unit: 'np. 0,95'}, Q: {key: 'Q', label: 'Wielkość zamówienia Q (opcjonalnie – poziom wypełnienia)', unit: 'szt.', blank: true},
   pr: {key: 'pr', label: 'Cena sprzedaży', unit: 'zł / szt.'}, cost: {key: 'cost', label: 'Koszt zakupu', unit: 'zł / szt.'}, v: {key: 'v', label: 'Wartość odzysku niesprzedanej sztuki', unit: 'zł / szt.', blank: true, ph: '0'},
-  g: {key: 'g', label: 'Koszt utraconej sprzedaży (opcjonalnie)', unit: 'zł / szt.', blank: true, ph: '0'}, nmu: {key: 'nmu', label: 'Średni popyt w okresie μ', unit: 'szt.'}, nsd: {key: 'nsd', label: 'Odchylenie standardowe popytu σ', unit: 'szt.'}};
+  g: {key: 'g', label: 'Koszt utraconej sprzedaży (opcjonalnie)', unit: 'zł / szt.', blank: true, ph: '0'}, nmu: {key: 'nmu', label: 'Średni popyt w okresie μ', unit: 'szt.'}, nsd: {key: 'nsd', label: 'Odchylenie standardowe popytu σ', unit: 'szt.'},
+  Sl: {key: 'Sl', label: 'Koszt jednego zamówienia S', unit: 'zł'}, Hl: {key: 'Hl', label: 'Koszt utrzymania jednostki w okresie H', unit: 'zł / szt. / okres'},
+  Ql: {key: 'Ql', label: 'Stała wielkość partii Q (opcjonalnie – reguła FOQ)', unit: 'szt.', blank: true}, Pl: {key: 'Pl', label: 'Liczba okresów P (opcjonalnie – reguła POQ)', unit: 'okresów', blank: true}};
 const ivFields = I => ({eoq: ['D', 'S', 'H', 'c', 'L', 'days'], epq: ['D', 'S', 'H', 'p', 'c'], back: ['D', 'S', 'H', 'b', 'c'], disc: ['D', 'S', I.hMode === 'rate' ? 'i' : 'H'], rop: ['mu', 'sd', 'Ld', 'sdL', 'alpha', 'Q'],
-  news: ['pr', 'cost', 'v', 'g', ...(I.dist === 'normal' ? ['nmu', 'nsd'] : [])]})[I.model].map(k => IV_F[k]);
+  news: ['pr', 'cost', 'v', 'g', ...(I.dist === 'normal' ? ['nmu', 'nsd'] : [])], lot: ['Sl', 'Hl', 'Ql', 'Pl']})[I.model].map(k => IV_F[k]);
+const IV_REQ = [{key: 'label', label: 'Okres', type: 'name'}, {key: 'r', label: 'Zapotrzebowanie', type: 'num'}];
 const IV_TIER = [{key: 'from', label: 'Od ilości', type: 'num'}, {key: 'price', label: 'Cena jednostki', type: 'num'}], IV_DISC = [{key: 'd', label: 'Popyt', type: 'num'}, {key: 'p', label: 'Prawdopodobieństwo', type: 'num'}];
 const ivEx = (name, d) => ({name, data: {hMode: 'const', type: 'all', dist: 'normal', tiers: [{from: '0', price: '5'}], table: [{d: '10', p: '0.5'}, {d: '20', p: '0.5'}], ...d}});
 const IV_EXAMPLES = [
@@ -24,6 +27,7 @@ const IV_EXAMPLES = [
   ivEx('Rabaty przyrostowe', {model: 'disc', D: '6000', S: '120', i: '0.25', hMode: 'rate', type: 'inc', tiers: [{from: '0', price: '10'}, {from: '500', price: '9.5'}, {from: '1500', price: '9'}]}),
   ivEx('Zapas bezpieczeństwa (poziom obsługi 95%)', {model: 'rop', mu: '20', sd: '4', Ld: '9', alpha: '0.95', Q: '200'}),
   ivEx('Gazeciarz – popyt normalny (Gallego)', {model: 'news', pr: '4', cost: '1', nmu: '100', nsd: '30', dist: 'normal'}),
+  ivEx('Dobór partii: 8 okresów (Wagner-Whitin, Silver-Meal…)', {model: 'lot', Sl: '120', Hl: '1', Ql: '150', Pl: '2', req: [50, 60, 70, 60, 95, 75, 60, 55].map((r, i) => ({label: String(i + 1), r: String(r)}))}),
   ivEx('Gazeciarz – popyt dyskretny', {model: 'news', pr: '12', cost: '5', v: '1', dist: 'discrete', table: [{d: '20', p: '0.1'}, {d: '30', p: '0.2'}, {d: '40', p: '0.3'}, {d: '50', p: '0.25'}, {d: '60', p: '0.15'}]}),
 ];
 let IV = ivNormalize(JSON.parse(JSON.stringify(IV_EXAMPLES[0].data)));
@@ -32,6 +36,7 @@ function ivNormalize(d) {
   const o = {model: d.model, hMode: d.hMode === 'rate' ? 'rate' : 'const', type: d.type === 'inc' ? 'inc' : 'all', dist: d.dist === 'discrete' ? 'discrete' : 'normal'};
   Object.keys(IV_F).forEach(k => { o[k] = String(d[k] ?? ''); });
   o.tiers = (Array.isArray(d.tiers) && d.tiers.length ? d.tiers : [{from: '0', price: ''}]).map(t => ({from: String(t.from ?? ''), price: String(t.price ?? '')}));
+  o.req = (Array.isArray(d.req) && d.req.length ? d.req : [{label: '1', r: ''}]).map((t, i) => ({label: String(t.label ?? i + 1), r: String(t.r ?? '')}));
   o.table = (Array.isArray(d.table) && d.table.length ? d.table : [{d: '', p: ''}]).map(t => ({d: String(t.d ?? ''), p: String(t.p ?? '')}));
   return o;
 }
@@ -41,14 +46,16 @@ function ivRender() {
   $('#' + IVP + 'params').innerHTML = paramFormHTML(IVP, ivFields(IV), IV);
   const tb = $('#' + IVP + 'table');
   if (IV.model === 'disc') tb.innerHTML = '<h4>Progi cenowe</h4>' + rowTableHTML(IVP + 't', IV_TIER, IV.tiers, {addLabel: '+ próg', count: n => `${n} progów`});
+  else if (IV.model === 'lot') tb.innerHTML = '<h4>Zapotrzebowanie w okresach</h4>' + rowTableHTML(IVP + 't', IV_REQ, IV.req, {addLabel: '+ okres', count: n => `${n} okresów`});
   else if (IV.model === 'news' && IV.dist === 'discrete') tb.innerHTML = '<h4>Rozkład popytu</h4>' + rowTableHTML(IVP + 't', IV_DISC, IV.table, {addLabel: '+ wartość popytu', count: n => `${n} wartości`});
   else tb.innerHTML = '';
-  const add = $('#' + IVP + 'tadd'); if (add) add.onclick = () => { ivSync(); (IV.model === 'disc' ? IV.tiers : IV.table).push(IV.model === 'disc' ? {from: '', price: ''} : {d: '', p: ''}); ivRender(); };
+  const add = $('#' + IVP + 'tadd'); if (add) add.onclick = () => { ivSync(); (IV.model === 'disc' ? IV.tiers : IV.model === 'lot' ? IV.req : IV.table).push(IV.model === 'disc' ? {from: '', price: ''} : IV.model === 'lot' ? {label: String(IV.req.length + 1), r: ''} : {d: '', p: ''}); ivRender(); };
   matrixPolish($('#' + IVP + 'top'));
 }
 function ivSync() {
   paramSync(IVP, ivFields(IV), IV);
   if (IV.model === 'disc' && $('#' + IVP + 'tfrom0')) IV.tiers = rowTableSync(IVP + 't', IV_TIER, IV.tiers);
+  if (IV.model === 'lot' && $('#' + IVP + 'tr0')) IV.req = rowTableSync(IVP + 't', IV_REQ, IV.req);
   if (IV.model === 'news' && IV.dist === 'discrete' && $('#' + IVP + 'td0')) IV.table = rowTableSync(IVP + 't', IV_DISC, IV.table);
   IV.model = $('#' + IVP + 'model').value; IV.hMode = $('#' + IVP + 'hmode').value; IV.type = $('#' + IVP + 'type').value; IV.dist = $('#' + IVP + 'dist').value;
 }
@@ -62,14 +69,14 @@ function ivInit() {
     <p class="hint">Wybierz model i wpisz dane. Jednostki czasu muszą być zgodne (np. popyt roczny i koszt utrzymania na rok). Program pokaże wzory z podstawionymi liczbami i wykres kosztów.</p>`;
   ['model', 'hmode', 'type', 'dist'].forEach(k => $('#' + IVP + k).onchange = () => { ivSync(); clearErr(); ivRender(); });
   const top = $('#' + IVP + 'top'); matrixWire(top);
-  top.addEventListener('click', e => { const k = e.target.dataset?.del; if (k === undefined) return; ivSync(); const arr = IV.model === 'disc' ? IV.tiers : IV.table; if (arr.length > 1) arr.splice(+k, 1); clearErr(); ivRender(); });
+  top.addEventListener('click', e => { const k = e.target.dataset?.del; if (k === undefined) return; ivSync(); const arr = IV.model === 'disc' ? IV.tiers : IV.model === 'lot' ? IV.req : IV.table; if (arr.length > 1) arr.splice(+k, 1); clearErr(); ivRender(); });
   const keys = ['model', 'typ rabatu', 'rodzaj kosztu utrzymania', 'rozkład', ...Object.keys(IV_F)];
   netToolsWire(IVP, {kind: 'inventory', out: '#out-inv', examples: IV_EXAMPLES, normalize: ivNormalize,
     get: () => { ivSync(); return JSON.parse(JSON.stringify(IV)); }, set: d => { IV = d; ivRender(); },
     toCSV: d => paramsToCSV([['model', d.model], ['typ rabatu', d.type], ['rodzaj kosztu utrzymania', d.hMode], ['rozkład', d.dist], ...ivFields(d).map(f => [f.key, d[f.key]]).filter(([, x]) => x !== '')],
-      d.model === 'disc' ? IV_TIER : d.model === 'news' && d.dist === 'discrete' ? IV_DISC : null, d.model === 'disc' ? d.tiers : d.table),
-    fromCSV: t => { const r = paramsFromCSV(t, keys, [...IV_TIER, ...IV_DISC]); const m = r.meta;
-      return {...m, model: m.model, type: m['typ rabatu'], hMode: m['rodzaj kosztu utrzymania'], dist: m['rozkład'], tiers: r.rows.filter(x => x.from !== undefined), table: r.rows.filter(x => x.d !== undefined)}; }});
+      d.model === 'disc' ? IV_TIER : d.model === 'lot' ? IV_REQ : d.model === 'news' && d.dist === 'discrete' ? IV_DISC : null, d.model === 'disc' ? d.tiers : d.model === 'lot' ? d.req : d.table),
+    fromCSV: t => { const r = paramsFromCSV(t, keys, [...IV_TIER, ...IV_DISC, ...IV_REQ]); const m = r.meta;
+      return {...m, model: m.model, type: m['typ rabatu'], hMode: m['rodzaj kosztu utrzymania'], dist: m['rozkład'], tiers: r.rows.filter(x => x.from !== undefined), table: r.rows.filter(x => x.d !== undefined), req: r.rows.filter(x => x.r !== undefined)}; }});
   $('#btn-inv').onclick = ivSolveUI;
   ivRender();
 }
@@ -81,6 +88,7 @@ function ivRead() {
   const pos = k => { if (!(X[k] > 0)) bad.push(k); };
   if (['eoq', 'epq', 'back', 'disc'].includes(IV.model)) { pos('D'); pos('S'); pos(IV.model === 'disc' && IV.hMode === 'rate' ? 'i' : 'H'); }
   if (IV.model === 'back') pos('b'); if (IV.model === 'epq') pos('p');
+  if (IV.model === 'lot') { if (!(X.Hl > 0)) bad.push('Hl'); if (X.Ql !== null && !(X.Ql > 0)) bad.push('Ql'); if (X.Pl !== null && !(Number.isInteger(X.Pl) && X.Pl >= 1)) bad.push('Pl'); }
   if (IV.model === 'rop') { pos('Ld'); if (!(X.alpha > 0 && X.alpha < 1)) bad.push('alpha'); }
   if (IV.model === 'news') { pos('pr'); pos('cost'); if (IV.dist === 'normal') { pos('nmu'); pos('nsd'); } }
   if (bad.length) return netFail(IVP, out, 'zaznaczone wartości muszą być dodatnie (poziom obsługi – między 0 a 1, np. 0,95).', bad);
@@ -96,6 +104,11 @@ function ivRead() {
     if (s.some((t, k) => k && t.from === s[k - 1].from)) return netFail(IVP, out, 'dwa progi mają tę samą ilość „od".', T.map(t => 'tfrom' + t.k));
     if (s[0].from > 1) return netFail(IVP, out, 'pierwszy próg musi zaczynać się od 0 (albo 1) – inaczej nie wiadomo, ile kosztują mniejsze zamówienia.', ['tfrom' + s[0].k]);
     X.tiers = s.map(t => ({from: t.from, price: t.price}));
+  }
+  if (IV.model === 'lot') {
+    const e = IV.req.map((t, k) => { const s = String(t.r).trim().replace(',', '.'), x = Number(s); return s === '' || !isFinite(x) || x < 0 ? 'tr' + k : null; }).filter(Boolean);
+    if (e.length) return netFail(IVP, out, 'zapotrzebowanie w okresach – liczby nieujemne.', e);
+    X.req = IV.req.map(t => Number(String(t.r).replace(',', '.'))); X.labels = IV.req.map((t, k) => String(t.label).trim() || String(k + 1));
   }
   if (IV.model === 'news' && IV.dist === 'discrete') {
     const T = IV.table.map((t, k) => ({d: Number(String(t.d).replace(',', '.')), p: Number(String(t.p).replace(',', '.')), k}));
@@ -158,6 +171,8 @@ function ivReportHTML(model, X, opt = {}) {
       `<div class="sum"><b>Wynik:</b> zamawiaj, gdy zapas spadnie do <b>${f(R.ROP)}</b> szt. (w tym zapas bezpieczeństwa ${f(R.SS)}). Prawdopodobieństwo braku w cyklu: ${pc(1 - X.alpha)}.</div>`;
     const pts = []; for (let k = 0; k <= 80; k++) { const x = R.dLT - 4 * R.sLT + 8 * R.sLT * k / 80; pts.push([x, ST.normPdf(x, R.dLT, R.sLT)]); }
     if (R.sLT > 0) h += VZ.line([{name: 'popyt w czasie dostawy', pts}], {title: 'Rozkład popytu w czasie dostawy', xLabel: 'popyt w czasie dostawy', marks: [{x: R.ROP, y: ST.normPdf(R.ROP, R.dLT, R.sLT), label: 'ROP'}]}) + '<p class="hint">Pole pod krzywą na prawo od ROP to prawdopodobieństwo braku (1 − α).</p>';
+  } else if (model === 'lot') {
+    h += ivLotHTML(X);
   } else {
     const R = invNews({p: X.pr, c: X.cost, v: X.v ?? 0, g: X.g ?? 0, ...(opt.dist === 'discrete' ? {discrete: X.table} : {normal: {mu: X.nmu, sd: X.nsd}})});
     h += `<p class="hint">Zamawiamy raz na okres (gazety, pieczywo, towar sezonowy). Za mało – tracimy marżę C<sub>u</sub>, za dużo – tracimy C<sub>o</sub> na każdej niesprzedanej sztuce. Optimum: P(popyt ≤ Q) = C<sub>u</sub> / (C<sub>u</sub> + C<sub>o</sub>).</p>` +
@@ -176,6 +191,23 @@ function ivReportHTML(model, X, opt = {}) {
       h += VZ.line([{name: 'oczekiwany zysk', pts}], {title: 'Oczekiwany zysk w zależności od zamówienia', xLabel: 'zamówienie Q', marks: [{x: R.Q, y: R.profit, label: 'Q*'}]});
     }
   }
+  return h;
+}
+/* dobór partii przy zapotrzebowaniu zmiennym w czasie: porównanie reguł (js/inv/lotsize.js) */
+function ivLotHTML(X) {
+  const r = X.req, T = r.length, f = v => fmt(Math.round(v * 100) / 100), S = X.Sl, H = X.Hl, lb = k => esc((X.labels || [])[k] ?? k + 1);
+  const rules = ['L4L', ...(X.Ql !== null ? ['FOQ'] : []), 'EOQ', ...(X.Pl !== null ? ['POQ'] : []), 'SM', 'LUC', 'PPB', 'WW'];
+  const res = rules.map(k => lotSize(r, k, {S, H, Q: X.Ql, P: X.Pl})), best = Math.min(...res.map(x => x.total));
+  let h = `<p class="hint">Zapotrzebowanie zmienia się z okresu na okres, więc stała partia EOQ nie musi być najlepsza. Każde zamówienie kosztuje S = ${f(S)}, a każda jednostka pozostała na koniec okresu – H = ${f(H)}. Heurystyki decydują, na ile kolejnych okresów wystarczy partia; Wagner-Whitin (programowanie dynamiczne) daje plan optymalny.</p>`;
+  h += `<div class="tw"><table><thead><tr><th>Reguła</th>${r.map((_, k) => `<th>${lb(k)}</th>`).join('')}<th>Zamówień</th><th>Koszt zamówień</th><th>Koszt utrzymania</th><th>Koszt łączny</th></tr></thead>` +
+    `<tr><th>Zapotrzebowanie</th>${r.map(v => `<td>${f(v)}</td>`).join('')}<td colspan="4"></td></tr>` +
+    res.map(x => `<tr${x.rule === 'WW' ? ' class="sel"' : ''}><th>${LOT_RULES[x.rule]}${x.Q ? ` (Q = ${f(x.Q)})` : ''}</th>${x.rec.map(v => `<td>${v > 1e-9 ? '<b>' + f(v) + '</b>' : ''}</td>`).join('')}<td>${x.setups}</td><td>${f(x.setupCost)}</td><td>${f(x.hold)}</td><td class="${Math.abs(x.total - best) < 1e-9 ? 'best' : ''}">${f(x.total)}</td></tr>`).join('') + '</table></div>';
+  const W = res.find(x => x.rule === 'WW'), SM = res.find(x => x.rule === 'SM');
+  h += `<div class="sum"><b>Wynik:</b> najtańszy plan (Wagner-Whitin) kosztuje <b>${f(W.total)}</b>: zamówienia w okresach ${W.steps.map(s => lb(s.t)).join(', ')}. Najlepsza heurystyka: ${LOT_RULES[res.filter(x => x.rule !== 'WW').reduce((a, b) => b.total < a.total - 1e-9 ? b : a).rule]}.</div>`;
+  h += '<details class="adv"><summary>Wagner-Whitin – tablica programowania dynamicznego</summary><p class="hint">f(j) – najmniejszy koszt pokrycia okresów 1…j. Liczymy f(j) = min po i ≤ j [f(i − 1) + S + H·Σ (k − i)·r<sub>k</sub>], gdzie i to okres ostatniego zamówienia.</p><div class="tw"><table><thead><tr><th>j</th><th>f(j)</th><th>ostatnie zamówienie w okresie</th></tr></thead>' +
+    W.f.slice(1).map((v, k) => `<tr><td>${lb(k)}</td><td>${f(v)}</td><td>${lb(W.arg[k + 1] - 1)}</td></tr>`).join('') + '</table></div></details>';
+  if (SM.steps.length) h += '<details class="adv"><summary>Silver-Meal – kroki</summary><ol>' + SM.steps.map(s => `<li>Zamówienie w okresie ${lb(s.t)}: średni koszt na okres przy pokryciu do okresu … ${s.trail.map(q => `${lb(q.j)}: ${f(q.v)}`).join('; ')} → pokrywamy okresy ${lb(s.t)}–${lb(s.j)} (dalej średni koszt rośnie).</li>`).join('') + '</ol></details>';
+  h += VZ.line([{name: 'Wagner-Whitin', pts: W.end.map((v, k) => [k + 1, v]), dots: true}, {name: 'partia na partię', pts: res[0].end.map((v, k) => [k + 1, v]), cls: 'b'}, {name: 'Silver-Meal', pts: SM.end.map((v, k) => [k + 1, v]), cls: 'c', dots: true}], {title: 'Zapas na koniec okresu', xLabel: 'okres', step: true});
   return h;
 }
 registerModule({id: 'inv', title: 'Zapasy', init: ivInit,

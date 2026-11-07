@@ -21,6 +21,21 @@ function goTab(t) {
   if (t === 'graph') Plotly.Plots.resize('plot');
 }
 document.querySelectorAll('nav button').forEach(b => b.onclick = () => goTab(b.dataset.tab));
+/* Przewijanie paska modułów na komputerze: przeciąganie myszą, kółko myszy, strzałki na końcach (na dotyku – zwykłe przesuwanie palcem) */
+(() => {
+  const nav = $('nav'); if (!nav || !document.body || !nav.addEventListener) return;
+  document.body.insertAdjacentHTML('beforeend', '<button type="button" class="navarrow l" aria-label="przewiń moduły w lewo" hidden>‹</button><button type="button" class="navarrow r" aria-label="przewiń moduły w prawo" hidden>›</button>');
+  const L = $('.navarrow.l'), R = $('.navarrow.r');
+  const upd = () => { const max = nav.scrollWidth - nav.clientWidth; L.hidden = !(max > 2 && nav.scrollLeft > 2); R.hidden = !(max > 2 && nav.scrollLeft < max - 2); };
+  L.onclick = () => nav.scrollBy({left: -nav.clientWidth * 0.7, behavior: 'smooth'}); R.onclick = () => nav.scrollBy({left: nav.clientWidth * 0.7, behavior: 'smooth'});
+  nav.addEventListener('scroll', upd, {passive: true}); window.addEventListener('resize', upd); setTimeout(upd, 0);
+  nav.addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && nav.scrollWidth > nav.clientWidth) { nav.scrollLeft += e.deltaY; e.preventDefault(); } }, {passive: false});
+  let drag = null, moved = false;
+  nav.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' || e.button !== 0) return; drag = {x: e.clientX, left: nav.scrollLeft}; moved = false; });
+  window.addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.x; if (!moved && Math.abs(dx) > 6) { moved = true; nav.classList.add('dragging'); } if (moved) nav.scrollLeft = drag.left - dx; });
+  window.addEventListener('pointerup', () => { if (!drag) return; drag = null; nav.classList.remove('dragging'); });
+  nav.addEventListener('click', e => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);   // przeciągnięcie to nie kliknięcie w moduł
+})();
 $('#logo').src = $('link[rel=icon]').href;     // logo w nagłówku = ta sama ikona
 $('#btn-export').onclick = async () => {
   // Raport obejmuje WYŁĄCZNIE bieżącą zakładkę (wcześniej łączył wyniki ze wszystkich zakładek)

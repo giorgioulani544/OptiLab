@@ -9,12 +9,14 @@ const R = c.invDisc({D: 5000, S: 49, i: 0.2, hMode: 'rate', type: 'all', tiers: 
 t('Heizer i Render: zamówienie 1000, koszt 24 725', Math.abs(R.best.Qadj - 1000) < 1e-6 && Math.abs(R.best.TC - 24725) < 1e-6);
 t('Heizer i Render: koszty wariantów 25 700 i 24 822,5', Math.abs(R.rows[0].TC - 25700) < 1e-6 && Math.abs(R.rows[2].TC - 24822.5) < 1e-6);
 const EX = get('JSON.parse(JSON.stringify(IV_EXAMPLES))'), num = v => v === '' ? null : Number(v);
-const X = d => { const o = {}; Object.keys(d).forEach(k => { o[k] = /^-?[\d.]+$/.test(d[k]) ? num(d[k]) : d[k]; }); ['c', 'L', 'days', 'sdL', 'Q', 'v', 'g'].forEach(k => { if (o[k] === undefined || o[k] === '') o[k] = null; });
-  o.tiers = d.tiers.map(x => ({from: +x.from, price: +x.price})); o.table = d.table.map(x => ({d: +x.d, p: +x.p})); return o; };
-const expect = ['Q* = √(2·D·S / H)', 'Q* = √(2·D·S / H)', 'Zapas maksymalny Q*(1 − D/p)', 'maksymalny brak', 'Ilość do oceny', 'R<sub>k</sub>', 'zapas bezpieczeństwa SS', 'Q* = μ + z·σ', 'P(popyt ≤ Q)'];
+const X = d => { const o = {}; Object.keys(d).forEach(k => { o[k] = /^-?[\d.]+$/.test(d[k]) ? num(d[k]) : d[k]; }); ['c', 'L', 'days', 'sdL', 'Q', 'v', 'g', 'Ql', 'Pl'].forEach(k => { if (o[k] === undefined || o[k] === '') o[k] = null; });
+  o.tiers = d.tiers.map(x => ({from: +x.from, price: +x.price})); o.table = d.table.map(x => ({d: +x.d, p: +x.p})); o.req = (d.req || []).map(x => +x.r); o.labels = (d.req || []).map(x => x.label); return o; };
+const expect = ['Q* = √(2·D·S / H)', 'Q* = √(2·D·S / H)', 'Zapas maksymalny Q*(1 − D/p)', 'maksymalny brak', 'Ilość do oceny', 'R<sub>k</sub>', 'zapas bezpieczeństwa SS', 'Q* = μ + z·σ', 'Wagner-Whitin – tablica programowania dynamicznego', 'P(popyt ≤ Q)'];
 EX.forEach((e, k) => { const h = c.ivReportHTML(e.data.model, X(e.data), e.data); t(`raport „${e.name}": wzór, wynik i wykres`, h.includes(expect[k]) && /class="sum"/.test(h) && /class="vzsvg"/.test(h)); });
 let h = c.ivReportHTML('eoq', X(EX[0].data), EX[0].data); t('EOQ: Q* = 200 i punkt zamawiania 20', /<b>200<\/b>/.test(h) && /<b>20<\/b> szt\./.test(h) && /Krzywa kosztu jest płaska/.test(h));
-h = c.ivReportHTML('news', X(EX[8].data), EX[8].data); t('gazeciarz dyskretny: wybór Q = 50 (P ≥ wskaźnik krytyczny)', /zamów <b>50<\/b>/.test(h));
+h = c.ivReportHTML('news', X(EX[9].data), EX[9].data); t('gazeciarz dyskretny: wybór Q = 50 (P ≥ wskaźnik krytyczny)', /zamów <b>50<\/b>/.test(h));
+h = c.ivReportHTML('lot', X(EX[8].data), EX[8].data); const W = c.lotSize([50, 60, 70, 60, 95, 75, 60, 55], 'WW', {S: 120, H: 1});
+t('dobór partii: porównanie 8 reguł, optimum Wagnera-Whitina wyróżnione', (h.match(/<tr( class="sel")?><th>/g) || []).length >= 9 && h.includes(`kosztuje <b>${String(W.total).replace('.', ',')}</b>`) && /Silver-Meal – kroki/.test(h));
 const csv = get(`paramsToCSV([['model','disc'],['D','5000'],['S','49']], IV_TIER, [{from:'0',price:'5'},{from:'1000',price:'4.8'}])`), back = get(`paramsFromCSV(${JSON.stringify(csv)}, ['model','D','S'], [...IV_TIER, ...IV_DISC])`);
 t('CSV: eksport → import (parametry i progi, przecinek dziesiętny)', back.meta.model === 'disc' && back.meta.D === '5000' && back.rows.length === 2 && back.rows[1].price === '4.8' && /4,8/.test(csv));
 let th = ''; try { get('paramsFromCSV("model;eoq\\nD;abc", ["model","D"])'); } catch (e) { th = e.message; } t('CSV: błąd z numerem wiersza', /wiersz 2: „abc"/.test(th));

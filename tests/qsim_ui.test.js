@@ -1,0 +1,20 @@
+// Moduł Symulacja kolejek: raporty przykładów (zdarzenia, powtórzenia, przedziały ufności, teoria), porównanie konfiguracji, CSV z tabelami rozkładów, rejestracja
+const vm = require('vm'), {order, load} = require('./helpers');
+const stub = new Proxy(function () {}, {get: (t, k) => k === 'forEach' ? () => {} : k === Symbol.toPrimitive ? () => '' : stub, set: () => true, apply: () => stub});
+const c = load(order, {document: {querySelector: () => stub, querySelectorAll: () => []}, window: {scrollTo() {}}, navigator: {}, Plotly: {}, setTimeout, console});
+const get = code => vm.runInContext(code, c);
+let ok = 0, bad = 0; const t = (n, v) => { v ? ok++ : (bad++, console.log('BŁĄD:', n)); };
+const EX = get('JSON.parse(JSON.stringify(QS_EXAMPLES))');
+const dist = (d, pre) => { const t2 = d[pre + 'Type'], o = {type: t2}; if (t2 === 'exp') o.mean = +d[pre + 'Mean']; if (t2 === 'uni') { o.a = +d[pre + 'A']; o.b = +d[pre + 'B']; } if (t2 === 'const') o.value = +d[pre + 'Val']; if (t2 === 'emp') o.table = d[pre + 'Tab'].map(r => ({v: +r.v, p: +r.p})); return o; };
+const X = d => ({P: {arr: dist(d, 'ia'), svc: dist(d, 'sv'), s: +d.s, K: d.K === '' ? null : +d.K, T: +d.T, warm: +d.warm, trace: +d.trace}, R: +d.R, seed: +d.seed, s2: d.cmp ? +d.s2 : null});
+const theory = [true, true, false, false, true, true];
+EX.forEach((e, k) => { const h = c.qsReportHTML(X(e.data));
+  t(`raport „${e.name}": zdarzenia, powtórzenia, przedziały ufności${theory[k] ? ', teoria' : ''}`, /Pierwsze zdarzenia/.test(h) && /Wyniki powtórzeń/.test(h) && /Średnie z przedziałami ufności 95%/.test(h) && (theory[k] ? /Teoria w przedziale\?/.test(h) : /nie ma prostego wzoru/.test(h))); });
+let h = c.qsReportHTML(X(EX[4].data)); t('centrala bez kolejki: kolumna odrzuconych i zdarzenia „odrzucenie"', /Odrzuceni/.test(h) && /odrzucenie/.test(h));
+h = c.qsReportHTML(X(EX[5].data)); t('porównanie 1 vs 2 stanowiska: różnica istotna na korzyść 2 stanowisk', /Porównanie: 1 czy 2 stanowisk/.test(h) && /2 stanowiskami ma istotnie krótsze oczekiwanie/.test(h));
+h = c.qsReportHTML({...X(EX[0].data), P: {...X(EX[0].data).P, arr: {type: 'exp', mean: 0.9}}}); t('przeciążenie (ρ ≥ 1): ostrzeżenie w raporcie', /System jest przeciążony/.test(h));
+const csv = get(`paramsToCSV([['iaType','emp'],['svType','exp'],['svMean','1.5'],['iaTab','1:0.2|2:0.8']])`);
+t('CSV: tabela rozkładu empirycznego zapisana w jednej komórce, liczby z przecinkiem', /iaTab;1:0\.2\|2:0\.8/.test(csv) && /svMean;1,5/.test(csv));
+let th = ''; try { get('qsNormalize({iaType: "xyz", svType: "exp"})'); } catch (e) { th = e.message; } t('plik z nieznanym rozkładem odrzucony', /nieznany rozkład/.test(th));
+t('moduł zarejestrowany i usunięty z listy „wkrótce"', get("MODULES.some(m => m.id === 'qsim') && !SOON.some(s => s[0] === 'qsim')"));
+console.log(`Testy modułu Symulacja kolejek: ${ok} OK, ${bad} błędów`); process.exit(bad ? 1 : 0);
