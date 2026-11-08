@@ -12,7 +12,7 @@
 
 <p align="center">
   ![moduły](https://img.shields.io/badge/modu%C5%82y-19%20gotowych-1f3a5f)
-  ![testy automatyczne](https://img.shields.io/badge/testy%20automatyczne-10370%20%E2%9C%93-2e7d32)
+  ![testy automatyczne](https://img.shields.io/badge/testy%20automatyczne-10623%20%E2%9C%93-2e7d32)
   ![instalacja](https://img.shields.io/badge/instalacja-niepotrzebna-c9a227)
   ![język](https://img.shields.io/badge/j%C4%99zyk-polski-b0413e)
 </p>
@@ -31,8 +31,8 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 | | Moduł | Co potrafi |
 |---|---|---|
 | 📈 | **Metoda graficzna** | obszar dopuszczalny, wierzchołki, prosta celu, punkty całkowite |
-| 🧾 | **Simpleks** | tablice krok po kroku: metoda dwufazowa, duże M i alternatywna metoda tabelaryczna (C<sub>B</sub>, z<sub>j</sub>, c<sub>j</sub> − z<sub>j</sub>, kolumna ilorazów, symboliczne M), zadanie dualne, analiza wrażliwości i parametryczna, rozwiązania alternatywne |
-| 🔢 | **Programowanie całkowitoliczbowe** | metoda podziału i ograniczeń z drzewem obliczeń |
+| 🧾 | **Simpleks** | tablice krok po kroku: metoda dwufazowa, duże M i alternatywna metoda tabelaryczna (C<sub>B</sub>, z<sub>j</sub>, c<sub>j</sub> − z<sub>j</sub>, kolumna ilorazów, symboliczne M), zadanie dualne, analiza wrażliwości OFC i RHS (jak w Excel Solver), gotowa interpretacja wyników, eksport tablic do Excela, analiza parametryczna, rozwiązania alternatywne |
+| 🔢 | **Programowanie całkowitoliczbowe** | metoda podziału i ograniczeń z drzewem obliczeń oraz **odcięcia Gomory'ego** z dualną metodą simpleks (tablice krok po kroku, dokładne ułamki) |
 
 ### 🕸️ Modele sieciowe
 | | Moduł | Co potrafi |
@@ -89,7 +89,7 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 
 ## ✅ Na wynikach można polegać
 
-- **10 370 automatycznych sprawdzeń** – wszystkie przechodzą.
+- **10 623 automatycznych sprawdzeń** – wszystkie przechodzą.
 - Wyniki porównujemy z **przykładami z literatury** (m.in. Hillier i Lieberman, Heizer i Render, Render i Stair, Chopra i Meindl, Montgomery) oraz **niezależnymi obliczeniami**: przeglądem wszystkich możliwych rozwiązań, wzorami zamkniętymi i symulacją Monte Carlo.
 - Każdy moduł jest sprawdzany w prawdziwej przeglądarce na ekranie komputera i telefonu.
 - Gdy wynik nie jest pewny (np. przekroczony limit obliczeń), aplikacja mówi to wprost – **nigdy nie pokazuje niepewnego wyniku jako poprawnego**.

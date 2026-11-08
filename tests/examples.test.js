@@ -6,7 +6,7 @@ const c = load(order, {document: {querySelector: $, querySelectorAll: () => []},
 const get = code => vm.runInContext(code, c);
 let ok = 0, bad = 0; const t = (n, v) => { v ? ok++ : (bad++, console.log('BŁĄD:', n)); };
 const near = (a, b) => Math.abs(a - b) < 1e-6;
-const expected = [{s: 'optimal', z: 36}, {s: 'optimal', z: 10}, {s: 'optimal', z: 21}, {s: 'optimal', z: 4}, {s: 'optimal'}, {s: 'infeasible'}, {s: 'unbounded'}];
+const expected = [{s: 'optimal', z: 36}, {s: 'optimal', z: 10}, {s: 'optimal', z: 21}, {s: 'optimal', z: 4}, {s: 'optimal'}, {s: 'infeasible'}, {s: 'unbounded'}, {s: 'optimal'}, {s: 'optimal'}, {s: 'optimal'}, {s: 'optimal'}];
 t('liczba przykładów', get('EXAMPLES.length') === expected.length);
 expected.forEach((e, i) => {
   const m = get(`(() => { const d = parseModel('simplex', exampleToData(EXAMPLES[${i}])); const num = v => Number(v);

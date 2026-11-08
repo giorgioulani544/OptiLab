@@ -24,18 +24,25 @@ function altOptimum(M, s) {
 function qsbReport(M, r, rec) {
   const S = lpSensitivity(M, r, rec), rg = (lo, hi) => `${isFinite(lo) ? fmt(lo) : '−∞'} … ${isFinite(hi) ? fmt(hi) : '+∞'}`;   // obliczenia: js/solver.js
   let alt = S.vars.some(v => !v.basic && v.rc < 1e-6);
-  let h = '<details class="adv"><summary>Raport końcowy i analiza wrażliwości</summary><div class="tw"><table><tr><th>Zmienna</th><th>Wartość</th><th>Współcz. celu</th><th>Wkład w Z</th><th>Koszt zredukowany</th><th>Zakres współcz. celu</th></tr>';
-  S.vars.forEach((v, j) => { const c = M.c[j];
-    h += `<tr><th>x${sub(j+1)}</th><td>${fmt(r.x[j])}</td><td>${fmt(c)}</td><td>${fmt(c * r.x[j])}</td><td>${fmt(v.rc)}</td><td>${M.t[j] === 'u' ? '–' : rg(v.lo, v.hi)}</td></tr>`; });
-  h += '</table></div><div class="tw"><table><tr><th>Ograniczenie</th><th>Lewa str.</th><th>Znak</th><th>Prawa str.</th><th>Luz / nadwyżka</th><th>Cena dualna</th><th>Zakres prawej strony</th></tr>';
+  const dn = (v, lo) => isFinite(lo) ? fmt(Math.round((v - lo) * 1e6) / 1e6) : '∞', up = (v, hi) => isFinite(hi) ? fmt(Math.round((hi - v) * 1e6) / 1e6) : '∞';
+  let h = '<details class="adv" open><summary>Raport końcowy i analiza wrażliwości (jak w raporcie Excel Solver i WinQSB)</summary><h4>Zmienne decyzyjne – analiza wrażliwości współczynników funkcji celu (OFC)</h4><div class="tw"><table><tr><th>Zmienna</th><th>Wartość końcowa</th><th>Współcz. celu c<sub>j</sub></th><th>Wkład w Z</th><th>Koszt zredukowany</th><th>Dopuszczalny spadek</th><th>Dopuszczalny wzrost</th><th>Zakres współcz. celu</th></tr>';
+  S.vars.forEach((v, j) => { const c = M.c[j], fr = M.t[j] === 'u';
+    h += `<tr><th>x${sub(j+1)}</th><td>${fmt(r.x[j])}</td><td>${fmt(c)}</td><td>${fmt(c * r.x[j])}</td><td>${fmt(v.rc)}</td><td>${fr ? '–' : dn(c, v.lo)}</td><td>${fr ? '–' : up(c, v.hi)}</td><td>${fr ? '–' : rg(v.lo, v.hi)}</td></tr>`; });
+  h += '</table></div><h4>Ograniczenia – analiza wrażliwości prawych stron (RHS)</h4><div class="tw"><table><tr><th>Ograniczenie</th><th>Lewa str.</th><th>Znak</th><th>Prawa str.</th><th>Luz / nadwyżka</th><th>Cena dualna</th><th>Dopuszczalny spadek</th><th>Dopuszczalny wzrost</th><th>Zakres prawej strony</th></tr>';
   S.rows.forEach((q, i) => {
-    h += `<tr><th>Ogr. ${i+1}</th><td>${fmt(q.lhs)}</td><td>${sign(M.rel[i])}</td><td>${fmt(M.b[i])}</td><td>${fmt(Math.abs(M.b[i] - q.lhs))}</td><td>${fmt(q.y)}</td><td>${rg(q.lo, q.hi)}</td></tr>`;
+    h += `<tr><th>Ogr. ${i+1}</th><td>${fmt(q.lhs)}</td><td>${sign(M.rel[i])}</td><td>${fmt(M.b[i])}</td><td>${fmt(Math.abs(M.b[i] - q.lhs))}</td><td>${fmt(q.y)}</td><td>${dn(M.b[i], q.lo)}</td><td>${up(M.b[i], q.hi)}</td><td>${rg(q.lo, q.hi)}</td></tr>`;
   });
   h += '</table></div><p class="hint">Cena dualna: o ile zmieni się Z, gdy prawa strona wzrośnie o 1. Koszt zredukowany: o ile pogorszy się Z po wymuszeniu 1 jednostki zmiennej spoza bazy. Zakresy: w tych granicach obecna baza pozostaje optymalna.</p>' +
     (r.degenerate ? '<p class="note">Rozwiązanie jest zdegenerowane (któraś zmienna bazowa ma wartość 0). Ceny dualne mogą wtedy nie być jednoznaczne – przy zwiększaniu i przy zmniejszaniu prawej strony mogą być różne – a niektóre zakresy kurczą się do jednej wartości.</p>' : '');
   const ax = altOptimum(M, S.s); alt = alt || !!ax;
+  h += '<details class="adv"><summary>Jak czytać ten raport (gdzie odczytać wyniki)</summary><ul class="interp"><li><b>Wartość końcowa</b> – optymalna wartość zmiennej (rozwiązanie zadania); <b>Wkład w Z</b> – współczynnik celu × wartość.</li>' +
+    '<li><b>Koszt zredukowany</b> – dla zmiennej równej 0: o ile pogorszy się Z, jeśli wymusimy 1 jednostkę tej zmiennej; dla zmiennej w bazie = 0.</li>' +
+    '<li><b>Dopuszczalny spadek / wzrost</b> (OFC) – o ile może się zmienić współczynnik celu, a obecne rozwiązanie (te same wartości zmiennych) pozostanie optymalne; Z zmieni się proporcjonalnie.</li>' +
+    '<li><b>Luz / nadwyżka</b> – niewykorzystana część zasobu (≤) albo nadwyżka ponad minimum (≥); 0 oznacza ograniczenie wiążące.</li>' +
+    '<li><b>Cena dualna</b> – o ile zmieni się Z, gdy prawa strona ograniczenia wzrośnie o 1; obowiązuje w zakresie dopuszczalnego spadku/wzrostu prawej strony (RHS).</li>' +
+    '<li>Te same pojęcia występują w raporcie wrażliwości dodatku Solver w Excelu i w raporcie „Combined Report” programu WinQSB (Reduced Cost, Allowable Min/Max, Shadow Price).</li></ul></details>';
   return h + (alt ? '<p class="note">Uwaga: zmienna spoza bazy ma koszt zredukowany 0 – ' + (ax ? 'istnieją' : 'mogą istnieć') + ' alternatywne rozwiązania optymalne.' +
-    (ax ? ` Drugie rozwiązanie optymalne: ${ax.map((v, j) => `x${sub(j+1)} = ${fmt(v)}`).join(', ')} (to samo Z = ${fmt(r.z)}); każda kombinacja wypukła obu rozwiązań też jest optymalna.` : '') + '</p>' : '') + '</details>';
+    (ax ? ` Drugie rozwiązanie optymalne: ${ax.map((v, j) => `x${sub(j+1)} = ${fmt(v)}`).join(', ')} (to samo Z = ${fmt(r.z)}); każda kombinacja wypukła obu rozwiązań też jest optymalna.` : '') + '</p>' : '') + lpInterpretHTML(M, r, S) + '</details>';
 }
 /* Analiza parametryczna: parametr θ (prawa strona wybranego ograniczenia albo współczynnik celu) zmienia się od–do.
    Próbkujemy zakres, wykrywamy zmianę bazy optymalnej, a punkty załamania doprecyzowujemy bisekcją. */
@@ -222,6 +229,14 @@ $('#btn-graph').onclick = () => {
    ===================================================================== */
 $('#btn-ilp').onclick = () => {
   const out = '#out-ilp', M = readModel('ilp'); if (!M) return;
+  if ($('#ilp-method').value === 'gom') {                                 // odcięcia Gomory'ego (js/lp-gomory.js), raport: gomReportHTML w js/render.js
+    const bad = M.t.map((t, j) => t === 'i' || t === 'b' ? null : 't' + j).filter(Boolean);
+    if (bad.length) return fail(out, 'odcięcia Gomory\'ego (w wersji dla zadań całkowitoliczbowych) wymagają, by wszystkie zmienne były całkowite lub binarne. Zmień typ zaznaczonych zmiennych albo wybierz metodę podziału i ograniczeń.', bad);
+    const MG = {...M, A: M.A.map(r => r.slice()), rel: M.rel.slice(), b: M.b.slice()}; M.t.forEach((t, j) => { if (t === 'b') { MG.A.push(M.c.map((_, q) => +(q === j))); MG.rel.push('<='); MG.b.push(1); } });
+    const G = gomSolve(MG, {maxCuts: 200, maxPiv: 20000}), BB = ilpSolve(M, {rule: 'most', search: 'best'});
+    if (G.status === 'unbounded') return failLP(out, {status: 'unbounded'}, M);
+    const h = infoHTML(M) + gomReportHTML(MG, G, BB); $(out).innerHTML = h; last.ilp = h; return;
+  }
   const R = ilpSolve(M, {rule: $('#ilp-branch').value, search: $('#ilp-search').value});   // obliczenia: js/ilp-solver.js
   if (R.status === 'unbounded_relax') return fail(out, 'relaksacja LP (zadanie bez wymogu całkowitości) jest nieograniczona. Wtedy zadanie całkowitoliczbowe jest nieograniczone albo nie ma rozwiązań całkowitych – Branch & Bound tego nie rozstrzygnie. Dodaj ograniczenie z góry dla zmiennych o dodatnich współczynnikach celu.', M.c.map((_, j) => 'c' + j));
   if (R.status === 'limit') return failLP(out, {status: 'limit'}, M);

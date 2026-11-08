@@ -41,6 +41,7 @@ js/markov/markov-solver.js  łańcuchy Markowa: klasyfikacja, rozkład stacjonar
 js/modules/markov.js    moduł Procesy Markowa
 js/qsim/qsim-solver.js  symulacja zdarzeń dyskretnych kolejek, powtórzenia, przedziały ufności, wspólne liczby losowe – bez DOM
 js/modules/qsim.js      moduł Symulacja kolejek
+js/lp-gomory.js         odcięcia Gomory'ego + dualny simpleks na dokładnych ułamkach (FR, BigInt), usuwanie nieaktywnych odcięć – bez DOM; raport: gomReportHTML w js/render.js
 js/lp-tab.js            alternatywna metoda tabelaryczna simpleksu (cj − zj, kolumna ilorazów, symboliczne M) – bez DOM; raport: tabReportHTML w js/render.js
 js/dec/decision-solver.js  analiza decyzji: kryteria, EMV/EOL/EVPI, drzewa, Bayes i EVSI, użyteczność, gry (LP) – bez DOM
 js/modules/decision.js  moduł Analiza decyzji

@@ -40,6 +40,8 @@ Hosting: GitHub Pages (statyczne pliki, bez backendu i bez bundlera). Wykresy: P
 3. Zarządzanie projektem – zrobione: PERT/CPM, Harmonogramowanie. Pakiety 2, 3 i 4 zrobione. Dalej według PROGRESS.md (pakiet 5: programowanie celowe, dynamiczne, kwadratowe, nieliniowe, lokalizacja).
 - Simpleks: opcja „alternatywna metoda tabelaryczna” (value TAB) ustawia model.tab = true, a model.method zostaje '2F' – solver traktuje każdą metodę ≠ '2F' jak duże M, więc nigdy nie przekazuj mu 'TAB'.
 - CSV parametrów: paramsFromCSV(text, keys, cols, textKeys) – parametry tekstowe (model, rozkład) podaj w textKeys; klucze dopasowywane najpierw dokładnie (n ≠ N).
+- Całkowite: wybór metody #ilp-method (bb | gom). Gomory: js/lp-gomory.js (gomSolve, FR – ułamki BigInt), skalowanie wierszy do liczb całkowitych, nieaktywne odcięcia usuwane; kontrola wyniku przez ilpSolve w raporcie.
+- Raport końcowy LP (qsbReport): otwarty domyślnie, kolumny jak w Excel Solver (dopuszczalny spadek/wzrost), interpretacja słowna lpInterpretHTML, legenda „Jak czytać”; eksport tablic tablesCSVLink (render.js).
 - Lista SOON w registry.js: usuwając moduł, sprawdź też ostatni element (bez przecinka po nim).
 - Wykresy: VZ.control (karta kontrolna, zmienne granice, strefy σ), VZ.pareto.
 - Wspólne: js/linalg.js (LA.solve, LA.inv, LA.det, LA.chol, LA.isPD, LA.mul, LA.vecMul, LA.pow); VZ.bars (wykres słupkowy), VZ.stateGraph (graf stanów: układ 'circle' albo 'line'); serie wykresu liniowego: klasy '', b, c, d, e, f, g; legenda zawija się po 4 pozycjach.

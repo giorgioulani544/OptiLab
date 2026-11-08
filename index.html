@@ -13,7 +13,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="OptiLab">
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
-<link rel="stylesheet" href="css/style.css?v=16">
+<link rel="stylesheet" href="css/style.css?v=17">
 </head>
 <body>
 <header>
@@ -46,7 +46,8 @@
   <div id="ilp-top"></div>
   <div class="crow" id="ilp-opts"><label for="ilp-branch">Podział:</label><select id="ilp-branch"><option value="first">pierwsza ułamkowa</option><option value="most">najbardziej ułamkowa</option></select>
    <label for="ilp-search">Przeszukiwanie:</label><select id="ilp-search"><option value="dfs">w głąb (DFS)</option><option value="best">najlepsza granica</option></select></div>
-  <button id="btn-ilp" type="button">Rozwiąż (Branch &amp; Bound)</button>
+  <div class="crow" id="ilp-mbox"><label for="ilp-method">Metoda:</label><select id="ilp-method"><option value="bb">podział i ograniczenia (Branch &amp; Bound)</option><option value="gom">odcięcia Gomory'ego (dualny simpleks)</option></select></div>
+  <button id="btn-ilp" type="button">Rozwiąż</button>
   <div id="out-ilp" class="tree"></div>
  </div></section>
  <section id="tab-soon" hidden><div class="card"><h2 id="soon-title"></h2>
@@ -60,54 +61,55 @@
 </nav>
 <div id="print-area"></div>
 
-<script src="js/core.js?v=16"></script>
-<script src="js/stats.js?v=16"></script>
-<script src="js/viz.js?v=16"></script>
-<script src="js/linalg.js?v=16"></script>
-<script src="js/solver.js?v=16"></script>
-<script src="js/lp-tab.js?v=16"></script>
-<script src="js/parametric.js?v=16"></script>
-<script src="js/ilp-solver.js?v=16"></script>
-<script src="js/render.js?v=16"></script>
-<script src="js/examples.js?v=16"></script>
-<script src="js/csv.js?v=16"></script>
-<script src="js/forms.js?v=16"></script>
-<script src="js/registry.js?v=16"></script>
-<script src="js/modules/lp.js?v=16"></script>
-<script src="js/net/netui.js?v=16"></script>
-<script src="js/net/transport-solver.js?v=16"></script>
-<script src="js/modules/transport.js?v=16"></script>
-<script src="js/net/assignment-solver.js?v=16"></script>
-<script src="js/modules/assignment.js?v=16"></script>
-<script src="js/net/shortestpath-solver.js?v=16"></script>
-<script src="js/modules/shortestpath.js?v=16"></script>
-<script src="js/net/maxflow-solver.js?v=16"></script>
-<script src="js/modules/maxflow.js?v=16"></script>
-<script src="js/pm/cpm-solver.js?v=16"></script>
-<script src="js/modules/cpm.js?v=16"></script>
-<script src="js/pm/sched-solver.js?v=16"></script>
-<script src="js/modules/scheduling.js?v=16"></script>
-<script src="js/inv/inventory-solver.js?v=16"></script>
-<script src="js/inv/lotsize.js?v=16"></script>
-<script src="js/modules/inventory.js?v=16"></script>
-<script src="js/fc/forecast-solver.js?v=16"></script>
-<script src="js/modules/forecast.js?v=16"></script>
-<script src="js/agg/agg-solver.js?v=16"></script>
-<script src="js/modules/aggplan.js?v=16"></script>
-<script src="js/mrp/mrp-solver.js?v=16"></script>
-<script src="js/modules/mrp.js?v=16"></script>
-<script src="js/queue/queue-solver.js?v=16"></script>
-<script src="js/modules/queue.js?v=16"></script>
-<script src="js/markov/markov-solver.js?v=16"></script>
-<script src="js/modules/markov.js?v=16"></script>
-<script src="js/qsim/qsim-solver.js?v=16"></script>
-<script src="js/modules/qsim.js?v=16"></script>
-<script src="js/dec/decision-solver.js?v=16"></script>
-<script src="js/modules/decision.js?v=16"></script>
-<script src="js/qc/spc-solver.js?v=16"></script>
-<script src="js/modules/spc.js?v=16"></script>
-<script src="js/qc/acceptance-solver.js?v=16"></script>
-<script src="js/modules/acceptance.js?v=16"></script>
-<script src="js/app.js?v=16"></script>
+<script src="js/core.js?v=17"></script>
+<script src="js/stats.js?v=17"></script>
+<script src="js/viz.js?v=17"></script>
+<script src="js/linalg.js?v=17"></script>
+<script src="js/solver.js?v=17"></script>
+<script src="js/lp-tab.js?v=17"></script>
+<script src="js/lp-gomory.js?v=17"></script>
+<script src="js/parametric.js?v=17"></script>
+<script src="js/ilp-solver.js?v=17"></script>
+<script src="js/render.js?v=17"></script>
+<script src="js/examples.js?v=17"></script>
+<script src="js/csv.js?v=17"></script>
+<script src="js/forms.js?v=17"></script>
+<script src="js/registry.js?v=17"></script>
+<script src="js/modules/lp.js?v=17"></script>
+<script src="js/net/netui.js?v=17"></script>
+<script src="js/net/transport-solver.js?v=17"></script>
+<script src="js/modules/transport.js?v=17"></script>
+<script src="js/net/assignment-solver.js?v=17"></script>
+<script src="js/modules/assignment.js?v=17"></script>
+<script src="js/net/shortestpath-solver.js?v=17"></script>
+<script src="js/modules/shortestpath.js?v=17"></script>
+<script src="js/net/maxflow-solver.js?v=17"></script>
+<script src="js/modules/maxflow.js?v=17"></script>
+<script src="js/pm/cpm-solver.js?v=17"></script>
+<script src="js/modules/cpm.js?v=17"></script>
+<script src="js/pm/sched-solver.js?v=17"></script>
+<script src="js/modules/scheduling.js?v=17"></script>
+<script src="js/inv/inventory-solver.js?v=17"></script>
+<script src="js/inv/lotsize.js?v=17"></script>
+<script src="js/modules/inventory.js?v=17"></script>
+<script src="js/fc/forecast-solver.js?v=17"></script>
+<script src="js/modules/forecast.js?v=17"></script>
+<script src="js/agg/agg-solver.js?v=17"></script>
+<script src="js/modules/aggplan.js?v=17"></script>
+<script src="js/mrp/mrp-solver.js?v=17"></script>
+<script src="js/modules/mrp.js?v=17"></script>
+<script src="js/queue/queue-solver.js?v=17"></script>
+<script src="js/modules/queue.js?v=17"></script>
+<script src="js/markov/markov-solver.js?v=17"></script>
+<script src="js/modules/markov.js?v=17"></script>
+<script src="js/qsim/qsim-solver.js?v=17"></script>
+<script src="js/modules/qsim.js?v=17"></script>
+<script src="js/dec/decision-solver.js?v=17"></script>
+<script src="js/modules/decision.js?v=17"></script>
+<script src="js/qc/spc-solver.js?v=17"></script>
+<script src="js/modules/spc.js?v=17"></script>
+<script src="js/qc/acceptance-solver.js?v=17"></script>
+<script src="js/modules/acceptance.js?v=17"></script>
+<script src="js/app.js?v=17"></script>
 </body>
 </html>

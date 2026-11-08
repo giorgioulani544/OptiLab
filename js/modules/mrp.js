@@ -120,6 +120,8 @@ function mrReportHTML(P, S) {
   const late = S.messages.filter(m => m.kind === 'late'), dl = S.messages.filter(m => m.kind === 'delay'), cn = S.messages.filter(m => m.kind === 'cancel');
   h += '<h3>Plan zamówień (do uruchomienia)</h3><div class="tw"><table><thead><tr><th>Pozycja</th>' + per.map(k => `<th>${k}</th>`).join('') + '</tr></thead>' +
     S.order.map(i => `<tr><th>${code(i)}</th>${S.R[i].rel.map(v => `<td>${Math.abs(v) < 1e-9 ? '' : '<b>' + f(v) + '</b>'}</td>`).join('')}</tr>`).join('') + '</table></div>';
+  const orders = S.order.map(i => ({i, k: S.R[i].rel.filter(v => v > 1e-9).length, t1: S.R[i].rel.findIndex(v => v > 1e-9)})).filter(o => o.k);
+  h += `<div class="sum"><b>Wynik:</b> plan obejmuje ${orders.reduce((s2, o) => s2 + o.k, 0)} zamówień dla ${orders.length} z ${n} pozycji (${orders.map(o => `${code(o.i)}: ${o.k}, pierwsze w okresie ${o.t1 + 1}`).join('; ')}).${late.length || dl.length || cn.length ? ` Do wyjaśnienia: ${late.length + dl.length + cn.length} komunikat(y) – zob. niżej.` : ''}</div>`;
   h += late.length || dl.length || cn.length ? '<h4>Komunikaty</h4><ul>' + [...late.map(m => `<li class="msg">Przyspieszyć: ${code(m.i)} – przyjęcie ${f(m.qty)} w okresie ${m.t + 1} wymagało zamówienia w okresie ${m.rt + 1} (przed horyzontem). Zamówienie wpisano do okresu 1 – trzeba skrócić czas realizacji albo przesunąć zapotrzebowanie.</li>`),
     ...dl.map(m => `<li>Opóźnić: ${code(m.i)} – przyjęcie zaplanowane ${f(m.qty)} w okresie ${m.t + 1} jest potrzebne dopiero w okresie ${m.u + 1}.</li>`),
     ...cn.map(m => `<li>Anulować lub przesunąć: ${code(m.i)} – przyjęcie zaplanowane ${f(m.qty)} w okresie ${m.t + 1} nie jest potrzebne w horyzoncie planowania.</li>`)].join('') + '</ul>'

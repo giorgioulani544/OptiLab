@@ -141,7 +141,7 @@ function initModule(k) {
   };
   renderForm(k);
   // przenosimy dodatkowe kontrolki modułu do „Opcji zaawansowanych"
-  const extra = {graph: ['g-int-wrap'], simplex: ['method-box', 'btn-dual', 'par-box'], ilp: ['ilp-opts']}[k]; extra.forEach(id => $('#' + p + 'advbody').append($('#' + id)));
+  const extra = {graph: ['g-int-wrap'], simplex: ['btn-dual', 'par-box'], ilp: ['ilp-opts']}[k]; extra.forEach(id => $('#' + p + 'advbody').append($('#' + id)));
 }
 /* Odczyt i walidacja. Błąd => czerwone pola + komunikat edukacyjny, zwraca null */
 const clearErr = () => {
