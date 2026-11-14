@@ -4,9 +4,11 @@ const VZ = (() => {
   const r1 = v => Math.round(v * 10) / 10, E = s => String(s ?? '').replace(/[&<>"]/g, ch => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'})[ch]);
   const nf = v => String(Math.round(v * 1000) / 1000).replace('.', ',');
   function ticks(lo, hi, n = 6) {                                         // „ładne" podziałki osi
-    if (!(hi > lo)) hi = lo + 1;
+    if (!isFinite(lo) || !isFinite(hi)) return [];
+    if (!(hi - lo > 1e-9 * Math.max(1, Math.abs(lo), Math.abs(hi)))) hi = lo + Math.max(1, Math.abs(lo) * 1e-6);   // zakres zerowy albo mniejszy niż dokładność liczb (np. stała seria z szumem zaokrągleń)
     const raw = (hi - lo) / n, p = 10 ** Math.floor(Math.log10(raw)), st = [1, 2, 2.5, 5, 10].map(k => k * p).find(k => k >= raw) || 10 * p;
-    const out = []; for (let v = Math.ceil(lo / st - 1e-9) * st; v <= hi + st * 1e-9; v += st) out.push(Math.round(v / st) * st); return out;
+    if (!(st > 0) || !isFinite(st) || lo + st === lo) return [lo];
+    const out = []; for (let v = Math.ceil(lo / st - 1e-9) * st; v <= hi + st * 1e-9 && out.length < 200; v += st) out.push(Math.round(v / st) * st); return out;
   }
   const wrap = (W, H, body, title) => `<div class="tw"><svg class="vzsvg" viewBox="0 0 ${W} ${H}" style="max-width:${W}px" role="img" aria-label="${E(title || 'Wykres')}">${body}</svg></div>`;
   /* rows: [{label, bars: [{s, e, cls, text}]}]; o: {tmax, title, marks: [{t, label, cls}], unit} */
@@ -42,7 +44,8 @@ const VZ = (() => {
   function line(series, o = {}) {
     const legRows = series.length > 1 ? Math.ceil(series.length / 4) : 1, W = 680, H = 300 + 14 * (legRows - 1), L = 62, B = 40, T = 18 + 14 * (legRows - 1), R = 16, all = series.flatMap(s => s.pts);
     const x0 = Math.min(...all.map(p => p[0])), x1 = Math.max(...all.map(p => p[0])), y0 = Math.min(...all.map(p => p[1])), y1 = Math.max(...all.map(p => p[1]));
-    const xl = x0, xh = x1 > x0 ? x1 : x0 + 1, pad = (y1 - y0) * 0.08 || Math.abs(y1) * 0.1 || 1, yl = y0 - pad, yh = y1 + pad;
+    const flatY = !(y1 - y0 > 1e-9 * Math.max(1, Math.abs(y0), Math.abs(y1)));   // seria stała (także z szumem zaokrągleń) – rysujemy płaską linię, nie powiększamy szumu
+    const xl = x0, xh = x1 > x0 ? x1 : x0 + 1, pad = flatY ? (Math.abs(y1) * 0.1 || 1) : (y1 - y0) * 0.08, yl = y0 - pad, yh = y1 + pad;
     const X = x => L + (W - L - R) * (x - xl) / (xh - xl), Y = y => T + (H - T - B) * (1 - (y - yl) / (yh - yl));
     let s = `<line class="vza" x1="${L}" y1="${H - B}" x2="${W - R}" y2="${H - B}"/><line class="vza" x1="${L}" y1="${T}" x2="${L}" y2="${H - B}"/>`;
     ticks(xl, xh, 7).forEach(v => { if (v >= xl - 1e-9 && v <= xh + 1e-9) s += `<line class="vzg" x1="${r1(X(v))}" y1="${T}" x2="${r1(X(v))}" y2="${H - B}"/><text class="vzt" x="${r1(X(v))}" y="${H - B + 15}" text-anchor="middle">${nf(v)}</text>`; });
@@ -91,7 +94,7 @@ const VZ = (() => {
   /* karta kontrolna: v – wartości, cl/ucl/lcl – tablice (granice mogą się zmieniać), o: {flags: Set indeksów, sig: tablica σ (strefy ±1σ, ±2σ), title, yLabel, start (numer pierwszego punktu)} */
   function control(v, cl, ucl, lcl, o = {}) {
     const n = v.length, W = 720, H = 300, L = 62, B = 34, T = 16, R = 70, st = o.start ?? 1, all = [...v, ...ucl, ...lcl].filter(isFinite);
-    const lo = Math.min(...all), hi = Math.max(...all), pad = (hi - lo) * 0.08 || 1, y0 = lo - pad, y1 = hi + pad;
+    const lo = Math.min(...all), hi = Math.max(...all), pad = hi - lo > 1e-9 * Math.max(1, Math.abs(lo), Math.abs(hi)) ? (hi - lo) * 0.08 : (Math.abs(hi) * 0.1 || 1), y0 = lo - pad, y1 = hi + pad;
     const X = i => L + (W - L - R) * (n > 1 ? i / (n - 1) : 0.5), Y = y => T + (H - T - B) * (1 - (y - y0) / (y1 - y0)), path = arr => arr.map((y, i) => (i ? 'L' : 'M') + r1(X(i)) + ' ' + r1(Y(y))).join('');
     const step = arr => { let d = ''; arr.forEach((y, i) => { const xa = n > 1 ? X(Math.max(0, i - 0.5)) : L, xb = n > 1 ? X(Math.min(n - 1, i + 0.5)) : W - R; d += (i ? 'L' : 'M') + r1(xa) + ' ' + r1(Y(y)) + 'L' + r1(xb) + ' ' + r1(Y(y)); }); return d; };
     let s = `<line class="vza" x1="${L}" y1="${H - B}" x2="${W - R}" y2="${H - B}"/><line class="vza" x1="${L}" y1="${T}" x2="${L}" y2="${H - B}"/>`;
@@ -117,5 +120,37 @@ const VZ = (() => {
     ticks(0, ymax, 4).forEach(v => { if (v <= ymax) s += `<text class="vzt" x="${L - 6}" y="${r1(Y(v) + 4)}" text-anchor="end">${nf(v)}</text>`; });
     return wrap(W, H, s, o.title);
   }
-  return {gantt, hist, line, ticks, bars, stateGraph, control, pareto};
+  /* poziomice funkcji f(x, y) (marching squares) + obszar dopuszczalny (wielokąt), linie ograniczeń, punkty i ścieżka iteracji
+     o: {x0, x1, y0, y1, levels (liczba albo tablica), poly: [[x,y]], lines: [{a, b, c, label}] (a·x + b·y = c), points: [{x, y, label, cls}], path: [[x,y]], title} */
+  function contour(fn, o) {
+    const W = 460, H = 400, L = 48, B = 34, T = 12, R = 14, G = 60, {x0, x1, y0, y1} = o, X = x => L + (W - L - R) * (x - x0) / (x1 - x0), Y = y => H - B - (H - B - T) * (y - y0) / (y1 - y0);
+    const z = Array.from({length: G + 1}, (_, i) => Array.from({length: G + 1}, (_, j) => fn(x0 + (x1 - x0) * j / G, y0 + (y1 - y0) * i / G)));
+    const fin = z.flat().filter(isFinite), lo = Math.min(...fin), hi = Math.max(...fin);
+    let lv = Array.isArray(o.levels) ? o.levels : (() => { const k = o.levels || 12, out = []; for (let q = 1; q <= k; q++) { const t = q / (k + 1); out.push(lo + (hi - lo) * t * t); } return out; })();
+    let s = `<line class="vza" x1="${L}" y1="${H - B}" x2="${W - R}" y2="${H - B}"/><line class="vza" x1="${L}" y1="${T}" x2="${L}" y2="${H - B}"/>`;
+    if (o.poly && o.poly.length > 2) s += `<path class="ctreg" d="M${o.poly.map(p => r1(X(p[0])) + ' ' + r1(Y(p[1]))).join('L')}Z"/>`;
+    const px = (i, j) => [x0 + (x1 - x0) * j / G, y0 + (y1 - y0) * i / G];
+    lv.forEach((v, k) => { let d = '';
+      for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) {
+        const c = [z[i][j], z[i][j + 1], z[i + 1][j + 1], z[i + 1][j]]; if (c.some(q => !isFinite(q))) continue;
+        const P = [px(i, j), px(i, j + 1), px(i + 1, j + 1), px(i + 1, j)], pts = [];
+        for (let e = 0; e < 4; e++) { const a = c[e], b = c[(e + 1) % 4]; if ((a < v) !== (b < v)) { const t = (v - a) / (b - a), A2 = P[e], B2 = P[(e + 1) % 4]; pts.push([A2[0] + t * (B2[0] - A2[0]), A2[1] + t * (B2[1] - A2[1])]); } }
+        for (let q = 0; q + 1 < pts.length; q += 2) d += `M${r1(X(pts[q][0]))} ${r1(Y(pts[q][1]))}L${r1(X(pts[q + 1][0]))} ${r1(Y(pts[q + 1][1]))}`; }
+      if (d) s += `<path class="ctl" style="stroke-opacity:${(0.35 + 0.65 * (1 - k / lv.length)).toFixed(2)}" d="${d}"/>`; });
+    (o.zero || []).forEach(g => { const zz = Array.from({length: G + 1}, (_, i) => Array.from({length: G + 1}, (_, j) => g(x0 + (x1 - x0) * j / G, y0 + (y1 - y0) * i / G))); let d = '';   // krzywe g(x) = 0 (ograniczenia nieliniowe)
+      for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) { const c = [zz[i][j], zz[i][j + 1], zz[i + 1][j + 1], zz[i + 1][j]]; if (c.some(q => !isFinite(q))) continue; const P = [px(i, j), px(i, j + 1), px(i + 1, j + 1), px(i + 1, j)], pts = [];
+        for (let e = 0; e < 4; e++) { const a = c[e], b = c[(e + 1) % 4]; if ((a < 0) !== (b < 0)) { const t = a / (a - b), A2 = P[e], B2 = P[(e + 1) % 4]; pts.push([A2[0] + t * (B2[0] - A2[0]), A2[1] + t * (B2[1] - A2[1])]); } }
+        for (let q = 0; q + 1 < pts.length; q += 2) d += `M${r1(X(pts[q][0]))} ${r1(Y(pts[q][1]))}L${r1(X(pts[q + 1][0]))} ${r1(Y(pts[q + 1][1]))}`; }
+      if (d) s += `<path class="ctc" style="fill:none" d="${d}"/>`; });
+    (o.lines || []).forEach(l => { const pts = []; if (Math.abs(l.b) > 1e-12) [x0, x1].forEach(x => pts.push([x, (l.c - l.a * x) / l.b])); else if (Math.abs(l.a) > 1e-12) pts.push([l.c / l.a, y0], [l.c / l.a, y1]);
+      if (pts.length === 2) { s += `<line class="ctc" x1="${r1(X(pts[0][0]))}" y1="${r1(Y(pts[0][1]))}" x2="${r1(X(pts[1][0]))}" y2="${r1(Y(pts[1][1]))}"/>`;
+        const m = pts.map(p => [Math.min(x1, Math.max(x0, p[0])), Math.min(y1, Math.max(y0, p[1]))]); if (l.label) s += `<text class="vzt b" x="${r1(X((m[0][0] + m[1][0]) / 2) + 4)}" y="${r1(Y((m[0][1] + m[1][1]) / 2) - 4)}">${E(l.label)}</text>`; } });
+    if (o.path && o.path.length > 1) s += `<path class="ctpath" d="M${o.path.map(p => r1(X(p[0])) + ' ' + r1(Y(p[1]))).join('L')}"/>` + o.path.map(p => `<circle class="ctpt" cx="${r1(X(p[0]))}" cy="${r1(Y(p[1]))}" r="2.6"/>`).join('');
+    (o.points || []).forEach(p => { s += `<circle class="vzmark ${p.cls || ''}" cx="${r1(X(p.x))}" cy="${r1(Y(p.y))}" r="6.5"/>` + (p.label ? `<text class="vzt b" x="${r1(X(p.x) + 9)}" y="${r1(Y(p.y) - 7)}">${E(p.label)}</text>` : ''); });
+    ticks(x0, x1, 6).forEach(v => { if (v >= x0 && v <= x1) s += `<text class="vzt" x="${r1(X(v))}" y="${H - B + 14}" text-anchor="middle">${nf(v)}</text>`; });
+    ticks(y0, y1, 6).forEach(v => { if (v >= y0 && v <= y1) s += `<text class="vzt" x="${L - 6}" y="${r1(Y(v) + 4)}" text-anchor="end">${nf(v)}</text>`; });
+    s += `<text class="vzt" x="${W - R}" y="${H - 4}" text-anchor="end">x₁</text><text class="vzt" x="${L + 4}" y="${T + 10}">x₂</text>`;
+    return `<div class="tw"><svg class="vzsvg" viewBox="0 0 ${W} ${H}" style="max-width:${W}px" role="img" aria-label="${E(o.title || 'Poziomice')}"><defs><clipPath id="ctclip"><rect x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}"/></clipPath></defs><g clip-path="url(#ctclip)">${s.replace(/(<text[^>]*>[^<]*<\/text>)/g, '')}</g>${(s.match(/<text[^>]*>[^<]*<\/text>/g) || []).join('')}</svg></div>`;
+  }
+  return {gantt, hist, line, ticks, bars, stateGraph, control, pareto, contour};
 })();

@@ -31,5 +31,14 @@ const LA = (() => {
   const mul = (A, B) => A.map(r => B[0].map((_, j) => r.reduce((s, v, k) => s + v * B[k][j], 0)));
   const vecMul = (v, A) => A[0].map((_, j) => v.reduce((s, x, k) => s + x * A[k][j], 0));
   const pow = (A, n) => { let R = I(A.length), B = copy(A); while (n > 0) { if (n & 1) R = mul(R, B); B = mul(B, B); n >>= 1; } return R; };
-  return {solve, inv, det, chol, isPD, mul, vecMul, pow, I, lu};
+  function eigSym(A0) {                                                   // wartości własne macierzy symetrycznej (metoda Jacobiego), rosnąco
+    const n = A0.length, A = copy(A0); for (let sweep = 0; sweep < 100; sweep++) {
+      let off = 0; for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) off += A[i][j] ** 2; if (off < 1e-22 * (1 + scale(A0) ** 2)) break;
+      for (let p = 0; p < n; p++) for (let q = p + 1; q < n; q++) { if (Math.abs(A[p][q]) < 1e-300) continue;
+        const th = (A[q][q] - A[p][p]) / (2 * A[p][q]), t = Math.sign(th || 1) / (Math.abs(th) + Math.sqrt(th * th + 1)), c = 1 / Math.sqrt(t * t + 1), s = t * c;
+        for (let k = 0; k < n; k++) { const akp = A[k][p], akq = A[k][q]; A[k][p] = c * akp - s * akq; A[k][q] = s * akp + c * akq; }
+        for (let k = 0; k < n; k++) { const apk = A[p][k], aqk = A[q][k]; A[p][k] = c * apk - s * aqk; A[q][k] = s * apk + c * aqk; } } }
+    return A.map((r, i) => r[i]).sort((x, y) => x - y);
+  }
+  return {solve, inv, det, chol, isPD, mul, vecMul, pow, I, lu, eigSym};
 })();

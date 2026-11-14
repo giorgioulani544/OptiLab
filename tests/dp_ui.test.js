@@ -1,0 +1,21 @@
+// Moduł Programowanie dynamiczne: raporty wszystkich przykładów (wzór, tablice etapów, odtworzenie polityki, wynik), sieć etapowa, CSV, rejestracja
+const vm = require('vm'), {order, load} = require('./helpers');
+const stub = new Proxy(function () {}, {get: (t, k) => k === 'forEach' ? () => {} : k === Symbol.toPrimitive ? () => '' : stub, set: () => true, apply: () => stub});
+const c = load(order, {document: {querySelector: () => stub, querySelectorAll: () => []}, window: {scrollTo() {}}, navigator: {}, Plotly: {}, setTimeout, console});
+const get = code => vm.runInContext(code, c);
+let ok = 0, bad = 0; const t = (n, v) => { v ? ok++ : (bad++, console.log('BŁĄD:', n)); };
+const EX = get('JSON.parse(JSON.stringify(DP_EXAMPLES.map(e => ({name: e.name, data: dpNormalize(e.data)}))))'), N = Number;
+const toX = d => { const t2 = d.type; if (t2 === 'path') return {t: t2, arcs: d.path.arcs.map(e => ({a: e.a, b: e.b, c: N(e.c)})), start: d.path.start, end: d.path.end, maxi: d.path.maxi, dir: d.path.dir};
+  if (t2 === 'alloc') return {t: t2, R: N(d.alloc.R), ret: d.alloc.ret.map(r => r.map(N)), names: d.alloc.names, maxi: d.alloc.maxi};
+  if (t2 === 'knap') return {t: t2, W: N(d.knap.W), kind: d.knap.kind, items: d.knap.items.map(i => ({name: i.name, w: N(i.w), v: N(i.v), lim: d.knap.kind === '01' ? 1 : d.knap.kind === 'unbounded' ? Infinity : N(i.lim)}))};
+  if (t2 === 'prod') return {t: t2, I0: N(d.prod.I0), Iend: N(d.prod.Iend), Smax: N(d.prod.Smax), per: d.prod.per.map(p => ({label: p.label, D: N(p.D), cap: N(p.cap), K: N(p.K), c: N(p.c), h: N(p.h)}))};
+  const A = N(d.repl.A), op = Array(A).fill(0), sal = Array(A + 1).fill(0); d.repl.rows.forEach(r => { const a = N(r.a); if (a < A) op[a] = N(r.op); if (a >= 1) sal[a] = N(r.sal); }); return {t: t2, T: N(d.repl.T), a0: N(d.repl.a0), P: N(d.repl.P), A, op, sal}; };
+EX.forEach(e => { const h = c.dpReportHTML(toX(e.data)); t(`raport „${e.name}": wzór rekurencji, tablice etapów, wynik`, /class="formula"/.test(h) && /<h4>(Etap|Okres|Rok)/.test(h) && /class="sum"/.test(h) && /class="best"/.test(h)); });
+let h = c.dpReportHTML(toX(EX[0].data)); t('dyliżans: koszt 11, trzy trasy, rysunek sieci', /<b>11<\/b>/.test(h) && /Trasy optymalne \(3\)/.test(h) && /aria-label="Sieć etapowa"/.test(h));
+h = c.dpReportHTML(toX(EX[2].data)); t('rozdział zespołów: wynik i tabela decyzji', /Odtworzenie decyzji/.test(h) && /łączny efekt/.test(h));
+const back = c.dpFromCSV(c.dpToCSV(get('dpNormalize(JSON.parse(JSON.stringify(DP_EXAMPLES[5].data)))'))); t('CSV (produkcja i zapasy): okresy i parametry wracają', back.type === 'prod' && back.prod.per.length === 4 && back.prod.Smax === '4' && back.prod.per[0].h === '0.5');
+const ba = c.dpFromCSV(c.dpToCSV(get('dpNormalize(JSON.parse(JSON.stringify(DP_EXAMPLES[2].data)))'))); t('CSV (rozdział zasobów): macierz efektów wraca', ba.type === 'alloc' && ba.alloc.R === '5' && ba.alloc.ret[1][5] === '150');
+let th = ''; try { c.dpFromCSV('Z węzła;Do węzła;Koszt / zysk\nA;B;1'); } catch (e) { th = e.message; } t('CSV bez rodzaju zadania odrzucony', /zadanie;/.test(th));
+h = c.dpReportHTML({t: 'path', arcs: [{a: '<b>A</b>', b: 'B', c: 1}], start: '<b>A</b>', end: 'B', maxi: false, dir: 'back'}); t('nazwy węzłów bezpiecznie wyświetlane', !/<b>A<\/b> →/.test(h));
+t('moduł zarejestrowany i usunięty z listy „wkrótce"', get("MODULES.some(m => m.id === 'dp') && !SOON.some(s => s[0] === 'dp')"));
+console.log(`Testy modułu Programowanie dynamiczne: ${ok} OK, ${bad} błędów`); process.exit(bad ? 1 : 0);

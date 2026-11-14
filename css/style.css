@@ -234,3 +234,6 @@ select{max-width:100%}
 }
 ul.interp li,ol.interp li{margin:4px 0;line-height:1.45} a.dl{display:inline-block;padding:8px 12px;border:1.5px solid var(--line);border-radius:10px;text-decoration:none;color:var(--ink);font-weight:600}
 @media print{a.dl{display:none}}
+svg.vzsvg .gpreg{fill:#e7f5ef;stroke:none} svg.vzsvg .gpl{stroke-width:1.6} svg.vzsvg .gpl.goal{stroke:var(--link);stroke-dasharray:6 4} svg.vzsvg .gpl.hard{stroke:var(--ink)}
+svg.vzsvg .ctreg{fill:#e7f5ef;stroke:var(--ok);stroke-width:1} svg.vzsvg .ctl{fill:none;stroke:var(--link);stroke-width:1.1} svg.vzsvg .ctc{stroke:var(--ink);stroke-width:1.6} svg.vzsvg .ctpath{fill:none;stroke:var(--err);stroke-width:1.8} svg.vzsvg .ctpt{fill:var(--err)} svg.vzsvg .vzmark.u{fill:#fff;stroke:var(--link);stroke-dasharray:3 2}
+svg.vzsvg .lopt{fill:#dbe7f5;stroke:var(--link);stroke-width:1.3} svg.vzsvg .lolink{stroke:#9aa9bd;stroke-width:1;stroke-dasharray:3 3} svg.vzsvg .lostar{font-size:22px;fill:var(--warn,#c8781e)}

@@ -64,5 +64,15 @@ async def main():
         await pg.click('#btn-ilp'); await pg.wait_for_timeout(300); gh = (await pg.inner_html('#out-ilp')).replace('\u00a0', '').replace(' ', '')
         print('Odcięcia Gomory\'ego (Z9):', 'OK' if 'z=<b>15578</b>' in gh and 'tęsamąwartość' in gh else 'BŁĄD')
         await pg.evaluate("document.getElementById('ilp-method').value = 'bb'")
+        for tab, txt in (('goal', 'nadmiar 15'), ('dp', 'Trasy optymalne (3)'), ('qp', '<b>270</b>'), ('nlp', 'minimum w x'), ('loc', '(66,67; 93,33)')):
+            await pg.click(f'nav button[data-tab={tab}]'); await pg.click(f'#btn-{tab}'); await pg.wait_for_timeout(250)
+            print(tab + ':', 'OK' if txt in await pg.inner_html(f'#out-{tab}') else 'BŁĄD')
+        # regresja z audytu 2026-11-13: wartość wpisana z klawiatury w komórkę macierzy musi dotrzeć do raportu
+        for tab, ex, cell, val in (('qp', None, 'qp-Mc0_0', '-10'), ('dec', None, 'dec-Sc0_0', '777777'), ('qc', None, 'qc-Sc0_0', '99.5'), ('dp', '2', 'dp-Mc0_1', '4444'), ('loc', '3', 'loc-Fc0_1', '500')):
+            await pg.click(f'nav button[data-tab={tab}]')
+            await pg.evaluate("([t, k]) => { const s = document.getElementById(t + '-ex'); s.value = k ?? '0'; s.dispatchEvent(new Event('change')); }", [tab, ex])
+            await pg.click(f'#btn-{tab}'); await pg.wait_for_timeout(150); before = await pg.inner_text(f'#out-{tab}')
+            await pg.fill('#' + cell, val); await pg.click(f'#btn-{tab}'); await pg.wait_for_timeout(150)
+            print(f'Edycja macierzy ({tab}):', 'OK' if await pg.inner_text(f'#out-{tab}') != before else 'BŁĄD')
         print('Błędy JS:', errs or 'brak'); await b.close()
 asyncio.run(main())

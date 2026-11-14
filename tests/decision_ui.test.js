@@ -18,5 +18,8 @@ t('CSV (Bayes): tabela wypłat, prawdopodobieństwa, wiarygodność, koszt', bac
 const tcsv = c.dcToCSV(get('dcNormalize(JSON.parse(JSON.stringify(DC_EXAMPLES[2].data)))')), tb = c.dcFromCSV(tcsv); t('CSV (drzewo): węzły z rodzicami i prawdopodobieństwami', tb.mode === 'tree' && tb.tree.length === 26 && tb.tree[3].prob === '0.5');
 let th = ''; try { c.dcFromCSV('tryb;table\nDecyzja;S1;S2\nA;1'); } catch (e) { th = e.message; } t('CSV: błąd liczby kolumn z numerem wiersza', /wiersz 3/.test(th));
 h = c.dcReportHTML({mode: 'table', V: [[1, 2], [3, 4]], rn: ['<b>x</b>', 'y'], cn: ['s1', 's2'], kind: 'profit', alpha: 0.5}); t('nazwy bezpiecznie wyświetlane', !/<b>x<\/b>/.test(h));
+{ // audyt 2026-11-13: tabela wartości oczekiwanych wszystkich decyzji (Thompson Lumber, liczone ręcznie: po wyniku korzystnym P = 7/9 → 115 555,56 i 73 333,33; po niekorzystnym P = 3/11 → −76 363,64 i 12 727,27)
+  const hb = c.dcReportHTML(toX(EX.find(e => /Bayes/.test(e.name)).data)).replace(/[\u00a0 ]/g, '');
+  t('Bayes: wartości oczekiwane każdej decyzji bez badania i po każdym wyniku (liczone ręcznie)', /Wartościoczekiwanedecyzji/.test(hb) && ['10000', '40000', '115555,56', '73333,33', '-76363,64', '12727,27'].every(v => hb.includes('>' + v + '<')) && (hb.match(/class="best">(40000|115555,56|12727,27)</g) || []).length === 3); }
 t('moduł zarejestrowany i usunięty z listy „wkrótce"', get("MODULES.some(m => m.id === 'dec') && !SOON.some(s => s[0] === 'dec')"));
 console.log(`Testy modułu Analiza decyzji: ${ok} OK, ${bad} błędów`); process.exit(bad ? 1 : 0);

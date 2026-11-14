@@ -11,8 +11,8 @@
 </p>
 
 <p align="center">
-  ![moduły](https://img.shields.io/badge/modu%C5%82y-19%20gotowych-1f3a5f)
-  ![testy automatyczne](https://img.shields.io/badge/testy%20automatyczne-10623%20%E2%9C%93-2e7d32)
+  ![moduły](https://img.shields.io/badge/modu%C5%82y-24%20gotowe-1f3a5f)
+  ![testy automatyczne](https://img.shields.io/badge/testy%20automatyczne-12701%20%E2%9C%93-2e7d32)
   ![instalacja](https://img.shields.io/badge/instalacja-niepotrzebna-c9a227)
   ![język](https://img.shields.io/badge/j%C4%99zyk-polski-b0413e)
 </p>
@@ -70,6 +70,25 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 | 📉 | **Karty kontrolne** | X̄-R, X̄-s, I-MR, p, np, c, u, reguły Nelsona, faza I, zdolność procesu Cp/Cpk, wykres Pareto, CUSUM, EWMA, ARL |
 | 🔍 | **Odbiór statystyczny** | krzywe OC, AOQ, AOQL, ATI, dobór planu dla AQL i LTPD, plany dwustopniowe, plan sekwencyjny SPRT, plany dla cech mierzalnych |
 
+### 🧮 Optymalizacja zaawansowana i lokalizacja
+| | Moduł | Co potrafi |
+|---|---|---|
+| 🎯 | **Programowanie celowe** | cele z odchyleniami d⁻ i d⁺, priorytety (krok po kroku), wagi, minimax, normalizacja, cele całkowitoliczbowe, rysunek dla 2 zmiennych |
+| 🪜 | **Programowanie dynamiczne** | ścieżka etapowa (wstecz i w przód), rozdział zasobów, plecak, produkcja i zapasy, wymiana sprzętu – tablice f(s) i polityka optymalna |
+| 🥚 | **Programowanie kwadratowe** | wypukłość z wartości własnych, warunki KKT, algorytm Lemkego krok po kroku, mnożniki Lagrange’a, poziomice |
+| 〰️ | **Programowanie nieliniowe** | funkcje wpisywane jak w zeszycie (2x1², sin, ln…), złoty podział, Fibonacci, Newton, gradient, BFGS, funkcja kary, rozszerzony Lagrange, ścieżka na poziomicach |
+| 📍 | **Lokalizacja i układ** | mediana ważona, Weiszfeld, środek ciężkości z porównaniem kryteriów, układ działów metodą CRAFT, p-mediana, mapy |
+
+## 📸 Jak to wygląda
+| | |
+|---|---|
+| ![Tablica simpleksu – alternatywna metoda tabelaryczna](docs/img/simpleks-tablica.png) | ![Sieć PERT/CPM ze ścieżką krytyczną](docs/img/pert-cpm-siec.png) |
+| *Simpleks: alternatywna metoda tabelaryczna (c<sub>j</sub> − z<sub>j</sub>)* | *PERT/CPM: sieć i ścieżka krytyczna* |
+| ![Karta kontrolna z regułami Nelsona](docs/img/karta-kontrolna.png) | ![Poziomice funkcji i ścieżka metody](docs/img/nieliniowe-poziomice.png) |
+| *Karty kontrolne: sygnały reguł Nelsona* | *Programowanie nieliniowe: poziomice i droga metody* |
+| ![Sieć etapowa programowania dynamicznego](docs/img/dynamiczne-siec-etapowa.png) | ![Mapa lokalizacji obiektu](docs/img/lokalizacja-mapa.png) |
+| *Programowanie dynamiczne: trasy optymalne* | *Lokalizacja: obiekt, punkty i droga algorytmu Weiszfelda* |
+
 ## 🚀 Jak zacząć
 
 1. **Otwórz aplikację** i wybierz moduł na dolnym pasku. Na komputerze pasek przewiniesz kółkiem myszy, przeciągnięciem albo strzałkami.
@@ -89,8 +108,8 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 
 ## ✅ Na wynikach można polegać
 
-- **10 623 automatycznych sprawdzeń** – wszystkie przechodzą.
-- Wyniki porównujemy z **przykładami z literatury** (m.in. Hillier i Lieberman, Heizer i Render, Render i Stair, Chopra i Meindl, Montgomery) oraz **niezależnymi obliczeniami**: przeglądem wszystkich możliwych rozwiązań, wzorami zamkniętymi i symulacją Monte Carlo.
+- **12 701 automatycznych sprawdzeń** – wszystkie przechodzą.
+- Wyniki porównujemy z **przykładami z literatury** (m.in. Hillier i Lieberman, Heizer i Render, Render i Stair, Chopra i Meindl, Montgomery, Taylor) oraz **niezależnymi obliczeniami**: przeglądem wszystkich możliwych rozwiązań, wzorami zamkniętymi i symulacją Monte Carlo.
 - Każdy moduł jest sprawdzany w prawdziwej przeglądarce na ekranie komputera i telefonu.
 - Gdy wynik nie jest pewny (np. przekroczony limit obliczeń), aplikacja mówi to wprost – **nigdy nie pokazuje niepewnego wyniku jako poprawnego**.
 
@@ -101,11 +120,8 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 - 💾 **Plik .json** – zapis i wczytanie całego zadania
 - 🖨️ **PDF** – raport tylko z bieżącego modułu, tabele nie są rozcinane między stronami
 
-## 🛠️ W przygotowaniu
-
-Programowanie celowe · Programowanie dynamiczne · Programowanie kwadratowe · Programowanie nieliniowe · Lokalizacja i układ
-
-Docelowo OptiLab ma objąć wszystkie moduły WinQSB. Uwagi i zgłoszenia błędów są bardzo mile widziane. 🙌
+## 🏁 Stan projektu
+Wszystkie moduły WinQSB są gotowe 🎉 – od programowania liniowego po lokalizację i układ. Dalsze prace to dopracowywanie na podstawie uwag użytkowników: jeśli coś liczy się inaczej niż na zajęciach albo raport jest niejasny, zgłoś to razem z danymi zadania.
 
 ## 👩‍💻 Dla programistów
 

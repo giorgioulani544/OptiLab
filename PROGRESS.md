@@ -47,11 +47,11 @@ Programowanie liniowe (graficzna, Simpleks, Całkowite), Transport, Przydział, 
 ## Pakiet 5 – Programowanie matematyczne i lokalizacja
 | Moduł | Status | Uwagi |
 |---|---|---|
-| Programowanie celowe | nie zaczęty | |
-| Programowanie dynamiczne | nie zaczęty | |
-| Programowanie kwadratowe | nie zaczęty | |
-| Programowanie nieliniowe | nie zaczęty | |
-| Lokalizacja i układ | nie zaczęty | |
+| Programowanie celowe | gotowy – rdzeń + rozszerzenia (2026-11-12) | odchylenia d⁻/d⁺, priorytety leksykograficznie (kolejne LP, poziom w pełni osiągnięty utrwalany dokładnie), wagi, minimax, normalizacja, cele całkowite (B&B), rysunek 2D. Testy: Beaver Creek (Taylor), przegląd wierzchołków dla każdego poziomu, siatka dla celów całkowitych. NIE zrobione: analiza wrażliwości wag. |
+| Programowanie dynamiczne | gotowy – rdzeń (2026-11-12) | ścieżka etapowa wstecz i w przód (wszystkie trasy optymalne, rysunek sieci), rozdział zasobów (cały zasób), plecak 0/1 / ograniczony / nieograniczony, produkcja–zapasy, wymiana sprzętu; tablice f(s) z decyzjami optymalnymi. Testy: dyliżans (Hillier i Lieberman), przegląd wszystkich polityk. NIE zrobione: programowanie dynamiczne stochastyczne. |
+| Programowanie kwadratowe | gotowy – rdzeń + rozszerzenia (2026-11-12) | wypukłość z wartości własnych (Jacobi), KKT, algorytm Lemkego z regułą leksykograficzną, mnożniki, sprawdzenie KKT, poziomice; sprzeczność/nieograniczoność rozstrzygana LP. Testy: Hillier i Lieberman (12, 9; 270), przegląd zbiorów aktywnych, Q = 0 vs wierzchołki. NIE zrobione: zmienne bez znaku (tylko x ≥ 0), QP całkowitoliczbowe. |
+| Programowanie nieliniowe | gotowy – rdzeń + rozszerzenia (2026-11-12) | parser expr.js (bez eval, testy ataków), 1D: bisekcja, złoty podział, Fibonacci, Newton; wiele zmiennych: gradient, Newton (modyfikacja hesjanu), BFGS z Armijo; ograniczenia: kara zewnętrzna, rozszerzony Lagrange (mnożniki); poziomice ze ścieżką i krzywymi ograniczeń, wykres zbieżności. Testy: funkcje kwadratowe (analitycznie), Rosenbrock, funkcja Boyda (siatka), zadania z KKT liczonymi ręcznie. |
+| Lokalizacja i układ | gotowy – rdzeń + rozszerzenia (2026-11-12) | mediana ważona (zbiór optymalny), Weiszfeld z warunkiem Kuhna, środek ciężkości, porównanie kryteriów, CRAFT (wymiana par) z przeglądem n! (n ≤ 8), p-mediana (przegląd), mapy SVG. Testy: Quain’s (Heizer i Render), przegląd współrzędnych, siatka, n!, przegląd zestawów. NIE zrobione: działy o różnych powierzchniach, bilansowanie linii. |
 
 ## Zaległości do dokończenia przy okazji (rozszerzenia)
 - Zapasy: (s, S), (R, S), wiele towarów z ograniczeniem, ABC.
@@ -63,6 +63,8 @@ Programowanie liniowe (graficzna, Simpleks, Całkowite), Transport, Przydział, 
 - Poprawka (2026-11-08, zgłoszona z telefonu): reguły Nelsona porównują z tolerancją 1e-9 – punkt równy średniej (z błędem zaokrągleń) nie jest „po jednej stronie”; komunikat „proces nie jest uregulowany” jest czerwony; lista sygnałów posortowana wg reguł.
 - Audyt (2026-11-10): przegląd w przeglądarce wszystkich przykładów wszystkich modułów (komputer i telefon) – brak błędów JS i wartości NaN/undefined; naprawione: na telefonie długie listy wyboru i opisy pól wychodziły poza ekran (6 modułów); podsumowania wyniku dodane w Procesach Markowa i MRP; wybór metody widoczny w Simpleksie i Całkowitych.
 - Pod zadania z laboratorium (Simpleks, sprawozdanie): odcięcia Gomory'ego z dualnym simpleksem (zakładka Całkowite), raport końcowy z analizą wrażliwości OFC/RHS jak w Excel Solver (otwarty domyślnie), interpretacja słowna wyników, legenda „gdzie odczytać wyniki”, eksport tablic do Excela, przykłady Z6, Z9, Z15 i minimalizacja 3×3.
-- Kolejna sesja: pakiet 5 – Programowanie celowe (najpierw), potem dynamiczne, kwadratowe (fundament: linalg gotowy), nieliniowe (najpierw js/expr.js – bezpieczny parser), Lokalizacja i układ.
+- Pakiet 5 (2026-11-12): programowanie celowe, dynamiczne, kwadratowe, nieliniowe (z parserem expr.js), lokalizacja i układ; README ze zrzutami ekranu (docs/img).
+- Audyt (2026-11-13): 1195 prób z błędnymi wpisami i 1076 prób edycji pól we wszystkich modułach. Naprawione: (1) WAŻNE – ręczna edycja macierzy była ignorowana w Analizie decyzji (tabela wypłat, gra), Kartach kontrolnych (pomiary), Programowaniu kwadratowym (Q i c), dynamicznym (rozdział zasobów) i Lokalizacji (przepływy): moduły sprawdzały element #prefiks, którego matrixHTML nie tworzył – tabela dostała id = prefiks; przykłady, wklejanie i pliki działały, dlatego testy tego nie wykryły; (2) błąd JS (RangeError w VZ.ticks) przy wykresie serii stałej z szumem zaokrągleń, np. planowanie zagregowane z limitem zatrudnień 0; (3) drobne: nieużywane pole N w planie dwustopniowym, koszt zakupu D·c w EPQ i modelu z brakami, przekątna macierzy przepływów wyłączona; (4) Bayes: tabela wartości oczekiwanych wszystkich decyzji. Testy: tests/audit_regress.test.js + wpisywanie z klawiatury w tests/browser_check.py.
+- Kolejna sesja: wszystkie moduły gotowe – poprawki z uwag użytkowników; ewentualnie DP stochastyczne, wrażliwość wag w programowaniu celowym, działy o różnych powierzchniach w CRAFT.
 - PERT/CPM: podgląd sieci AOA z czynnościami pozornymi.
 - Harmonogramowanie: job shop (reguły SPT, FIFO, MWKR, Gantt), terminy gotowości zadań.

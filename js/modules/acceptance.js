@@ -7,7 +7,7 @@ const AC_F = {n: {key: 'n', label: 'Liczebność próbki n'}, c: {key: 'c', labe
   AQL: {key: 'AQL', label: 'AQL – akceptowalny poziom jakości', unit: 'frakcja, np. 0,01'}, alpha: {key: 'alpha', label: 'Ryzyko dostawcy α', unit: 'np. 0,05'}, LTPD: {key: 'LTPD', label: 'LTPD – graniczna frakcja wadliwych', unit: 'np. 0,06'}, beta: {key: 'beta', label: 'Ryzyko odbiorcy β', unit: 'np. 0,10'},
   n1: {key: 'n1', label: 'Pierwsza próbka n₁'}, c1: {key: 'c1', label: 'Liczba akceptująca c₁'}, n2: {key: 'n2', label: 'Druga próbka n₂'}, c2: {key: 'c2', label: 'Łączna liczba akceptująca c₂ (dla n₁ + n₂)'},
   p1: {key: 'p1', label: 'Frakcja dobra p₁ (jak AQL)'}, p2: {key: 'p2', label: 'Frakcja zła p₂ (jak LTPD)'}};
-const acFields = I => ({single: ['n', 'c', 'N'], design: ['AQL', 'alpha', 'LTPD', 'beta', ...(I.dist === 'hyp' ? ['N'] : [])], double: ['n1', 'c1', 'n2', 'c2', 'N'], sprt: ['p1', 'p2', 'alpha', 'beta'], var: ['AQL', 'alpha', 'LTPD', 'beta']})[I.mode].map(k => AC_F[k]);
+const acFields = I => ({single: ['n', 'c', 'N'], design: ['AQL', 'alpha', 'LTPD', 'beta', ...(I.dist === 'hyp' ? ['N'] : [])], double: ['n1', 'c1', 'n2', 'c2'], sprt: ['p1', 'p2', 'alpha', 'beta'], var: ['AQL', 'alpha', 'LTPD', 'beta']})[I.mode].map(k => AC_F[k]);
 const acEx = (name, d) => ({name, data: {dist: 'bin', n: '89', c: '2', N: '10000', AQL: '0.01', alpha: '0.05', LTPD: '0.06', beta: '0.1', n1: '50', c1: '1', n2: '100', c2: '3', p1: '0.01', p2: '0.06', seq: '', ...d}});
 const AC_EXAMPLES = [
   acEx('Plan n = 89, c = 2 (Montgomery) – krzywa OC, AOQ, ATI', {mode: 'single'}),
@@ -50,7 +50,7 @@ function acRead() {
   if (bad.length) return netFail(ACP, out, 'wpisz w zaznaczonych polach liczby nieujemne.', bad);
   const int = (k, lo) => { if (!(Number.isInteger(X[k]) && X[k] >= lo)) bad.push(k); }, frac = k => { if (!(X[k] > 0 && X[k] < 1)) bad.push(k); };
   if (X.mode === 'single') { int('n', 1); int('c', 0); if (!bad.length && X.c >= X.n) bad.push('c'); if (X.N !== null && !(Number.isInteger(X.N) && X.N >= X.n)) bad.push('N'); if (X.dist === 'hyp' && X.N === null) bad.push('N'); }
-  if (X.mode === 'double') { int('n1', 1); int('c1', 0); int('n2', 1); int('c2', 0); if (!bad.length && !(X.c2 > X.c1 && X.c2 < X.n1 + X.n2)) bad.push('c2'); if (X.N !== null && !(Number.isInteger(X.N) && X.N >= X.n1 + X.n2)) bad.push('N'); }
+  if (X.mode === 'double') { int('n1', 1); int('c1', 0); int('n2', 1); int('c2', 0); if (!bad.length && !(X.c2 > X.c1 && X.c2 < X.n1 + X.n2)) bad.push('c2'); }
   if (['design', 'var'].includes(X.mode)) { ['AQL', 'alpha', 'LTPD', 'beta'].forEach(frac); if (!bad.length && !(X.LTPD > X.AQL)) bad.push('LTPD'); if (X.mode === 'design' && X.dist === 'hyp' && !(Number.isInteger(X.N) && X.N >= 2)) bad.push('N'); }
   if (X.mode === 'sprt') { ['p1', 'p2', 'alpha', 'beta'].forEach(frac); if (!bad.length && !(X.p2 > X.p1)) bad.push('p2');
     const items = String(AC.seq).split(/[\s,;]+/).filter(Boolean); if (items.some(v => v !== '0' && v !== '1')) return netFail(ACP, out, 'przebieg kontroli: wpisz tylko 0 (dobry) i 1 (wadliwy), rozdzielone spacjami.', ['seq']); X.items = items.map(Number); }

@@ -41,6 +41,18 @@ js/markov/markov-solver.js  łańcuchy Markowa: klasyfikacja, rozkład stacjonar
 js/modules/markov.js    moduł Procesy Markowa
 js/qsim/qsim-solver.js  symulacja zdarzeń dyskretnych kolejek, powtórzenia, przedziały ufności, wspólne liczby losowe – bez DOM
 js/modules/qsim.js      moduł Symulacja kolejek
+js/expr.js              bezpieczny parser wyrażeń (tokenizer + zejście rekurencyjne → domknięcia, bez eval/new Function), gradient i hesjan numeryczny
+js/goal/goal-solver.js   programowanie celowe: priorytety (kolejne LP), wagi, minimax, normalizacja, cele całkowite – bez DOM
+js/modules/goal.js       moduł Programowanie celowe (rysunek 2D: gpChartSVG)
+js/dp/dp-solver.js       programowanie dynamiczne: ścieżka etapowa, rozdział zasobów, plecak, produkcja–zapasy, wymiana sprzętu – bez DOM
+js/modules/dp.js         moduł Programowanie dynamiczne
+js/qp/qp-solver.js       programowanie kwadratowe: wypukłość (LA.eigSym), algorytm Lemkego (leksykograficznie), KKT – bez DOM
+js/modules/qp.js         moduł Programowanie kwadratowe (poziomice: VZ.contour)
+js/nlp/nlp-solver.js     programowanie nieliniowe: 1D (bisekcja, złoty podział, Fibonacci, Newton), gradient/Newton/BFGS z Armijo, kara i rozszerzony Lagrange – bez DOM
+js/modules/nlp.js        moduł Programowanie nieliniowe
+js/loc/loc-solver.js     lokalizacja: mediana ważona, Weiszfeld z warunkiem Kuhna, środek ciężkości, CRAFT, przegląd n!, p-mediana – bez DOM
+js/modules/loc.js        moduł Lokalizacja i układ (mapa SVG: loMapSVG)
+docs/img/                zrzuty ekranu do README
 js/lp-gomory.js         odcięcia Gomory'ego + dualny simpleks na dokładnych ułamkach (FR, BigInt), usuwanie nieaktywnych odcięć – bez DOM; raport: gomReportHTML w js/render.js
 js/lp-tab.js            alternatywna metoda tabelaryczna simpleksu (cj − zj, kolumna ilorazów, symboliczne M) – bez DOM; raport: tabReportHTML w js/render.js
 js/dec/decision-solver.js  analiza decyzji: kryteria, EMV/EOL/EVPI, drzewa, Bayes i EVSI, użyteczność, gry (LP) – bez DOM

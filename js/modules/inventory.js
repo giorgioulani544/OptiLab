@@ -142,14 +142,14 @@ function ivReportHTML(model, X, opt = {}) {
     h += `<p class="hint">Partia jest produkowana stopniowo z wydajnością p, a jednocześnie zużywana z prędkością D, więc zapas rośnie tylko w tempie p − D i nigdy nie osiąga Q.</p>` +
       `<div class="formula">Q* = √(2·D·S / (H·(1 − D/p))) = √(2 · ${f(X.D)} · ${f(X.S)} / (${f(X.H)} · (1 − ${f(X.D)}/${f(X.p)}))) = <b>${f(R.Q)}</b></div>` +
       `<div class="tw"><table><tbody><tr><th>Zapas maksymalny Q*(1 − D/p)</th><td>${f(R.Imax)}</td></tr><tr><th>Czas produkcji partii Q*/p</th><td>${f4(R.tp)} okresu</td></tr><tr><th>Czas cyklu Q*/D</th><td>${f4(R.T)} okresu</td></tr>` +
-      `<tr><th>Liczba uruchomień w okresie</th><td>${f(R.N)}</td></tr><tr><th>Koszt uruchomień</th><td>${f(R.order)}</td></tr><tr><th>Koszt utrzymania H·Imax/2</th><td>${f(R.hold)}</td></tr><tr><th>Koszt łączny</th><td><b>${f(R.TCv)}</b></td></tr></tbody></table></div>` +
+      `<tr><th>Liczba uruchomień w okresie</th><td>${f(R.N)}</td></tr><tr><th>Koszt uruchomień</th><td>${f(R.order)}</td></tr><tr><th>Koszt utrzymania H·Imax/2</th><td>${f(R.hold)}</td></tr><tr><th>Koszt łączny</th><td><b>${f(R.TCv)}</b></td></tr>${X.c ? `<tr><th>Z kosztem zakupu D·c</th><td>${f(R.TC)}</td></tr>` : ''}</tbody></table></div>` +
       `<div class="sum"><b>Wynik:</b> partia produkcyjna <b>${f(R.Q)}</b> szt., zapas maksymalny ${f(R.Imax)}, koszt ${f(R.TCv)}.</div>` + curve(q => R.tc(q) - X.D * (X.c ?? 0), R.Q, [q => X.D * X.S / q, q => X.H * q * (1 - X.D / X.p) / 2], 'Koszty uruchomień i utrzymania w zależności od wielkości partii') + flat(q => R.tc(q) - X.D * (X.c ?? 0), R.Q);
   } else if (model === 'back') {
     const R = invBack({D: X.D, S: X.S, H: X.H, b: X.b, c: X.c ?? 0});
     h += `<p class="hint">Dopuszczamy zaległości: część popytu czeka na dostawę (koszt b za jednostkę i okres). Opłaca się, gdy utrzymanie zapasu jest drogie w porównaniu z kosztem braku.</p>` +
       `<div class="formula">Q* = √(2·D·S/H · (H + b)/b) = <b>${f(R.Q)}</b>;&nbsp; maksymalny brak S* = Q*·H/(H + b) = <b>${f(R.Smax)}</b></div>` +
       `<div class="tw"><table><tbody><tr><th>Zapas maksymalny Q* − S*</th><td>${f(R.Imax)}</td></tr><tr><th>Część cyklu z brakiem S*/Q*</th><td>${pc(R.frac)}</td></tr><tr><th>Czas cyklu</th><td>${f4(R.T)} okresu</td></tr>` +
-      `<tr><th>Koszt zamawiania</th><td>${f(R.order)}</td></tr><tr><th>Koszt utrzymania</th><td>${f(R.hold)}</td></tr><tr><th>Koszt braków</th><td>${f(R.short)}</td></tr><tr><th>Koszt łączny</th><td><b>${f(R.TCv)}</b></td></tr></tbody></table></div>` +
+      `<tr><th>Koszt zamawiania</th><td>${f(R.order)}</td></tr><tr><th>Koszt utrzymania</th><td>${f(R.hold)}</td></tr><tr><th>Koszt braków</th><td>${f(R.short)}</td></tr><tr><th>Koszt łączny</th><td><b>${f(R.TCv)}</b></td></tr>${X.c ? `<tr><th>Z kosztem zakupu D·c</th><td>${f(R.TC)}</td></tr>` : ''}</tbody></table></div>` +
       `<div class="sum"><b>Wynik:</b> zamawiaj po <b>${f(R.Q)}</b> szt., dopuszczając zaległości do <b>${f(R.Smax)}</b> szt.; koszt ${f(R.TCv)} (bez braków: ${f(invEOQ({D: X.D, S: X.S, H: X.H}).TCv)}).</div>` + curve(q => R.tc(q) - X.D * (X.c ?? 0), R.Q, null, 'Koszt zamawiania, utrzymania i braków (przy optymalnym braku dla każdego Q)');
   } else if (model === 'disc') {
     const R = invDisc({D: X.D, S: X.S, H: X.H ?? 0, i: X.i ?? 0, tiers: X.tiers, type: opt.type, hMode: opt.hMode});

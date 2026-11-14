@@ -9,7 +9,8 @@ function matrixHTML(p, st, o) {
   // o: {corner, xcLabel, xrLabel, allowM, staticNames (nagłówki jako tekst), blank (pusta komórka = brak wartości), diag (przekątna wyłączona), noMsg}
   const cell = (id, v, extra = '') => `<input class="num" data-num${extra}${o.blank ? ' data-blank' : ''} inputmode="decimal" id="${p}${id}" value="${esc(v)}" aria-label="${id}">`;
   const name = (id, v, lbl) => o.staticNames ? esc(v) : `<input class="nm" id="${p}${id}" value="${esc(v)}" aria-label="${lbl}">`;
-  let h = `<div class="tw"><table class="mx"><tr><th>${o.corner || ''}</th>` + st.cn.map((v, j) => `<th>${name('cn' + j, v, 'nazwa kolumny ' + (j + 1))}</th>`).join('') + (o.xcLabel ? `<th>${o.xcLabel}</th>` : '') + '</tr>';
+  // id tabeli = prefiks p: moduły sprawdzają $('#' + p) przed matrixSync – bez tego identyfikatora ręczna edycja macierzy była pomijana (audyt 2026-11-13)
+  let h = `<div class="tw"><table class="mx" id="${p}"><tr><th>${o.corner || ''}</th>` + st.cn.map((v, j) => `<th>${name('cn' + j, v, 'nazwa kolumny ' + (j + 1))}</th>`).join('') + (o.xcLabel ? `<th>${o.xcLabel}</th>` : '') + '</tr>';
   st.rn.forEach((r, i) => {
     h += `<tr><th>${name('rn' + i, r, 'nazwa wiersza ' + (i + 1))}</th>` + st.cn.map((_, j) => o.diag && i === j ? '<td class="diag">—</td>' : `<td>${cell(`c${i}_${j}`, st.cells[i][j], o.allowM ? ' data-m' : '')}</td>`).join('') +
       (o.xcLabel ? `<td class="xc">${cell('xc' + i, st.xc[i])}</td>` : '') + '</tr>';
