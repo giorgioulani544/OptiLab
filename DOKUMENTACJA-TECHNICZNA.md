@@ -69,7 +69,8 @@ PROGRESS.md             stan prac nad kolejnymi modułami
 js/net/maxflow-solver.js     Ford-Fulkerson / Edmonds-Karp, przekrój minimalny, superźródło – bez DOM
 js/modules/maxflow.js        moduł Maksymalny przepływ (sieć rezydualna w każdej iteracji)
 js/registry.js          rejestr modułów (registerModule) i lista modułów „wkrótce"
-js/app.js               zakładki, eksport PDF, start (ładowany ostatni)
+js/app.js               zakładki, eksport PDF, start
+js/bg.js                tło: powolna animowana sieć z pomarańczowymi wyładowaniami (canvas #bgnet; tylko ozdoba, ładowany ostatni)
 tests/                  testy w Node (solver, metoda dwufazowa, parametryczna, CSV, przykłady, ładowanie, interfejs)
 tools/bundle.py         skleja projekt w jeden plik (podgląd na telefonie / wgranie z telefonu)
 manifest.webmanifest, icon-192.png, icon-512.png   ikona skrótu na telefonie/komputerze
