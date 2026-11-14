@@ -1,10 +1,9 @@
-/* ===== Motyw: papier milimetrowy + granat tuszu ===== */
-:root{--ink:#1b2a4e;--paper:#f4f0e6;--card:#fdfcf8;--line:#c9cbd8;--accent:#1b2a4e;--link:#1a6fd6;--pivot:#ffb703;--hl:#fff1c2;--err:#c0261b;--ok:#2e7d32}
+/* ===== Motyw: ciepły beż + pastelowy pomarańcz (akcent) + granat tuszu (tekst, raporty) ===== */
+:root{--ink:#1b2a4e;--paper:#f3ecdf;--card:#fffdf8;--line:#c9cbd8;--fline:#dfd3c0;--or:#e8915c;--or-soft:#f6c7a3;--or-pale:#fdf1e6;--or-deep:#b9552c;--accent:#1b2a4e;--link:#1a6fd6;--pivot:#ffb703;--hl:#fff1c2;--err:#c0261b;--ok:#2e7d32}
 *{box-sizing:border-box}
 html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 sub{font-size:.72em;line-height:0}
-body{margin:0;font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--paper);
- background-image:linear-gradient(rgba(27,42,78,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(27,42,78,.05) 1px,transparent 1px);background-size:24px 24px;padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+body{margin:0;font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--paper);padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
 h1,h2,h3,h4{margin:.2em 0}h2{font-size:1.1rem}
 header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;max-width:1200px;margin:0 auto;padding:14px 16px 6px}
 header{align-items:center}header h1{font-size:1.5rem;margin:0}#tabname{flex:1}
@@ -237,3 +236,48 @@ ul.interp li,ol.interp li{margin:4px 0;line-height:1.45} a.dl{display:inline-blo
 svg.vzsvg .gpreg{fill:#e7f5ef;stroke:none} svg.vzsvg .gpl{stroke-width:1.6} svg.vzsvg .gpl.goal{stroke:var(--link);stroke-dasharray:6 4} svg.vzsvg .gpl.hard{stroke:var(--ink)}
 svg.vzsvg .ctreg{fill:#e7f5ef;stroke:var(--ok);stroke-width:1} svg.vzsvg .ctl{fill:none;stroke:var(--link);stroke-width:1.1} svg.vzsvg .ctc{stroke:var(--ink);stroke-width:1.6} svg.vzsvg .ctpath{fill:none;stroke:var(--err);stroke-width:1.8} svg.vzsvg .ctpt{fill:var(--err)} svg.vzsvg .vzmark.u{fill:#fff;stroke:var(--link);stroke-dasharray:3 2}
 svg.vzsvg .lopt{fill:#dbe7f5;stroke:var(--link);stroke-width:1.3} svg.vzsvg .lolink{stroke:#9aa9bd;stroke-width:1;stroke-dasharray:3 3} svg.vzsvg .lostar{font-size:22px;fill:var(--warn,#c8781e)}
+
+/* ===== Odświeżony interfejs (2026-11): tło-sieć, pomarańczowe akcenty, formularze. Raporty (#out-…, #print-area) celowo bez zmian. ===== */
+#bgnet{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+#tabname{flex:0 1 auto;margin-right:auto;color:var(--or-deep);background:var(--or-pale);border:1px solid var(--or-soft);border-radius:999px;padding:2px 12px;font-size:.85rem;font-weight:600}
+header h1{letter-spacing:-.01em}
+.card{border:1px solid var(--fline);border-radius:22px;box-shadow:0 1px 2px rgba(80,55,25,.05),0 10px 30px -12px rgba(80,55,25,.18)}
+button,select,input{border-color:var(--fline);transition:border-color .15s,box-shadow .15s,background-color .15s}
+input,select{box-shadow:inset 0 1px 2px rgba(80,55,25,.06)}
+input:focus,select:focus{outline:none;border-color:var(--or);box-shadow:0 0 0 3px rgba(232,145,92,.3)}
+:focus-visible{outline:3px solid rgba(232,145,92,.65);outline-offset:1px}
+input:focus-visible,select:focus-visible{outline:none}
+input[type=checkbox],input[type=radio]{accent-color:var(--or);box-shadow:none}
+input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{outline:3px solid rgba(232,145,92,.65)}
+/* Przycisk główny: pastelowy pomarańcz z granatowym tekstem (biały tekst byłby za mało czytelny) */
+button{background:linear-gradient(180deg,#f5b48a,#ec9a68);color:var(--ink);border-color:#de8b58;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 2px 6px -2px rgba(190,90,40,.45)}
+button:active{transform:translateY(1px)}
+button.ghost{background:#fff;border-color:var(--fline);box-shadow:0 1px 2px rgba(80,55,25,.06)}
+@media(hover:hover){
+ input:hover,select:hover{border-color:#cdb89b}
+ button:hover{filter:brightness(1.05)}
+ button.ghost:hover{background:var(--or-pale);border-color:var(--or-soft);filter:none}
+}
+nav{background:rgba(255,253,248,.97);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--fline);box-shadow:0 -6px 20px -12px rgba(80,55,25,.25)}
+nav button,nav button:hover{position:relative;background:transparent;border:0;box-shadow:none;filter:none;color:#756f80;transform:none}
+nav button[aria-selected=true]{color:var(--ink);font-weight:700}
+nav button[aria-selected=true] svg{stroke:var(--or-deep)}
+nav button[aria-selected=true]::before{content:"";position:absolute;top:0;left:22%;right:22%;height:3px;border-radius:0 0 4px 4px;background:var(--or)}
+@media(hover:hover){nav button:hover{color:var(--ink)}}
+.navarrow,.navarrow:hover{background:#fff;color:var(--ink);border:1px solid var(--fline);box-shadow:0 2px 8px rgba(80,55,25,.18)}
+/* Opcje zaawansowane: jasny panel ze strzałką */
+details.adv{border:1px solid #ecdcc6;border-radius:14px;background:var(--or-pale);padding:2px 14px}
+details.adv>summary{color:var(--or-deep);list-style:none;gap:8px}
+details.adv>summary::-webkit-details-marker{display:none}
+details.adv>summary::before{content:"";flex:0 0 auto;width:8px;height:8px;margin-left:2px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .2s}
+details.adv[open]>summary::before{transform:rotate(45deg)}
+details.adv details.adv{background:#fffaf3}
+.hint{color:#6f6a63}
+.credit{color:rgba(90,60,30,.5)}
+/* Raporty zachowują dotychczasowy wygląd zwijanych sekcji */
+[id^="out-"] details.adv,#print-area details.adv{border:1.5px dashed var(--line);border-radius:12px;background:transparent;padding:2px 12px}
+[id^="out-"] details.adv>summary,#print-area details.adv>summary{color:var(--link);list-style:revert;gap:0}
+[id^="out-"] details.adv>summary::before,#print-area details.adv>summary::before{content:none}
+[id^="out-"] details.adv>summary::-webkit-details-marker,#print-area details.adv>summary::-webkit-details-marker{display:revert}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{#bgnet{display:none!important}}

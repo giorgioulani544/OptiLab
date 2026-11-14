@@ -80,6 +80,8 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 | 📍 | **Lokalizacja i układ** | mediana ważona, Weiszfeld, środek ciężkości z porównaniem kryteriów, układ działów metodą CRAFT, p-mediana, mapy |
 
 ## 📸 Jak to wygląda
+<p align="center"><img src="docs/img/interfejs.png" alt="Interfejs OptiLab: dane po lewej, raport krok po kroku po prawej" width="820"></p>
+
 | | |
 |---|---|
 | ![Tablica simpleksu – alternatywna metoda tabelaryczna](docs/img/simpleks-tablica.png) | ![Sieć PERT/CPM ze ścieżką krytyczną](docs/img/pert-cpm-siec.png) |
@@ -121,6 +123,8 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 - 🖨️ **PDF** – raport tylko z bieżącego modułu, tabele nie są rozcinane między stronami
 
 ## 🏁 Stan projektu
+🎨 **Nowość (listopad 2026): odświeżony wygląd** – ciepły beż z pastelowym pomarańczem, spokojnie animowane tło-sieć z pomarańczowymi wyładowaniami, czytelniejsze przyciski i „Opcje zaawansowane”. Obliczenia i raporty bez zmian.
+
 Wszystkie moduły WinQSB są gotowe 🎉 – od programowania liniowego po lokalizację i układ. Dalsze prace to dopracowywanie na podstawie uwag użytkowników: jeśli coś liczy się inaczej niż na zajęciach albo raport jest niejasny, zgłoś to razem z danymi zadania.
 
 ## 👩‍💻 Dla programistów
