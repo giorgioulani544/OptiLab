@@ -12,7 +12,7 @@
 
 <p align="center">
   ![moduły](https://img.shields.io/badge/modu%C5%82y-24%20gotowe-1f3a5f)
-  ![testy automatyczne](https://img.shields.io/badge/testy%20automatyczne-12701%20%E2%9C%93-2e7d32)
+  ![testy automatyczne](https://img.shields.io/badge/testy%20automatyczne-12736%20%E2%9C%93-2e7d32)
   ![instalacja](https://img.shields.io/badge/instalacja-niepotrzebna-c9a227)
   ![język](https://img.shields.io/badge/j%C4%99zyk-polski-b0413e)
 </p>
@@ -32,7 +32,7 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 |---|---|---|
 | 📈 | **Metoda graficzna** | obszar dopuszczalny, wierzchołki, prosta celu, punkty całkowite |
 | 🧾 | **Simpleks** | tablice krok po kroku: metoda dwufazowa, duże M i alternatywna metoda tabelaryczna (C<sub>B</sub>, z<sub>j</sub>, c<sub>j</sub> − z<sub>j</sub>, kolumna ilorazów, symboliczne M), zadanie dualne, analiza wrażliwości OFC i RHS (jak w Excel Solver), gotowa interpretacja wyników, eksport tablic do Excela, analiza parametryczna, rozwiązania alternatywne |
-| 🔢 | **Programowanie całkowitoliczbowe** | metoda podziału i ograniczeń z drzewem obliczeń oraz **odcięcia Gomory'ego** z dualną metodą simpleks (tablice krok po kroku, dokładne ułamki) |
+| 🔢 | **Programowanie całkowitoliczbowe** | metoda podziału i ograniczeń z drzewem obliczeń oraz **odcięcia Gomory'ego** z dualną metodą simpleks: każde odcięcie rozpisane krok po kroku (wybór wiersza, części ułamkowe, nowe ograniczenie, tablice), do 500 odcięć, dokładne ułamki; szczegóły odcięć można dołączyć do raportu PDF albo je pominąć |
 
 ### 🕸️ Modele sieciowe
 | | Moduł | Co potrafi |
@@ -90,6 +90,8 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 | *Karty kontrolne: sygnały reguł Nelsona* | *Programowanie nieliniowe: poziomice i droga metody* |
 | ![Sieć etapowa programowania dynamicznego](docs/img/dynamiczne-siec-etapowa.png) | ![Mapa lokalizacji obiektu](docs/img/lokalizacja-mapa.png) |
 | *Programowanie dynamiczne: trasy optymalne* | *Lokalizacja: obiekt, punkty i droga algorytmu Weiszfelda* |
+| ![Odcięcie Gomory'ego rozpisane krok po kroku](docs/img/gomory-odciecie.png) | |
+| *Całkowite: odcięcie Gomory'ego krok po kroku – wybór wiersza, części ułamkowe, nowe ograniczenie* | |
 
 ## 🚀 Jak zacząć
 
@@ -110,7 +112,7 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 
 ## ✅ Na wynikach można polegać
 
-- **12 701 automatycznych sprawdzeń** – wszystkie przechodzą.
+- **12 736 automatycznych sprawdzeń** – wszystkie przechodzą.
 - Wyniki porównujemy z **przykładami z literatury** (m.in. Hillier i Lieberman, Heizer i Render, Render i Stair, Chopra i Meindl, Montgomery, Taylor) oraz **niezależnymi obliczeniami**: przeglądem wszystkich możliwych rozwiązań, wzorami zamkniętymi i symulacją Monte Carlo.
 - Każdy moduł jest sprawdzany w prawdziwej przeglądarce na ekranie komputera i telefonu.
 - Gdy wynik nie jest pewny (np. przekroczony limit obliczeń), aplikacja mówi to wprost – **nigdy nie pokazuje niepewnego wyniku jako poprawnego**.
@@ -123,6 +125,8 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 - 🖨️ **PDF** – raport tylko z bieżącego modułu, tabele nie są rozcinane między stronami
 
 ## 🏁 Stan projektu
+🔢 **Nowość (listopad 2026): odcięcia Gomory'ego krok po kroku** – w zakładce „Całkowite” każde odcięcie jest rozpisane w całości, niezależnie od ich liczby (do 500). Jednym przełącznikiem decydujesz, czy szczegóły trafią do raportu PDF (nawet ponad 100 stron obliczeń), czy wystarczy tabela podsumowania.
+
 🎨 **Nowość (listopad 2026): odświeżony wygląd** – ciepły beż z pastelowym pomarańczem, spokojnie animowane tło-sieć z pomarańczowymi wyładowaniami, czytelniejsze przyciski i „Opcje zaawansowane”. Obliczenia i raporty bez zmian.
 
 Wszystkie moduły WinQSB są gotowe 🎉 – od programowania liniowego po lokalizację i układ. Dalsze prace to dopracowywanie na podstawie uwag użytkowników: jeśli coś liczy się inaczej niż na zajęciach albo raport jest niejasny, zgłoś to razem z danymi zadania.

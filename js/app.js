@@ -46,26 +46,33 @@ $('#btn-export').onclick = async () => {
   }
   if (t === 'simplex') { if (last.simplex) sec.push(['Metoda simpleks', last.simplex]); if (last.dual) sec.push(['Zadanie dualne', last.dual]); if (last.par) sec.push(['Analiza parametryczna', last.par]); }
   if (t === 'ilp' && last.ilp) sec.push(['Programowanie całkowitoliczbowe', `<div class="tree">${last.ilp}</div>`]);
+  if (t === 'ilp' && last.ilp && last.ilpCuts) sec.push(['Odcięcia Gomory\'ego krok po kroku', last.ilpCuts]);   // tylko gdy w raporcie zaznaczono „dołącz do raportu i PDF”
   const md = MODULES.find(x => x.id === t); if (md && last[md.id]) sec.push([md.title, last[md.id]]);
   if (!sec.length) {
     const eb = $('#btn-export'); eb.classList.add('bad'); eb.textContent = 'Najpierw rozwiąż zadanie w tej zakładce';
     setTimeout(() => { eb.classList.remove('bad'); eb.textContent = 'Eksportuj raport'; }, 2500); return;
   }
-  const pa = $('#print-area');
-  pa.innerHTML = `<h1>Raport z obliczeń – ${TITLES[t]}</h1><p>${new Date().toLocaleDateString('pl-PL')}</p>` + sec.map(([ti, body]) => `<h2>${ti}</h2>${body}`).join('');
-  pa.querySelectorAll('details').forEach(d => d.open = true);
-  // Nagłówek tabeli jako <thead>: gdy długa tabela przechodzi na kolejną stronę, nagłówek powtarza się na każdej stronie
-  pa.querySelectorAll('table').forEach(tb => { const r = tb.rows[0]; if (r && !tb.tHead && [...r.cells].every(c => c.tagName === 'TH')) tb.createTHead().appendChild(r); });
-  // Szerokie tabele zmniejszamy czcionką (nie „zoom" – ten psuje dzielenie na strony w Chrome), aż zmieszczą się w A4 (~690 px)
-  pa.style.cssText = 'display:block;position:absolute;left:-9999px;width:690px;font-size:10pt';
-  pa.querySelectorAll('table').forEach(tb => {
-    for (let k = 0; k < 4 && tb.scrollWidth > 690; k++) {
-      const cur = parseFloat(getComputedStyle(tb).fontSize) || 11.3;
-      tb.style.fontSize = Math.max(5, cur * 690 / tb.scrollWidth * 0.97).toFixed(2) + 'px';
-      tb.querySelectorAll('td,th').forEach(c => { c.style.padding = '1px 3px'; c.style.minWidth = '0'; });
-    }
-  });
-  pa.style.cssText = ''; window.print();
+  // bardzo długi raport (np. setki odcięć Gomory'ego) składa się kilka sekund – wtedy najpierw napis na przycisku, potem składanie;
+  // zwykłe raporty drukujemy od razu, jak dotąd
+  const big = sec.reduce((n, [, body]) => n + body.length, 0) > 1e6, eb = $('#btn-export');
+  if (big) { eb.textContent = 'Przygotowuję raport…'; eb.disabled = true; await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0))); }
+  try {
+    const pa = $('#print-area');
+    pa.innerHTML = `<h1>Raport z obliczeń – ${TITLES[t]}</h1><p>${new Date().toLocaleDateString('pl-PL')}</p>` + sec.map(([ti, body]) => `<h2>${ti}</h2>${body}`).join('');
+    pa.querySelectorAll('details').forEach(d => d.open = true);
+    // Nagłówek tabeli jako <thead>: gdy długa tabela przechodzi na kolejną stronę, nagłówek powtarza się na każdej stronie
+    pa.querySelectorAll('table').forEach(tb => { const r = tb.rows[0]; if (r && !tb.tHead && [...r.cells].every(c => c.tagName === 'TH')) tb.createTHead().appendChild(r); });
+    // Szerokie tabele zmniejszamy czcionką (nie „zoom" – ten psuje dzielenie na strony w Chrome), aż zmieszczą się w A4 (~690 px)
+    pa.style.cssText = 'display:block;position:absolute;left:-9999px;width:690px;font-size:10pt';
+    pa.querySelectorAll('table').forEach(tb => {
+      for (let k = 0; k < 4 && tb.scrollWidth > 690; k++) {
+        const cur = parseFloat(getComputedStyle(tb).fontSize) || 11.3;
+        tb.style.fontSize = Math.max(5, cur * 690 / tb.scrollWidth * 0.97).toFixed(2) + 'px';
+        tb.querySelectorAll('td,th').forEach(c => { c.style.padding = '1px 3px'; c.style.minWidth = '0'; });
+      }
+    });
+    pa.style.cssText = ''; window.print();
+  } finally { if (big) { eb.textContent = 'Eksportuj raport'; eb.disabled = false; } }
 };
 
 MODS.forEach(initModule);

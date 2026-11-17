@@ -30,4 +30,12 @@ for (let k = 0; k < 220; k++) {
   if (G.status === 'limit') { t(`#${k} limit odcięć zgłoszony jako „limit” (nie jako wynik)`, !G.x); continue; }
   t(`#${k} ${best === null ? 'brak rozwiązań całkowitych' : 'z* = ' + best}: wynik Gomory'ego zgodny z przeglądem`, best === null ? G.status === 'infeasible' : G.status === 'optimal' && near(G.zNum, best, 1e-9) && G.xNum.every(Number.isInteger));
 }
+// Dane do raportu krok po kroku (2026-11-17), przeliczone ręcznie dla przykładu Taha: kandydaci do odcięcia 1 to x1 = 9/2 i x2 = 7/2 (f = 1/2);
+// po odcięciu 1: x1 = 32/7, x3 = 11/7 (f = 4/7) – z wiersza x1 (x1 + 1/7·x4 − 1/7·s1 = 32/7) albo x3 (x3 + 1/7·x4 − 22/7·s1 = 11/7) wychodzi to samo odcięcie (1/7)x4 + (6/7)s1 ≥ 4/7
+{ const C1 = T.cuts[0], C2 = T.cuts[1], n2 = C2 ? C2.steps[0].names : [], f2 = v => FR.str(C2.f[n2.indexOf(v)]);
+  t('Taha: kandydaci do odcięcia 1 – x1 = 9/2 i x2 = 7/2, obie części ułamkowe 1/2', C1.cand.length === 2 && C1.cand.every(o => FR.str(o.f) === '1/2') && C1.cand.map(o => o.v + '=' + FR.str(o.b)).sort().join() === 'x1=9/2,x2=7/2');
+  t('Taha: kandydaci do odcięcia 2 – x1 = 32/7 i x3 = 11/7, obie części ułamkowe 4/7', C2 && C2.cand.map(o => o.v + '=' + FR.str(o.b) + ':' + FR.str(o.f)).sort().join() === 'x1=32/7:4/7,x3=11/7:4/7');
+  t('Taha: odcięcie 2 – (1/7)x4 + (6/7)s1 ≥ 4/7', C2 && ['x1', 'x3'].includes(C2.srcVar) && FR.str(C2.f0) === '4/7' && f2('x4') === '1/7' && f2('s1') === '6/7'); }
+{ const MT = {n: 2, c: [7, 10], A: [[-1, 3], [7, 1]], rel: ['<=', '<='], b: [6, 35], maxi: true}, A1 = c.gomSolve(MT, {maxCuts: 1}), A0 = c.gomSolve(MT, {maxPiv: 0});
+  t('powód przerwania: limit odcięć → limit „cuts” (bez wyniku), limit kroków → „pivots” (bez wyniku)', A1.status === 'limit' && A1.limit === 'cuts' && A1.cuts.length === 1 && !A1.x && A0.status === 'limit' && A0.limit === 'pivots' && !A0.x && A1.maxCuts === 1 && A0.maxPiv === 0); }
 console.log(`Testy odcięć Gomory'ego: ${ok} OK, ${bad} błędów`); process.exit(bad ? 1 : 0);

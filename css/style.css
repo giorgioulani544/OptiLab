@@ -281,3 +281,9 @@ details.adv details.adv{background:#fffaf3}
 [id^="out-"] details.adv>summary::-webkit-details-marker,#print-area details.adv>summary::-webkit-details-marker{display:revert}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{#bgnet{display:none!important}}
+/* Całkowite – odcięcia Gomory'ego krok po kroku: osobna sekcja raportu z przełącznikiem „dołącz do raportu i PDF” (sam przełącznik nie trafia do PDF) */
+.gchead{display:flex;flex-wrap:wrap;align-items:center;gap:2px 16px;margin:20px 0 4px;padding:6px 12px;background:var(--or-pale);border:1px solid #ecdcc6;border-radius:14px}
+.gchead h3{margin:0;flex:1 1 auto}
+.gchead label.chk{margin:0;min-height:44px;font-weight:600;color:var(--or-deep)}
+#out-ilp .gcut{content-visibility:auto;contain-intrinsic-size:auto 1100px}   /* setki odcięć: przeglądarka rysuje tylko odcięcia widoczne na ekranie */
+table.gfr td,table.gfr th{text-align:center;min-width:44px}
