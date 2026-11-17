@@ -1,6 +1,6 @@
 # Opcjonalny test w prawdziwej przeglądarce (wymaga: pip install playwright && playwright install chromium)
 # Uruchom: python3 tests/browser_check.py
-import asyncio, pathlib
+import asyncio, pathlib, re
 URL = (pathlib.Path(__file__).resolve().parent.parent / 'index.html').as_uri()
 from playwright.async_api import async_playwright
 async def main():
@@ -63,6 +63,32 @@ async def main():
         await pg.evaluate("(() => { const s = document.getElementById('ilp-ex'); s.value = '8'; s.dispatchEvent(new Event('change')); document.getElementById('ilp-method').value = 'gom'; })()")
         await pg.click('#btn-ilp'); await pg.wait_for_timeout(300); gh = (await pg.inner_html('#out-ilp')).replace('\u00a0', '').replace(' ', '')
         print('Odcięcia Gomory\'ego (Z9):', 'OK' if 'z=<b>15578</b>' in gh and 'tęsamąwartość' in gh else 'BŁĄD')
+        # Odcięcia krok po kroku (2026-11-17): każde odcięcie rozpisane w osobnej sekcji; przełącznik „dołącz do raportu i PDF” decyduje o PDF
+        await pg.evaluate("window.print = () => {}")
+        async def export():
+            await pg.click('#btn-export'); await pg.wait_for_function("!document.querySelector('#btn-export').disabled")
+            return await pg.evaluate("[document.querySelectorAll('#print-area .gcut').length, [...document.querySelectorAll('#print-area h2')].map(h => h.textContent).join('|'), document.querySelectorAll('#print-area input').length]")
+        n = int(re.search(r'Potrzebne odcięcia: (\d+)', await pg.inner_text('#out-ilp')).group(1))
+        cnt = await pg.eval_on_selector_all('#out-ilp .gcut', 'e => e.length'); dets = await pg.eval_on_selector_all('#out-ilp .gcbody details', 'e => e.length')
+        print('Odcięcia krok po kroku – wszystkie rozpisane:', 'OK' if cnt == n > 2 and dets == 0 else 'BŁĄD', f'({cnt}/{n})')
+        pa = await export(); print('PDF z odcięciami krok po kroku:', 'OK' if pa[0] == n and "Odcięcia Gomory'ego krok po kroku" in pa[1] and pa[2] == 0 else 'BŁĄD', pa)
+        await pg.uncheck('#out-ilp .gctog'); pa = await export()
+        empty = await pg.eval_on_selector_all('#out-ilp .gcut', 'e => e.length') == 0 and 'Pominięte' in await pg.inner_text('#out-ilp')
+        print('Przełącznik wyłączony – bez odcięć na ekranie i w PDF:', 'OK' if empty and pa[0] == 0 and 'Odcięcia Gomory' not in pa[1] and 'Programowanie całkowitoliczbowe' in pa[1] else 'BŁĄD', pa)
+        await pg.click('#btn-ilp'); await pg.wait_for_timeout(300)
+        print('Wybór „pomiń” zapamiętany przy kolejnym liczeniu:', 'OK' if not await pg.is_checked('#out-ilp .gctog') and await pg.eval_on_selector_all('#out-ilp .gcut', 'e => e.length') == 0 else 'BŁĄD')
+        await pg.check('#out-ilp .gctog'); pa = await export()
+        print('Przełącznik włączony ponownie – odcięcia wracają (ekran i PDF):', 'OK' if await pg.eval_on_selector_all('#out-ilp .gcut', 'e => e.length') == n and pa[0] == n else 'BŁĄD')
+        await pg.evaluate("document.getElementById('ilp-method').value = 'bb'"); await pg.click('#btn-ilp'); await pg.wait_for_timeout(200); pa = await export()
+        print('Po zmianie metody na B&B – w PDF brak starych odcięć:', 'OK' if pa[0] == 0 and 'Odcięcia Gomory' not in pa[1] else 'BŁĄD', pa)
+        # limit 500 odcięć: zadanie wymagające ok. 490 odcięć WPISANE z klawiatury; wynik = przegląd wszystkich punktów całkowitych (liczony tutaj)
+        await pg.evaluate("(() => { const s = document.getElementById('ilp-ex'); s.value = '9'; s.dispatchEvent(new Event('change')); document.getElementById('ilp-method').value = 'gom'; })()")
+        for k, v in {'c0': '11', 'c1': '17', 'c2': '19', 'a0_0': '12', 'a0_1': '9', 'a0_2': '40', 'b0': '178', 'a1_0': '11', 'a1_1': '24', 'a1_2': '23', 'b1': '129', 'a2_0': '35', 'a2_1': '16', 'a2_2': '40', 'b2': '161'}.items():
+            await pg.fill('#ilp-' + k, v)
+        await pg.click('#btn-ilp'); await pg.wait_for_timeout(500); gt = await pg.inner_text('#out-ilp')
+        best = max(11 * a + 17 * b2 + 19 * d for a in range(15) for b2 in range(6) for d in range(5) if 12 * a + 9 * b2 + 40 * d <= 178 and 11 * a + 24 * b2 + 23 * d <= 129 and 35 * a + 16 * b2 + 40 * d <= 161)
+        m = re.search(r'Potrzebne odcięcia: (\d+)', gt); n = int(m.group(1)) if m else 0
+        print('Limit 500 odcięć (zadanie wpisane z klawiatury):', 'OK' if f'z = {best} (' in gt and 200 < n <= 500 and await pg.eval_on_selector_all('#out-ilp .gcut', 'e => e.length') == n else 'BŁĄD', f'(odcięć: {n}, z* = {best})')
         await pg.evaluate("document.getElementById('ilp-method').value = 'bb'")
         for tab, txt in (('goal', 'nadmiar 15'), ('dp', 'Trasy optymalne (3)'), ('qp', '<b>270</b>'), ('nlp', 'minimum w x'), ('loc', '(66,67; 93,33)')):
             await pg.click(f'nav button[data-tab={tab}]'); await pg.click(f'#btn-{tab}'); await pg.wait_for_timeout(250)

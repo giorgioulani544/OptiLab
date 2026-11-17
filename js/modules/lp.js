@@ -227,15 +227,21 @@ $('#btn-graph').onclick = () => {
    Węzeł = relaksacja LP z dodatkowymi granicami zmiennych. Wybieramy pierwszą
    ułamkową zmienną x_j i dzielimy na x_j ≤ ⌊v⌋ oraz x_j ≥ ⌊v⌋+1.
    ===================================================================== */
+const GOM_MAX_CUTS = 500;                      // limit odcięć Gomory'ego (przekroczenie = status „limit”, nigdy wynik)
 $('#btn-ilp').onclick = () => {
+  last.ilp = last.ilpCuts = last.ilpCutsAll = null;    // nowe liczenie: do PDF nie może trafić raport ani odcięcia z poprzedniego zadania
   const out = '#out-ilp', M = readModel('ilp'); if (!M) return;
   if ($('#ilp-method').value === 'gom') {                                 // odcięcia Gomory'ego (js/lp-gomory.js), raport: gomReportHTML w js/render.js
     const bad = M.t.map((t, j) => t === 'i' || t === 'b' ? null : 't' + j).filter(Boolean);
     if (bad.length) return fail(out, 'odcięcia Gomory\'ego (w wersji dla zadań całkowitoliczbowych) wymagają, by wszystkie zmienne były całkowite lub binarne. Zmień typ zaznaczonych zmiennych albo wybierz metodę podziału i ograniczeń.', bad);
     const MG = {...M, A: M.A.map(r => r.slice()), rel: M.rel.slice(), b: M.b.slice()}; M.t.forEach((t, j) => { if (t === 'b') { MG.A.push(M.c.map((_, q) => +(q === j))); MG.rel.push('<='); MG.b.push(1); } });
-    const G = gomSolve(MG, {maxCuts: 200, maxPiv: 20000}), BB = ilpSolve(M, {rule: 'most', search: 'best'});
+    const G = gomSolve(MG, {maxCuts: GOM_MAX_CUTS, maxPiv: 20000}), BB = ilpSolve(M, {rule: 'most', search: 'best'});
     if (G.status === 'unbounded') return failLP(out, {status: 'unbounded'}, M);
-    const h = infoHTML(M) + gomReportHTML(MG, G, BB); $(out).innerHTML = h; last.ilp = h; return;
+    const h = infoHTML(M) + gomReportHTML(MG, G, BB); last.ilp = h;
+    if (!G.cuts.length) { $(out).innerHTML = h; return; }
+    // osobna sekcja „Odcięcia krok po kroku” – wszystkie odcięcia; przełącznik w raporcie decyduje, czy trafia na ekran i do PDF (wybór zostaje do kolejnych obliczeń)
+    const on = $(out).dataset.cuts !== 'off', cuts = gomCutsHTML(G); last.ilpCutsAll = cuts; last.ilpCuts = on ? cuts : null;
+    $(out).innerHTML = h + gomCutsShellHTML(G, on, cuts); return;
   }
   const R = ilpSolve(M, {rule: $('#ilp-branch').value, search: $('#ilp-search').value});   // obliczenia: js/ilp-solver.js
   if (R.status === 'unbounded_relax') return fail(out, 'relaksacja LP (zadanie bez wymogu całkowitości) jest nieograniczona. Wtedy zadanie całkowitoliczbowe jest nieograniczone albo nie ma rozwiązań całkowitych – Branch & Bound tego nie rozstrzygnie. Dodaj ograniczenie z góry dla zmiennych o dodatnich współczynnikach celu.', M.c.map((_, j) => 'c' + j));
@@ -252,3 +258,11 @@ $('#btn-ilp').onclick = () => {
   $(out).innerHTML = h; last.ilp = h;
   if (R.status === 'infeasible') fail(out, 'Brak rozwiązania całkowitego spełniającego wszystkie ograniczenia (wszystkie gałęzie odcięte).', M.b.map((_, i) => 'b' + i), true);
 };
+/* Odcięcia Gomory'ego krok po kroku: przełącznik w raporcie dołącza sekcję do raportu i PDF albo ją pomija – bez ponownego liczenia */
+$('#out-ilp').addEventListener('change', e => {
+  const cb = e.target; if (!cb.classList || !cb.classList.contains('gctog')) return;
+  const sec = cb.closest('.gcuts'), on = cb.checked; $('#out-ilp').dataset.cuts = on ? 'on' : 'off';
+  last.ilpCuts = on ? last.ilpCutsAll : null;
+  sec.querySelector('.gcbody').innerHTML = on ? last.ilpCutsAll || '' : '';
+  sec.querySelector('.gcinfo').innerHTML = gomCutsInfo(+sec.dataset.n, +sec.dataset.t, on);
+});

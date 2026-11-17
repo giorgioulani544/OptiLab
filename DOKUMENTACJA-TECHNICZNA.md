@@ -53,7 +53,7 @@ js/modules/nlp.js        moduł Programowanie nieliniowe
 js/loc/loc-solver.js     lokalizacja: mediana ważona, Weiszfeld z warunkiem Kuhna, środek ciężkości, CRAFT, przegląd n!, p-mediana – bez DOM
 js/modules/loc.js        moduł Lokalizacja i układ (mapa SVG: loMapSVG)
 docs/img/                zrzuty ekranu do README
-js/lp-gomory.js         odcięcia Gomory'ego + dualny simpleks na dokładnych ułamkach (FR, BigInt), usuwanie nieaktywnych odcięć – bez DOM; raport: gomReportHTML w js/render.js
+js/lp-gomory.js         odcięcia Gomory'ego + dualny simpleks na dokładnych ułamkach (FR, BigInt), usuwanie nieaktywnych odcięć – bez DOM; raport: gomReportHTML (relaksacja, podsumowanie, wynik) i gomCutsHTML (każde odcięcie krok po kroku, osobna sekcja z przełącznikiem gomCutsShellHTML) w js/render.js
 js/lp-tab.js            alternatywna metoda tabelaryczna simpleksu (cj − zj, kolumna ilorazów, symboliczne M) – bez DOM; raport: tabReportHTML w js/render.js
 js/dec/decision-solver.js  analiza decyzji: kryteria, EMV/EOL/EVPI, drzewa, Bayes i EVSI, użyteczność, gry (LP) – bez DOM
 js/modules/decision.js  moduł Analiza decyzji
@@ -71,7 +71,7 @@ js/modules/maxflow.js        moduł Maksymalny przepływ (sieć rezydualna w ka�
 js/registry.js          rejestr modułów (registerModule) i lista modułów „wkrótce"
 js/app.js               zakładki, eksport PDF, start
 js/bg.js                tło: powolna animowana sieć z pomarańczowymi wyładowaniami (canvas #bgnet; tylko ozdoba, ładowany ostatni)
-tests/                  testy w Node (solver, metoda dwufazowa, parametryczna, CSV, przykłady, ładowanie, interfejs)
+tests/                  testy w Node (solver, metoda dwufazowa, parametryczna, CSV, przykłady, ładowanie, interfejs); odcięcia Gomory'ego: gomory.test.js (solver), gomory_report.test.js (raport krok po kroku, limity), gomory_ui.test.js (zakładka Całkowite, dane do PDF)
 tools/bundle.py         skleja projekt w jeden plik (podgląd na telefonie / wgranie z telefonu)
 manifest.webmanifest, icon-192.png, icon-512.png   ikona skrótu na telefonie/komputerze
 ```

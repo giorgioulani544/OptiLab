@@ -42,30 +42,31 @@ function gomSolve(M, opt = {}) {
       const ratios = A.map((r, i) => F.sgn(r[s]) > 0 ? F.div(b[i], r[s]) : null); let r = -1;
       ratios.forEach((q, i) => { if (q && (r < 0 || F.cmp(q, ratios[r]) < 0 || (F.cmp(q, ratios[r]) === 0 && bland && basis[i] < basis[r]))) r = i; });
       T.pc = s; T.pr = r; T.ratios = ratios; T.bland = bland; steps.push(T); if (r < 0) return 'unbounded'; pivot(r, s); } };
-  const out = {names, kinds, scale, rows, lp: [], phase1: [], cuts: [], n};
+  const out = {names, kinds, scale, rows, lp: [], phase1: [], cuts: [], n, maxCuts, maxPiv};      // limit: 'cuts' | 'pivots' – który limit przerwał obliczenia
   if (kinds.includes('a')) {                                                   // faza I: max −Σ a
     const c1 = kinds.map(t => t === 'a' ? F.mk(-1n) : zero), st = primal(c1, true, out.phase1);
-    if (st === 'limit') return {...out, status: 'limit'};
+    if (st === 'limit') return {...out, status: 'limit', limit: 'pivots'};
     if (F.sgn(basis.reduce((s, bi, i) => kinds[bi] === 'a' ? F.add(s, b[i]) : s, zero)) > 0) return {...out, status: 'infeasible', reason: 'lp'};
     for (let i = A.length - 1; i >= 0; i--) if (kinds[basis[i]] === 'a') { const j = A[i].findIndex((v, jj) => kinds[jj] !== 'a' && F.sgn(v)); if (j >= 0) pivot(i, j); else { A.splice(i, 1); b.splice(i, 1); basis.splice(i, 1); } }
     const keep = names.map((_, j) => kinds[j] !== 'a'); const map = arr => arr.filter((_, j) => keep[j]);
     for (let i = 0; i < A.length; i++) A[i] = map(A[i]); const old = names.slice(), idx = old.map((_, j) => j).filter(j => keep[j]);
     basis.forEach((bi, i) => { basis[i] = idx.indexOf(bi); }); const nn = map(names), nk = map(kinds), nc = map(cost); names.length = 0; names.push(...nn); kinds.length = 0; kinds.push(...nk); cost.length = 0; cost.push(...nc);
   }
-  const st = primal(cost, M.maxi, out.lp); if (st !== 'optimal') return {...out, status: st};
+  const st = primal(cost, M.maxi, out.lp); if (st !== 'optimal') return {...out, status: st, ...(st === 'limit' ? {limit: 'pivots'} : {})};
   out.lpValue = cmzOf(cost).z; out.lpX = Array.from({length: n}, (_, j) => { const i = basis.indexOf(j); return i < 0 ? zero : b[i]; });
   for (let cut = 0; ; cut++) {
     const fr = b.map((v, i) => ({i, f: F.frac(v)})).filter(o => F.sgn(o.f) > 0);
     if (!fr.length) break;
-    if (cut >= maxCuts) return {...out, status: 'limit'};
+    if (cut >= maxCuts) return {...out, status: 'limit', limit: 'cuts'};
     const src = fr.reduce((p, o) => F.cmp(o.f, p.f) > 0 ? o : p), r = src.i, nonb = names.map((_, j) => j).filter(j => !basis.includes(j));
     const f = names.map((_, j) => basis.includes(j) ? zero : F.frac(A[r][j])), f0 = src.f, sName = 's' + (cut + 1);
     names.push(sName); kinds.push('g'); cost.push(zero); A.forEach(row => row.push(zero)); A.push([...f.map(v => F.sub(zero, v)), F.ONE]); b.push(F.sub(zero, f0)); basis.push(names.length - 1);
-    const C = {k: cut + 1, src: r, srcVar: names[basis[r]], f, f0, srcRow: names.map((_, j) => j < A[r].length ? A[r][j] : zero), srcB: b[r], nonb, steps: []};
+    const C = {k: cut + 1, src: r, srcVar: names[basis[r]], f, f0, srcRow: names.map((_, j) => j < A[r].length ? A[r][j] : zero), srcB: b[r], nonb, steps: [],
+      cand: fr.map(o => ({v: names[basis[o.i]], b: b[o.i], f: o.f}))};   // ułamkowe zmienne bazowe w chwili wyboru wiersza (do raportu)
     for (;;) {                                                                   // dualny simpleks
       const T = snap(cost); const neg = b.map((v, i) => ({i, v})).filter(o => F.sgn(o.v) < 0);
       if (!neg.length) { C.steps.push(T); break; }
-      if (pivots > maxPiv) { C.steps.push(T); out.cuts.push(C); return {...out, status: 'limit'}; }
+      if (pivots > maxPiv) { C.steps.push(T); out.cuts.push(C); return {...out, status: 'limit', limit: 'pivots'}; }
       const lr = neg.reduce((p, o) => F.cmp(o.v, p.v) < 0 ? o : p).i, cols = names.map((_, j) => j).filter(j => !basis.includes(j) && F.sgn(A[lr][j]) < 0);
       if (!cols.length) { T.pr = lr; C.steps.push(T); out.cuts.push(C); return {...out, status: 'infeasible', reason: 'int'}; }
       const ratio = j => { const v = F.div(T.cmz[j], A[lr][j]); return F.sgn(v) < 0 ? F.sub(zero, v) : v; }, dr = names.map((_, j) => cols.includes(j) ? ratio(j) : null);

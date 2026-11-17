@@ -67,8 +67,13 @@ function tabReportHTML(M, R) {
 }
 
 /* ===== Odcięcia Gomory'ego: raport z tablicami c_j − z_j, odcięciami i krokami dualnego simpleksu ===== */
-function gomReportHTML(M, G, BB) {
-  const n4 = v => fmt(Math.round(FR.toNum(v) * 10000) / 10000), fx = v => FR.isInt(v) ? String(v.n) : `${FR.str(v)} ≈ ${n4(v)}`, nm = s => s.replace(/^([xas])(\d+)$/, (_, l, d) => `${l}${sub(d)}`);
+/* ===== Odcięcia Gomory'ego – raport =====
+   gomReportHTML: relaksacja LP, podsumowanie WSZYSTKICH odcięć (z nierównościami), wynik i kontrola metodą podziału i ograniczeń.
+   gomCutsHTML: osobna sekcja „Odcięcia krok po kroku” – każde odcięcie rozpisane w całości (bez zwijania), niezależnie od ich liczby.
+   gomCutsShellHTML / gomCutsInfo: ramka tej sekcji na ekranie z przełącznikiem „dołącz do raportu i PDF” (sam przełącznik nie trafia do PDF). */
+function gomHelpers() {
+  const n4 = v => fmt(Math.round(FR.toNum(v) * 10000) / 10000), fr = v => FR.str(v).replace('-', '−'), fx = v => FR.isInt(v) ? fr(v) : `${fr(v)} ≈ ${n4(v)}`;
+  const nm = s => s.replace(/^([xas])(\d+)$/, (_, l, d) => `${l}${sub(d)}`), neg = v => FR.sub(FR.Z, v);
   const tbl = (T, mode) => { const N = T.names.length, cls = (i, j) => i === T.pr && j === T.pc ? 'pivot' : i === T.pr ? 'pr' : j === T.pc ? 'pcol' : '';
     return `<div class="tw"><table class="tabcj"><thead><tr><th colspan="2">C<sub>j</sub></th>${T.cost.map((c, j) => `<th class="${j === T.pc ? 'pcol' : ''}">${n4(c)}</th>`).join('')}<th rowspan="2">Rozwiązanie<br>b</th>${mode === 'p' && T.ratios ? '<th rowspan="2">Iloraz<br>b / a</th>' : ''}</tr>` +
       `<tr><th>C<sub>B</sub></th><th>Baza</th>${T.names.map((s, j) => `<th class="${j === T.pc ? 'pcol' : ''}">${nm(s)}</th>`).join('')}</tr></thead>` +
@@ -77,37 +82,78 @@ function gomReportHTML(M, G, BB) {
       `<tr class="zrow"><td></td><th>z<sub>j</sub></th>${T.zj.map(v => `<td>${n4(v)}</td>`).join('')}<td class="zval"><b>${n4(T.z)}</b></td>${mode === 'p' && T.ratios ? '<td></td>' : ''}</tr>` +
       `<tr class="zrow"><td></td><th>c<sub>j</sub> − z<sub>j</sub></th>${T.cmz.map((v, j) => `<td class="${j === T.pc ? 'pivot' : ''}">${n4(v)}</td>`).join('')}<td></td>${mode === 'p' && T.ratios ? '<td></td>' : ''}</tr>` +
       (T.dratios ? `<tr class="zrow"><td></td><th>|c<sub>j</sub> − z<sub>j</sub>| / |a<sub>rj</sub>|</th>${T.dratios.map((v, j) => `<td class="${j === T.pc ? 'pivot' : ''}">${v ? n4(v) + (j === T.pc ? ' min' : '') : '–'}</td>`).join('')}<td></td></tr>` : '') + '</table></div>'; };
+  // kombinacja liniowa ze znakami: [[1, 'x2'], [−5/17, 'x5']] → x₂ − 5/17·x₅ (współczynnik 1 pomijamy)
+  const lin = terms => terms.map(([v, s], q) => { const m = FR.sgn(v) < 0, a = m ? neg(v) : v;
+    return (q ? (m ? ' − ' : ' + ') : (m ? '−' : '')) + (FR.cmp(a, FR.ONE) ? fr(a) + '·' : '') + nm(s); }).join('') || '0';
+  const cutTerms = C => C.nonb.filter(j => FR.sgn(C.f[j]) > 0).map(j => [C.f[j], C.steps[0].names[j]]), ineq = C => `${lin(cutTerms(C))} ≥ ${fr(C.f0)}`;
+  const xOf = (T, n) => Array.from({length: n}, (_, j) => { const i = T.basis.indexOf(T.names.indexOf('x' + (j + 1))); return i < 0 ? FR.Z : T.b[i]; });
+  const done = C => C.steps[C.steps.length - 1].b.every(v => FR.sgn(v) >= 0);     // po odcięciu tablica znów dopuszczalna (nie przerwano, nie sprzeczne)
+  const pl = (k, a, b, c) => k === 1 ? a : k % 10 >= 2 && k % 10 <= 4 && (k % 100 < 12 || k % 100 > 14) ? b : c;   // 1 odcięcie, 2 odcięcia, 5 odcięć
+  return {n4, fr, fx, nm, neg, tbl, lin, cutTerms, ineq, xOf, done, pl};
+}
+function gomReportHTML(M, G, BB) {
+  const {n4, fx, nm, tbl, ineq, xOf, done} = gomHelpers();
   let h = `<h3>Odcięcia Gomory'ego (dualna metoda simpleks)</h3><p class="hint">Najpierw rozwiązujemy zadanie bez wymogu całkowitości (relaksacja LP). Jeśli któraś zmienna bazowa jest ułamkowa, z jej wiersza budujemy <b>odcięcie</b> – nowe ograniczenie, które usuwa obecne rozwiązanie ułamkowe, ale nie usuwa żadnego punktu całkowitego. ` +
-    `Po dodaniu odcięcia rozwiązanie przestaje być dopuszczalne (ujemne b), więc przywracamy dopuszczalność <b>dualną metodą simpleks</b>: wychodzi wiersz z ujemnym b, wchodzi kolumna z najmniejszym ilorazem |c<sub>j</sub> − z<sub>j</sub>| / |a<sub>rj</sub>| (tylko a<sub>rj</sub> &lt; 0). Powtarzamy, aż wszystkie zmienne będą całkowite. Obliczenia są dokładne (na ułamkach).</p>`;
+    `Po dodaniu odcięcia rozwiązanie przestaje być dopuszczalne (ujemne b), więc przywracamy dopuszczalność <b>dualną metodą simpleks</b>: wychodzi wiersz z ujemnym b, wchodzi kolumna z najmniejszym ilorazem |c<sub>j</sub> − z<sub>j</sub>| / |a<sub>rj</sub>| (tylko a<sub>rj</sub> &lt; 0). Powtarzamy, aż wszystkie zmienne będą całkowite. Obliczenia są dokładne (na ułamkach)${G.maxCuts ? `; limit: ${G.maxCuts} odcięć` : ''}.</p>`;
   const sc = G.scale.map((L, i) => L > 1n ? `ograniczenie ${i + 1} × ${L}` : null).filter(Boolean);
   if (sc.length) h += `<p><b>Przygotowanie:</b> odcięcie Gomory'ego zakłada, że wszystkie zmienne – także swobodne – są całkowite. Dlatego ograniczenia z ułamkowymi współczynnikami mnożymy tak, by stały się całkowite: ${sc.join(', ')}.</p>`;
   if (G.status === 'infeasible' && G.reason === 'lp') return h + '<p class="msg">Relaksacja LP nie ma rozwiązań dopuszczalnych – zadanie całkowitoliczbowe też ich nie ma.</p>';
-  if (!G.lp.length) return h + '<p class="msg">Nie udało się rozwiązać relaksacji LP (limit obliczeń).</p>';
+  if (!G.lp.length || !G.lpX) return h + '<p class="msg">Nie udało się rozwiązać relaksacji LP (limit obliczeń).</p>';
   const lastLP = G.lp[G.lp.length - 1];
   h += `<h4>Krok 1. Relaksacja LP – ostatnia tablica simpleks</h4><p>Rozwiązanie bez wymogu całkowitości: ${G.lpX.map((v, j) => `x${sub(j + 1)} = ${fx(v)}`).join(', ')}; z = <b>${n4(G.lpValue)}</b>.</p>` + tbl(lastLP, 'p') +
     (G.lp.length > 1 ? `<details class="adv"><summary>Wszystkie tablice simpleks relaksacji LP (${G.lp.length})</summary>${G.lp.map((T, k) => `<h4>Tablica ${k + 1}</h4>` + tbl(T, 'p')).join('')}</details>` : '');
   if (!G.cuts.length && G.status === 'optimal') return h + `<div class="sum"><b>Wynik:</b> rozwiązanie relaksacji LP jest już całkowite – odcięcia nie są potrzebne. ${G.xNum.map((v, j) => `x${sub(j + 1)} = ${v}`).join(', ')}, z = <b>${fmt(G.zNum)}</b>.</div>`;
-  const zAfter = C => C.steps[C.steps.length - 1].z, xAfter = C => { const T = C.steps[C.steps.length - 1]; return Array.from({length: G.n}, (_, j) => { const i = T.basis.indexOf(T.names.indexOf('x' + (j + 1))); return i < 0 ? FR.Z : T.b[i]; }); };
-  h += `<h4>Krok 2. Odcięcia – podsumowanie (${G.cuts.length})</h4><div class="tw"><table><thead><tr><th>Odcięcie</th><th>Z wiersza</th><th>Część ułamkowa f<sub>0</sub></th><th>z po odcięciu</th><th>Rozwiązanie po odcięciu</th></tr></thead>` +
-    G.cuts.map(C => `<tr><td>${C.k}</td><td>${nm(C.srcVar)}</td><td>${n4(C.f0)}</td><td>${n4(zAfter(C))}</td><td class="tl">${xAfter(C).map((v, j) => `x${sub(j + 1)} = ${n4(v)}`).join(', ')}</td></tr>`).join('') + '</table></div>';
-  const show = new Set([0, 1, G.cuts.length - 1]);
-  G.cuts.forEach((C, q) => {
-    const terms = C.nonb.filter(j => FR.sgn(C.f[j]) > 0).map(j => `${FR.str(C.f[j])}·${nm(C.steps[0].names[j])}`), body =
-      `<p>Wiersz zmiennej <b>${nm(C.srcVar)}</b> ma b = ${fx(C.srcB)}; część ułamkowa f<sub>0</sub> = ${fx(C.f0)} (największa). Części ułamkowe współczynników przy zmiennych niebazowych: ${C.nonb.map(j => `${nm(C.steps[0].names[j])}: ${FR.str(C.f[j])}`).join(', ')}.</p>` +
-      `<div class="formula">Odcięcie: ${terms.join(' + ') || '0'} ≥ ${FR.str(C.f0)} &nbsp;→&nbsp; −(${terms.join(' + ')}) + ${nm('s' + C.k)} = −${FR.str(C.f0)}</div>` +
-      C.steps.map((T, s) => `<p>${T.pr >= 0 && T.pc >= 0 ? `Dualny simpleks: wiersz <b>${nm(T.names[T.basis[T.pr]])}</b> ma ujemne b = ${n4(T.b[T.pr])} – zmienna wychodzi z bazy. Najmniejszy iloraz |c<sub>j</sub> − z<sub>j</sub>| / |a<sub>rj</sub>| ma kolumna <b>${nm(T.names[T.pc])}</b> – zmienna wchodzi; element wiodący = ${n4(T.A[T.pr][T.pc])}.` :
-        T.pr >= 0 ? 'W wierszu z ujemnym b nie ma ujemnych współczynników – zadanie całkowitoliczbowe nie ma rozwiązań.' : 'Wszystkie b ≥ 0 – tablica znów dopuszczalna.'}</p>` + tbl(T, 'd')).join('') +
-      (C.dropped && C.dropped.length ? `<p class="hint">Zmienne ${C.dropped.map(nm).join(', ')} odcięć są w bazie (odcięcie nieaktywne) – usuwamy ich wiersze i kolumny, by tablica nie rosła.</p>` : '');
-    h += show.has(q) ? `<h4>Odcięcie ${C.k}</h4>` + body : `<details class="adv"><summary>Odcięcie ${C.k}: z wiersza ${nm(C.srcVar)}, z = ${n4(zAfter(C))}</summary>${body}</details>`;
-  });
-  if (G.status === 'limit') return h + '<p class="msg">Przerwano po osiągnięciu limitu odcięć – rozwiązanie nie jest jeszcze całkowite, więc nie podajemy go jako wyniku. Użyj metody podziału i ograniczeń.</p>';
+  h += `<h4>Krok 2. Odcięcia – podsumowanie (${G.cuts.length})</h4><p class="hint">Każdy wiersz to jedno odcięcie: z którego wiersza tablicy powstało, jaką nierówność dopisujemy i jakie rozwiązanie daje tablica po przywróceniu dopuszczalności. Pełne obliczenia każdego odcięcia – w części „Odcięcia krok po kroku”.</p>` +
+    `<div class="tw"><table><thead><tr><th>Odcięcie</th><th>Z wiersza</th><th>Część ułamkowa f<sub>0</sub></th><th>Nierówność odcięcia</th><th>z po odcięciu</th><th>Rozwiązanie po odcięciu</th></tr></thead>` +
+    G.cuts.map(C => { const T = C.steps[C.steps.length - 1], ok = done(C);
+      return `<tr><td>${C.k}</td><td>${nm(C.srcVar)}</td><td>${n4(C.f0)}</td><td class="tl">${ineq(C)}</td><td>${ok ? n4(T.z) : '–'}</td><td class="tl">${ok ? xOf(T, G.n).map((v, j) => `x${sub(j + 1)} = ${n4(v)}`).join(', ') : G.status === 'infeasible' ? 'brak – zadanie bez rozwiązań całkowitych' : 'obliczenia przerwane (limit)'}</td></tr>`; }).join('') + '</table></div>';
+  if (G.status === 'limit') return h + `<p class="msg">${G.limit === 'cuts' ? `Przerwano po ${G.maxCuts} odcięciach (limit odcięć)` : `Przerwano po przekroczeniu limitu obliczeń (${G.maxPiv} kroków simpleksu)`} – rozwiązanie nie jest jeszcze całkowite, więc nie podajemy go jako wyniku. ` +
+    (BB && BB.status === 'optimal' ? `Dla porównania: metoda podziału i ograniczeń (pole „Metoda”) znajduje rozwiązanie optymalne z = ${fmt(Math.round(BB.bestZ * 1e6) / 1e6)}.` : 'Użyj metody podziału i ograniczeń.') + '</p>';
   if (G.status === 'infeasible') return h + '<p class="msg">Zadanie nie ma rozwiązań całkowitoliczbowych.</p>';
   h += tablesCSVLink([...G.lp, ...G.cuts.flatMap(C => C.steps)].map(T => ({...T, cB: T.basis.map(bi => T.cost[bi])})), v => String(Math.round(FR.toNum(v) * 1e6) / 1e6).replace('.', ','), 'tablice-gomory.csv', '⬇ Pobierz tablice (LP i odcięcia) do Excela (.csv)');
   h += `<div class="sum"><b>Rozwiązanie całkowitoliczbowe:</b> ${G.xNum.map((v, j) => `x${sub(j + 1)} = <b>${v}</b>`).join(', ')}; z = <b>${fmt(Math.round(G.zNum * 1e6) / 1e6)}</b> (relaksacja LP: ${n4(G.lpValue)}, różnica ${fmt(Math.round(Math.abs(FR.toNum(G.lpValue) - G.zNum) * 1e4) / 1e4)} – „koszt” wymogu całkowitości). Potrzebne odcięcia: ${G.cuts.length}.</div>`;
   if (BB && BB.status === 'optimal') h += Math.abs(BB.bestZ - G.zNum) < 1e-6 * (1 + Math.abs(G.zNum)) ? `<p class="hint">Kontrola: metoda podziału i ograniczeń daje tę samą wartość z = ${fmt(Math.round(BB.bestZ * 1e6) / 1e6)}${BB.best && BB.best.some((v, j) => Math.abs(v - G.xNum[j]) > 1e-6) ? ' przy innym rozwiązaniu – zadanie ma kilka rozwiązań całkowitych optymalnych' : ''}.</p>` : '<p class="msg">Uwaga: metoda podziału i ograniczeń daje inną wartość – zgłoś ten przykład.</p>';
   return h;
 }
-
+/* Wszystkie odcięcia krok po kroku – każde w pełnej postaci (wybór wiersza, wiersz źródłowy, części ułamkowe, odcięcie, dualny simpleks, wynik po odcięciu).
+   Ogólne wyjaśnienia tylko przy pierwszym odcięciu, żeby długi raport (setki odcięć) nie powtarzał tych samych zdań. */
+function gomCutsHTML(G) {
+  if (!G || !G.cuts || !G.cuts.length) return '';
+  const {n4, fr, fx, nm, neg, tbl, lin, cutTerms, xOf, done} = gomHelpers(), N = G.cuts.length;
+  return G.cuts.map((C, q) => {
+    const names = C.steps[0].names, cand = C.cand || [], tie = cand.filter(o => FR.cmp(o.f, C.f0) === 0).length > 1, T = C.steps[C.steps.length - 1];
+    const cols = C.nonb.filter(j => FR.sgn(C.srcRow[j])), terms = cutTerms(C), where = q ? `tablicy po odcięciu ${C.k - 1}` : 'ostatniej tablicy relaksacji LP';
+    let h = `<div class="step gcut"><h4>Odcięcie ${C.k} z ${N} – wiersz ${nm(C.srcVar)}</h4><p><b>1. Wybór wiersza.</b> ` + (cand.length > 1
+      ? `W ${where} ułamkowe są zmienne bazowe: ${cand.map(o => `${nm(o.v)} = ${fx(o.b)} (f = ${fr(o.f)})`).join('; ')}. Odcięcie budujemy z wiersza o największej części ułamkowej${tie ? ' (przy remisie – z pierwszego takiego wiersza tablicy)' : ''}: <b>${nm(C.srcVar)}</b>.`
+      : `W ${where} jedyną ułamkową zmienną bazową jest ${nm(C.srcVar)} = ${fx(C.srcB)} (f = ${fr(C.f0)}) – z jej wiersza budujemy odcięcie.`) + '</p>';
+    h += `<p><b>2. Wiersz ${nm(C.srcVar)} jako równanie</b>${q ? '' : ' (pozostałe zmienne bazowe mają w nim współczynnik 0)'}:</p><div class="formula">${lin([[FR.ONE, C.srcVar], ...cols.map(j => [C.srcRow[j], names[j]])])} = ${fr(C.srcB)}</div>`;
+    h += `<p><b>3. Części ułamkowe</b> f = a − ⌊a⌋${q ? '' : ', gdzie ⌊a⌋ to największa liczba całkowita nie większa od a (liczbę ujemną zaokrąglamy w dół: ⌊−1/4⌋ = −1, więc f = −1/4 − (−1) = 3/4)'}:</p>` +
+      `<div class="tw"><table class="gfr"><thead><tr><th></th>${cols.map(j => `<th>${nm(names[j])}</th>`).join('')}<th>b</th></tr></thead><tbody>` +
+      `<tr><th>a</th>${cols.map(j => `<td>${fr(C.srcRow[j])}</td>`).join('')}<td>${fr(C.srcB)}</td></tr>` +
+      `<tr><th>⌊a⌋</th>${cols.map(j => `<td>${fr(FR.floor(C.srcRow[j]))}</td>`).join('')}<td>${fr(FR.floor(C.srcB))}</td></tr>` +
+      `<tr><th>f = a − ⌊a⌋</th>${cols.map(j => `<td class="${FR.sgn(C.f[j]) ? 'best' : ''}">${fr(C.f[j])}</td>`).join('')}<td class="best">${fr(C.f0)}</td></tr></tbody></table></div>`;
+    h += `<p><b>4. Odcięcie</b>${q ? ` i jego postać do tablicy (nowa zmienna swobodna ${nm('s' + C.k)} ≥ 0)` : ` – nierówność Σ f<sub>j</sub>·x<sub>j</sub> ≥ f<sub>0</sub> po zmiennych niebazowych. Obecne rozwiązanie jej nie spełnia (zmienne niebazowe są w nim równe 0, więc lewa strona = 0 &lt; f<sub>0</sub>), a każdy punkt całkowity – spełnia. Do tablicy dopisujemy ją pomnożoną przez −1, z nową zmienną swobodną ${nm('s' + C.k)} ≥ 0`}:</p>` +
+      `<div class="formula">${lin(terms)} ≥ ${fr(C.f0)} &nbsp;→&nbsp; ${lin([...terms.map(([v, s]) => [neg(v), s]), [FR.ONE, 's' + C.k]])} = −${fr(C.f0)}</div>`;
+    h += `<p><b>5. Dualna metoda simpleks.</b>${q ? '' : ' Wiersz odcięcia ma ujemne b, więc tablica przestaje być dopuszczalna (optymalność c<sub>j</sub> − z<sub>j</sub> zostaje). Z bazy wychodzi zmienna z wiersza o najbardziej ujemnym b, wchodzi kolumna z najmniejszym ilorazem |c<sub>j</sub> − z<sub>j</sub>| / |a<sub>rj</sub>| (tylko a<sub>rj</sub> &lt; 0). Powtarzamy, aż wszystkie b ≥ 0.'}</p>` +
+      C.steps.map(S => `<p>${S.pr >= 0 && S.pc >= 0 ? `Wiersz <b>${nm(S.names[S.basis[S.pr]])}</b> ma ujemne b = ${n4(S.b[S.pr])} – zmienna wychodzi z bazy. Najmniejszy iloraz |c<sub>j</sub> − z<sub>j</sub>| / |a<sub>rj</sub>| ma kolumna <b>${nm(S.names[S.pc])}</b> – zmienna wchodzi; element wiodący = ${n4(S.A[S.pr][S.pc])}.` :
+        S.pr >= 0 ? 'W wierszu z ujemnym b nie ma ujemnych współczynników – zadanie całkowitoliczbowe nie ma rozwiązań.' : 'Wszystkie b ≥ 0 – tablica znów dopuszczalna.'}</p>` + tbl(S, 'd')).join('');
+    if (C.dropped && C.dropped.length) h += `<p class="hint">${C.dropped.length === 1 ? `Zmienna ${nm(C.dropped[0])} odcięcia jest w bazie (odcięcie nieaktywne) – usuwamy jej wiersz i kolumnę` : `Zmienne ${C.dropped.map(nm).join(', ')} odcięć są w bazie (odcięcia nieaktywne) – usuwamy ich wiersze i kolumny`}, by tablica nie rosła.</p>`;
+    if (done(C)) h += `<p><b>6. Wynik po odcięciu ${C.k}:</b> ${xOf(T, G.n).map((v, j) => `x${sub(j + 1)} = ${fx(v)}`).join(', ')}; z = ${fx(T.z)}. ` + (q < N - 1 ? `Nadal są ułamkowe zmienne bazowe – budujemy odcięcie ${C.k + 1}.`
+      : G.status === 'optimal' ? 'Wszystkie zmienne są całkowite – koniec: to rozwiązanie optymalne zadania całkowitoliczbowego.' : G.status === 'limit' ? `Nadal są ułamkowe zmienne bazowe, ale osiągnięto limit ${G.maxCuts} odcięć – obliczenia przerwano.` : '') + '</p>';
+    else if (G.status === 'limit') h += '<p class="msg">Obliczenia przerwano w trakcie tego odcięcia – przekroczono limit kroków simpleksu.</p>';
+    return h + '</div>';
+  }).join('');
+}
+function gomCutsInfo(N, tabs, on) {
+  const {pl} = gomHelpers();
+  return on ? `${N} ${pl(N, 'odcięcie', 'odcięcia', 'odcięć')}, ${tabs} ${pl(tabs, 'tablica', 'tablice', 'tablic')} – każde odcięcie rozpisane w całości: wybór wiersza, części ułamkowe, nowe ograniczenie i dualna metoda simpleks. Ta część trafia też do PDF jako osobny rozdział.`
+    : `Pominięte – raport i PDF zawierają tylko podsumowanie odcięć (krok 2). Zaznacz „dołącz do raportu i PDF”, aby rozpisać ${N === 1 ? 'to odcięcie' : `wszystkie ${N} ${pl(N, 'odcięcie', 'odcięcia', 'odcięć')}`} krok po kroku.`;
+}
+function gomCutsShellHTML(G, on, body) {   // body: HTML z gomCutsHTML (gdy sekcja włączona) albo ''
+  const N = G.cuts.length, tabs = G.cuts.reduce((s, C) => s + C.steps.length, 0);
+  return `<section class="gcuts" data-n="${N}" data-t="${tabs}"><div class="gchead"><h3>Odcięcia krok po kroku</h3><label class="chk"><input type="checkbox" class="gctog"${on ? ' checked' : ''}> dołącz do raportu i PDF</label></div>` +
+    `<p class="hint gcinfo">${gomCutsInfo(N, tabs, on)}</p><div class="gcbody">${on ? body : ''}</div></section>`;
+}
 /* ===== Interpretacja wyniku LP – gotowa odpowiedź słowna (zasoby, ceny dualne, koszty zredukowane, zakresy) ===== */
 function lpInterpretHTML(M, r, S) {
   const f = v => fmt(Math.round(v * 1e4) / 1e4), rg = (lo, hi) => `od ${isFinite(lo) ? f(lo) : '−∞'} do ${isFinite(hi) ? f(hi) : '+∞'}`, Z = M.maxi ? 'zysk (Z)' : 'koszt (Z)', L = [];
