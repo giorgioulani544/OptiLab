@@ -122,9 +122,11 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 - 📋 **Kopiuj / Wklej dane** – przenoszenie zadań między modułami i urządzeniami
 - 📊 **Excel (.csv)** – eksport i import w formacie polskiego Excela (średnik, przecinek dziesiętny)
 - 💾 **Plik .json** – zapis i wczytanie całego zadania
-- 🖨️ **PDF** – raport tylko z bieżącego modułu, tabele nie są rozcinane między stronami
+- 🖨️ **PDF** – raport tylko z bieżącego modułu, tabele nie są rozcinane między stronami; długie tabele przechodzą na kolejne strony z powtórzonym nagłówkiem kolumn – także na iPhonie (Safari)
 
 ## 🏁 Stan projektu
+🖨️ **Poprawka (listopad 2026): PDF z iPhone'a** – Safari dzieliło długie tabele w połowie wierszy i zostawiało nagłówki na dole strony. Teraz raport sam układa strony: długa tabela przechodzi na następną stronę z powtórzonym nagłówkiem kolumn, a nagłówki zawsze trzymają się swojej treści.
+
 🔢 **Nowość (listopad 2026): odcięcia Gomory'ego krok po kroku** – w zakładce „Całkowite” każde odcięcie jest rozpisane w całości, niezależnie od ich liczby (do 500). Jednym przełącznikiem decydujesz, czy szczegóły trafią do raportu PDF (nawet ponad 100 stron obliczeń), czy wystarczy tabela podsumowania.
 
 🎨 **Nowość (listopad 2026): odświeżony wygląd** – ciepły beż z pastelowym pomarańczem, spokojnie animowane tło-sieć z pomarańczowymi wyładowaniami, czytelniejsze przyciski i „Opcje zaawansowane”. Obliczenia i raporty bez zmian.
