@@ -69,6 +69,7 @@ PROGRESS.md             stan prac nad kolejnymi modułami
 js/net/maxflow-solver.js     Ford-Fulkerson / Edmonds-Karp, przekrój minimalny, superźródło – bez DOM
 js/modules/maxflow.js        moduł Maksymalny przepływ (sieć rezydualna w każdej iteracji)
 js/registry.js          rejestr modułów (registerModule) i lista modułów „wkrótce"
+js/print.js             składanie wydruku/PDF (PRINT.geom, PRINT.paginate): długie tabele na kawałki z powtórzonym nagłówkiem, nagłówki sklejone z treścią (.keep) – działa też w Safari na iPhonie
 js/app.js               zakładki, eksport PDF, start
 js/bg.js                tło: powolna animowana sieć z pomarańczowymi wyładowaniami (canvas #bgnet; tylko ozdoba, ładowany ostatni)
 tests/                  testy w Node (solver, metoda dwufazowa, parametryczna, CSV, przykłady, ładowanie, interfejs); odcięcia Gomory'ego: gomory.test.js (solver), gomory_report.test.js (raport krok po kroku, limity), gomory_ui.test.js (zakładka Całkowite, dane do PDF)

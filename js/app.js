@@ -62,15 +62,17 @@ $('#btn-export').onclick = async () => {
     pa.querySelectorAll('details').forEach(d => d.open = true);
     // Nagłówek tabeli jako <thead>: gdy długa tabela przechodzi na kolejną stronę, nagłówek powtarza się na każdej stronie
     pa.querySelectorAll('table').forEach(tb => { const r = tb.rows[0]; if (r && !tb.tHead && [...r.cells].every(c => c.tagName === 'TH')) tb.createTHead().appendChild(r); });
-    // Szerokie tabele zmniejszamy czcionką (nie „zoom" – ten psuje dzielenie na strony w Chrome), aż zmieszczą się w A4 (~690 px)
-    pa.style.cssText = 'display:block;position:absolute;left:-9999px;width:690px;font-size:10pt';
+    // Szerokie tabele zmniejszamy czcionką (nie „zoom" – ten psuje dzielenie na strony w Chrome), aż zmieszczą się w A4 (G.W: ~690 px, w Safari na iPhonie ~660 px)
+    const G = PRINT.geom();
+    pa.style.cssText = `display:block;position:absolute;left:-9999px;width:${G.W}px;font-size:10pt`;
     pa.querySelectorAll('table').forEach(tb => {
-      for (let k = 0; k < 4 && tb.scrollWidth > 690; k++) {
+      for (let k = 0; k < 4 && tb.scrollWidth > G.W; k++) {
         const cur = parseFloat(getComputedStyle(tb).fontSize) || 11.3;
-        tb.style.fontSize = Math.max(5, cur * 690 / tb.scrollWidth * 0.97).toFixed(2) + 'px';
+        tb.style.fontSize = Math.max(5, cur * G.W / tb.scrollWidth * 0.97).toFixed(2) + 'px';
         tb.querySelectorAll('td,th').forEach(c => { c.style.padding = '1px 3px'; c.style.minWidth = '0'; });
       }
     });
+    PRINT.paginate(pa, G);   // długie tabele na kawałki z nagłówkiem, nagłówki sklejone z treścią – także w Safari (js/print.js)
     pa.style.cssText = ''; window.print();
   } finally { if (big) { eb.textContent = 'Eksportuj raport'; eb.disabled = false; } }
 };

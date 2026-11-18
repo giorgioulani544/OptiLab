@@ -135,7 +135,7 @@ label.chk input{width:18px;height:18px;min-height:0}
  h1,h2,h3,h4{break-after:avoid}
  .sum,img,li{break-inside:avoid}
  .step{break-inside:auto}
- .step>h4,.step>p,h3,h4{break-after:avoid}
+ .step>h4,h3,h4{break-after:avoid}   /* akapity sklejane z treścią w js/print.js (.keep) – reguła dla .step>p kłóciła się z grupami */
  p{orphans:3;widows:3}
  img{max-width:100%;height:auto}
  .tw{overflow:visible;break-inside:avoid}
@@ -287,3 +287,10 @@ details.adv details.adv{background:#fffaf3}
 .gchead label.chk{margin:0;min-height:44px;font-weight:600;color:var(--or-deep)}
 #out-ilp .gcut{content-visibility:auto;contain-intrinsic-size:auto 1100px}   /* setki odcięć: przeglądarka rysuje tylko odcięcia widoczne na ekranie */
 table.gfr td,table.gfr th{text-align:center;min-width:44px}
+/* Wydruk składany w js/print.js (pod Safari): kawałki długich tabel z podpisem „ciąg dalszy”, niepodzielne grupy nagłówek + treść */
+#print-area caption.pcont{caption-side:top;text-align:left;font-size:7.5pt;font-style:italic;color:#6b7390;padding:0 0 2px}
+@media print{
+ #print-area .keep,#print-area .tw,#print-area table,#print-area .sum,#print-area .formula{break-inside:avoid;page-break-inside:avoid}
+ #print-area h1,#print-area h2,#print-area h3,#print-area h4{page-break-after:avoid}
+ #print-area tr{page-break-inside:avoid}
+}

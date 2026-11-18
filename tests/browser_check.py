@@ -100,5 +100,39 @@ async def main():
             await pg.click(f'#btn-{tab}'); await pg.wait_for_timeout(150); before = await pg.inner_text(f'#out-{tab}')
             await pg.fill('#' + cell, val); await pg.click(f'#btn-{tab}'); await pg.wait_for_timeout(150)
             print(f'Edycja macierzy ({tab}):', 'OK' if await pg.inner_text(f'#out-{tab}') != before else 'BŁĄD')
+        # Wydruk w Safari (2026-11-18): Safari (iPhone) nie powtarza nagłówków tabel, tnie wiersze tabel i ignoruje „nie łam po nagłówku”.
+        # Emulacja w Chromium: agent użytkownika iPhone'a + wyłączone te trzy mechanizmy + marginesy strony jak w PDF z iOS 26.
+        # Składanie wydruku (js/print.js) ma dać: tabelę odcięć w kawałkach z nagłówkiem, nagłówki sklejone z treścią, brak <details>.
+        WEBKIT_CSS = ('@page{size:A4;margin:13mm 17.7mm 32.3mm 17.7mm} @media print{#print-area thead{display:table-row-group!important}'
+                      '#print-area tr{break-inside:auto!important;page-break-inside:auto!important}'
+                      '#print-area h1,#print-area h2,#print-area h3,#print-area h4{break-after:auto!important;page-break-after:auto!important}}')
+        sctx = await b.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True,
+                                   user_agent='Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1')
+        sp = await sctx.new_page(); sp.on('pageerror', lambda e: errs.append('Safari: ' + str(e)))
+        await sp.route('**/plotly-*.js', lambda r: r.fulfill(body='window.Plotly={newPlot(){},Plots:{resize(){}},toImage:async()=>""};', content_type='text/javascript'))
+        await sp.goto(URL); await sp.add_style_tag(content=WEBKIT_CSS); await sp.evaluate("window.print = () => { window.__printed = (window.__printed || 0) + 1; }")
+        await sp.click('nav button[data-tab=ilp]')
+        await sp.evaluate("(() => { const s = document.getElementById('ilp-ex'); s.value = '9'; s.dispatchEvent(new Event('change')); document.getElementById('ilp-method').value = 'gom'; })()")
+        await sp.click('#btn-ilp'); await sp.wait_for_timeout(300); ncut = int(re.search(r'Potrzebne odcięcia: (\d+)', await sp.inner_text('#out-ilp')).group(1))
+        await sp.click('#btn-export'); await sp.wait_for_function('window.__printed >= 1')
+        r = await sp.evaluate("""() => { const pa = document.querySelector('#print-area'), G = PRINT.geom(); pa.style.cssText = `display:block;position:absolute;left:-9999px;width:${G.W}px;font-size:10pt`;
+            const ch = [...pa.querySelectorAll('table')].filter(t => t.tHead && /Nierówność odcięcia/.test(t.tHead.textContent));
+            const r = {W: G.W, CH: G.CH, n: ch.length, rows: ch.reduce((s, t) => s + t.tBodies[0].rows.length, 0), maxH: Math.max(...ch.map(t => t.closest('.tw').getBoundingClientRect().height)),
+              caps: pa.querySelectorAll('caption.pcont').length, det: pa.querySelectorAll('details').length, lone: pa.querySelectorAll('.gcut > h4').length,
+              krok2: [...pa.querySelectorAll('.keep h4')].some(h => h.textContent.startsWith('Krok 2') && h.closest('.keep').querySelector('caption, thead'))};
+            pa.style.cssText = ''; return r; }""")
+        print('Wydruk Safari – tabela odcięć w kawałkach z nagłówkiem kolumn:', 'OK' if r['W'] == 660 and r['n'] >= 2 and r['rows'] == ncut and r['caps'] == r['n'] - 1 and r['maxH'] <= r['CH'] else 'BŁĄD', r)
+        print('Wydruk Safari – nagłówki sklejone z treścią, bez <details>:', 'OK' if r['krok2'] and r['lone'] == 0 and r['det'] == 0 else 'BŁĄD')
+        import shutil, subprocess, tempfile
+        if shutil.which('pdftotext'):                    # sprawdzenie gotowego PDF (gdy jest poppler): nagłówek kolumn na każdej stronie z tabelą odcięć, żaden nagłówek nie kończy strony
+            heads = await sp.evaluate("[...document.querySelectorAll('#print-area h1,#print-area h2,#print-area h3,#print-area h4')].map(h => h.textContent.replace(/\\s+/g, ' ').trim())")
+            await sp.emulate_media(media='print'); f = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False); f.close()
+            await sp.pdf(path=f.name, prefer_css_page_size=True, print_background=True)
+            pages = subprocess.run(['pdftotext', '-layout', f.name, '-'], capture_output=True, text=True).stdout.split('\f')[:-1]; pathlib.Path(f.name).unlink()
+            row = re.compile(r'^\s*\d+\s+[xs]\s*\d+\s+0,\d+\s.*[·≥]', re.M); sq = lambda x: re.sub(r'\s+', '', x); hs = {sq(h) for h in heads}
+            bad = [k + 1 for k, t in enumerate(pages) if row.search(t) and 'Nierówność odcięcia' not in t]
+            orph = [k + 1 for k, t in enumerate(pages[:-1]) if (ls := [l for l in t.split('\n') if l.strip()]) and sq(ls[-1]) in hs]
+            print('Wydruk Safari – PDF: nagłówki kolumn i brak osieroconych nagłówków:', 'OK' if pages and not bad and not orph else 'BŁĄD', f'(stron {len(pages)}, bez nagłówka: {bad}, osierocone: {orph})')
+        await sctx.close()
         print('Błędy JS:', errs or 'brak'); await b.close()
 asyncio.run(main())
