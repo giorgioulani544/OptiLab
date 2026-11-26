@@ -47,7 +47,7 @@
        back: 'kolumna-1',      // karta z wyjaśnieniem – po 3 błędach Pivot proponuje powrót
        score: true             // liczone do wyniku Sprawdzianu (poprawnie za pierwszym razem)
      },
-     action: {label: 'Wczytaj to zadanie do zakładki', tab: 'simplex', data: {...}, method: 'TAB'},   // (opcjonalnie) przycisk na karcie
+     action: {label: 'Wczytaj to zadanie do zakładki', tab: 'simplex', data: {...}, sets: {'simplex-method': 'TAB'}},   // (opcjonalnie) przycisk: dane do zakładki + wartości pól (id → wartość), potem „Rozwiąż”
      result: {x: [...], z: liczba}   // (opcjonalnie) karta z wynikiem – ostatnia karta lekcji ma ten sam wynik co raport
    }
    Liczby, tabele i poprawne odpowiedzi pochodzą z solvera – lekcja nie zawiera wyników wpisanych na stałe.
@@ -349,7 +349,7 @@ const LESSON = (() => {
   function runAction(a) {
     if (a.tab && typeof models !== 'undefined' && typeof parseModel === 'function') {
       models[a.tab] = parseModel(a.tab, a.data); renderForm(a.tab);
-      if (a.method && document.getElementById(a.tab + '-method')) document.getElementById(a.tab + '-method').value = a.method;
+      Object.entries(a.sets || {}).forEach(([id, v]) => { const el = document.getElementById(id); if (el) el.value = v; });   // np. metoda w zakładce
       close(); if (typeof goTab === 'function') goTab(a.tab);
       const b = document.getElementById('btn-' + a.tab); if (b) b.click();
     }

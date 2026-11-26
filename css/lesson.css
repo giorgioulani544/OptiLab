@@ -159,3 +159,27 @@ html.ls-lock,html.ls-lock body{overflow:hidden}
 /* Nagłówek na telefonie: „Nauka” i „Eksportuj raport” w jednej linii z logo */
 @media(max-width:480px){header{gap:6px}header .learn,header #btn-export{padding:4px 9px;font-size:.88rem}header .learn svg{width:17px;height:17px}header .learn{gap:4px}}
 @media(max-width:360px){header .learn svg{display:none}header h1{font-size:1.3rem}}
+/* Zadania całkowitoliczbowe: punkty kratowe, pas podziału, granice gałęzi, ujemne b, drzewo podziału i ograniczeń */
+.ls-graph .lg-int{fill:#b9bccb}.ls-graph .lg-int.in{fill:#1b2a4e;stroke:#fff;stroke-width:1.2}
+.ls-graph .lg-strip{fill:rgba(192,38,27,.14);stroke:var(--err);stroke-width:1;stroke-dasharray:4 3}
+.ls-graph .lg-bnd{stroke:#b9552c;stroke-width:2;stroke-dasharray:6 4}
+.ls-graph .lg-p.lp{fill:var(--pivot);stroke:#1b2a4e;stroke-width:1.5}
+.ls-graph rect.ls-on{animation:ls-glow 1.3s ease-in-out 3;fill:rgba(192,38,27,.24)}
+.ls-table td.negb{color:var(--err);font-weight:700}
+.ls-vis .ls-treew{flex:1 1 100%;padding:6px 2px}
+.ls-tree{display:block;font-family:inherit}
+.ls-tree .lt-e{stroke:#8a8fa3;stroke-width:1.6}
+.ls-tree .lt-lab{font-size:11px;font-weight:700;fill:#b9552c;paint-order:stroke;stroke:#fffdf8;stroke-width:3px}
+.ls-tree .lt-n rect{fill:#fff;stroke:#8a8fa3;stroke-width:1.5}
+.ls-tree .lt-n.open rect{fill:#eef4ff;stroke:var(--link);stroke-dasharray:5 3}
+.ls-tree .lt-n.branch rect{fill:#f3f1ea}
+.ls-tree .lt-n.int rect{fill:#e7f5ef;stroke:var(--ok)}
+.ls-tree .lt-n.best rect{fill:#fff1c2;stroke:#e09a00;stroke-width:2.5}
+.ls-tree .lt-n.inf rect,.ls-tree .lt-n.bound rect,.ls-tree .lt-n.late rect{fill:#fbefee;stroke:var(--err)}
+.ls-tree .lt-n.cur rect{stroke-width:3}
+.ls-tree .lt-id{font-size:12px;font-weight:800;fill:#1b2a4e}
+.ls-tree .lt-tag{font-size:9.5px;fill:#6b7390}
+.ls-tree .lt-z{font-size:13px;font-weight:700;fill:#1b2a4e}
+.ls-tree .lt-x{font-size:10.5px;fill:#4a5470}
+.ls-tree .ls-on rect{animation:ls-glow 1.3s ease-in-out 3;stroke:#e09a00;stroke-width:3.5}
+.ls-tree .lt-n.ask rect{fill:#fdf1e6;stroke:var(--or-deep);stroke-dasharray:4 3}

@@ -127,7 +127,7 @@ t('przywrócone dane → Z = 7', near(LESSON.build('lp-simplex', 'warm').result.
 
 /* ---------- menu: tematy i poziomy ---------- */
 const ids = LESSON.topics.map(x => x.id);
-t('menu: metoda graficzna, simpleks (+ dwie fazy, duże M), Gomory i B&B (wkrótce)', ['lp-graph', 'lp-simplex', 'lp-2f', 'lp-bigm', 'lp-gomory', 'lp-bb'].every(i => ids.includes(i)) && LESSON.topics.filter(x => x.soon).length === 2);
+t('menu: metoda graficzna, simpleks (+ dwie fazy, duże M); Gomory i B&B rejestruje js/lessons/ilp-lessons.js (tests/ilp_lesson.test.js)', ['lp-graph', 'lp-simplex', 'lp-2f', 'lp-bigm'].every(i => ids.includes(i)) && LESSON.topics.every(x => !x.soon));
 t('poziomy: Rozgrzewka, Sprawdzian, Wyzwanie (po kolei)', LESSON.LEVELS.map(l => l[1]).join() === 'Rozgrzewka,Sprawdzian,Wyzwanie');
 t('przycisk Nauka tylko w zakładkach LP', LESSON.hasLessons('graph') && LESSON.hasLessons('simplex') && LESSON.hasLessons('ilp') && !LESSON.hasLessons('transport'));
 // bez eval / new Function w nowych plikach
