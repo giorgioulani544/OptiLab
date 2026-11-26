@@ -6,11 +6,13 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, ch => ({'&': '&amp;', '<': '
 
 /* ---------- edytor macierzy: st = {rn: nazwy wierszy, cn: nazwy kolumn, cells: [[tekst]], xc: kolumna dodatkowa, xr: wiersz dodatkowy} ---------- */
 function matrixHTML(p, st, o) {
-  // o: {corner, xcLabel, xrLabel, allowM, staticNames (nagłówki jako tekst), blank (pusta komórka = brak wartości), diag (przekątna wyłączona), noMsg}
+  // o: {corner, xcLabel, xrLabel, allowM, staticNames (nagłówki jako tekst), blank (pusta komórka = brak wartości), diag (przekątna wyłączona), noMsg,
+  //     grow: {r, c} albo {sq} – id list rozmiaru, przez które wklejanie z Excela (js/paste-ui.js) powiększa tabelę}
   const cell = (id, v, extra = '') => `<input class="num" data-num${extra}${o.blank ? ' data-blank' : ''} inputmode="decimal" id="${p}${id}" value="${esc(v)}" aria-label="${id}">`;
   const name = (id, v, lbl) => o.staticNames ? esc(v) : `<input class="nm" id="${p}${id}" value="${esc(v)}" aria-label="${lbl}">`;
   // id tabeli = prefiks p: moduły sprawdzają $('#' + p) przed matrixSync – bez tego identyfikatora ręczna edycja macierzy była pomijana (audyt 2026-11-13)
-  let h = `<div class="tw"><table class="mx" id="${p}"><tr><th>${o.corner || ''}</th>` + st.cn.map((v, j) => `<th>${name('cn' + j, v, 'nazwa kolumny ' + (j + 1))}</th>`).join('') + (o.xcLabel ? `<th>${o.xcLabel}</th>` : '') + '</tr>';
+  const g = o.grow || {}, ga = (g.sq ? ` data-sq="${g.sq}"` : '') + (g.r ? ` data-gr="${g.r}"` : '') + (g.c ? ` data-gc="${g.c}"` : '');
+  let h = `<div class="tw"><table class="mx" id="${p}"${ga}><tr><th>${o.corner || ''}</th>` + st.cn.map((v, j) => `<th>${name('cn' + j, v, 'nazwa kolumny ' + (j + 1))}</th>`).join('') + (o.xcLabel ? `<th>${o.xcLabel}</th>` : '') + '</tr>';
   st.rn.forEach((r, i) => {
     h += `<tr><th>${name('rn' + i, r, 'nazwa wiersza ' + (i + 1))}</th>` + st.cn.map((_, j) => o.diag && i === j ? '<td class="diag">—</td>' : `<td>${cell(`c${i}_${j}`, st.cells[i][j], o.allowM ? ' data-m' : '')}</td>`).join('') +
       (o.xcLabel ? `<td class="xc">${cell('xc' + i, st.xc[i])}</td>` : '') + '</tr>';
@@ -125,7 +127,7 @@ function layeredSVG(names, edges, src, o = {}) {      // names: etykiety węzł�
 
 /* ---------- narzędzia danych modułu: kopiuj/wklej, przykłady, .json, .csv ---------- */
 const netShared = {};
-const netCopyHTML = p => `<div class="crow"><button id="${p}copy" class="ghost" type="button">Kopiuj dane</button><button id="${p}paste" class="ghost" type="button">Wklej dane</button></div>`;
+const netCopyHTML = p => `<div class="crow"><button id="${p}copy" class="ghost" type="button">Kopiuj dane</button><button id="${p}paste" class="ghost" type="button">Wklej dane</button><span class="hint">Komórki z Excela wklejaj wprost do pola tabeli (Ctrl+V).</span></div>`;
 const netToolsHTML = (p, examples) => `<div class="crow"><label for="${p}ex">Przykład</label><select id="${p}ex"><option value="">– wybierz –</option>${examples.map((e, i) => `<option value="${i}">${esc(e.name)}</option>`).join('')}</select></div>
   <div class="crow"><button id="${p}open" class="ghost" type="button">Wczytaj z pliku (.json / .csv)</button><input type="file" id="${p}file" accept=".json,.csv,.txt,application/json,text/csv" hidden></div>
   <div class="crow"><button id="${p}save" class="ghost" type="button">Zapisz (.json)</button><button id="${p}csv" class="ghost" type="button">Eksport do Excela (.csv)</button></div>`;
@@ -133,9 +135,18 @@ function netToolsWire(p, cfg) {                                        // cfg: {
   const date = () => new Date().toISOString().slice(0, 10), wrap = d => JSON.stringify({optilab: cfg.kind, ...d});
   const load = d => { cfg.set(cfg.normalize(d)); clearErr(); $(cfg.out).innerHTML = ''; };
   $('#' + p + 'copy').onclick = async e => { const t = wrap(cfg.get()); netShared[cfg.kind] = t; try { await navigator.clipboard.writeText(t); } catch (_) {} flash(e.target, 'Skopiowano ✓'); };
+  // „Wklej dane”: dane skopiowane w OptiLab (JSON) albo tabela z Excela / tekst CSV w układzie eksportu .csv tego modułu (tabulator lub średnik)
   $('#' + p + 'paste').onclick = async e => {
     let t = null; try { t = await navigator.clipboard.readText(); } catch (_) {}
-    for (const src of [t, netShared[cfg.kind]]) { try { const d = JSON.parse(src); if (d && d.optilab === cfg.kind) { load(d); flash(e.target, 'Wklejono ✓'); return; } } catch (_) {} }
+    const json = src => { try { const d = JSON.parse(src); return d && d.optilab === cfg.kind ? d : null; } catch (_) { return null; } };
+    let d = json(t); if (d) { load(d); flash(e.target, 'Wklejono ✓'); return; }
+    if (t && /[\t;\n]/.test(t.trim()) && !t.trim().startsWith('{')) {   // tabela ze schowka ma pierwszeństwo przed zapasową kopią
+      try { load(cfg.fromCSV(PASTE.toSemicolon(t))); flash(e.target, 'Wklejono ✓'); }
+      catch (err) { netFail(p, null, `nie udało się odczytać wklejonej tabeli – ${esc(err.message)} Najprościej: wyeksportuj dane do Excela (.csv), popraw je tam, zaznacz całą tabelę, skopiuj i kliknij „Wklej dane”. Same liczby wklejaj wprost do komórek tabeli (Ctrl+V lub przytrzymaj palcem → Wklej).`, ['paste']); }
+      return;
+    }
+    if ((d = json(netShared[cfg.kind]))) { load(d); flash(e.target, 'Wklejono ✓'); return; }
+    if (t && t.trim().startsWith('{')) return netFail(p, null, 'w schowku są dane z innego modułu OptiLab albo uszkodzony zapis JSON.', ['paste']);
     flash(e.target, 'Brak skopiowanych danych', true);
   };
   $('#' + p + 'ex').onchange = e => { if (e.target.value === '') return; load(JSON.parse(JSON.stringify(cfg.examples[+e.target.value].data))); e.target.value = ''; };
@@ -147,7 +158,7 @@ function netToolsWire(p, cfg) {                                        // cfg: {
     try {
       const txt = await f.text(); let d;
       if (txt.trim().startsWith('{')) { d = JSON.parse(txt); if (d.optilab !== cfg.kind) throw new Error('to plik z innego modułu OptiLab.'); }
-      else d = cfg.fromCSV(txt);
+      else d = cfg.fromCSV(PASTE.toSemicolon(txt));   // CSV ze średnikiem albo tekst z tabulatorami (Excel)
       load(d); flash(btn, 'Wczytano ✓');
     } catch (err) { netFail(p, null, `nie udało się wczytać pliku „${esc(f.name)}" – ${err instanceof SyntaxError ? 'plik JSON jest uszkodzony.' : err.message}`, ['open']); }
     e.target.value = '';
@@ -194,9 +205,9 @@ function rowTableHTML(p, cols, rows, o = {}) {
     : c.type === 'num'
     ? `<input class="num" data-num${c.blank ? ' data-blank' : ''} inputmode="decimal" id="${p}${c.key}${i}" value="${esc(r[c.key] ?? '')}" aria-label="${esc(c.label)} ${i + 1}">`
     : `<input class="${c.type === 'name' ? 'nm' : 'tx'}" id="${p}${c.key}${i}" value="${esc(r[c.key] ?? '')}" aria-label="${esc(c.label)} ${i + 1}"${c.ph ? ` placeholder="${esc(c.ph)}"` : ''}>`;
-  return `<div class="tw"><table class="mx rt"><tr>${cols.map(c => `<th>${c.label}</th>`).join('')}<th></th></tr>` +
+  return `<div class="tw"><table class="mx rt" data-p="${p}"${o.noAdd ? '' : ` data-add="${p}add"`}><tr>${cols.map(c => `<th>${c.label}</th>`).join('')}<th></th></tr>` +
     rows.map((r, i) => '<tr>' + cols.map(c => `<td>${inp(c, r, i)}</td>`).join('') + `<td><button type="button" class="ghost" data-del="${i}" aria-label="usuń wiersz ${i + 1}">✕</button></td></tr>`).join('') +
-    `</table></div><div class="crow"><button id="${p}add" type="button" class="ghost">${o.addLabel || '+ wiersz'}</button><span class="hint">${o.count ? o.count(rows.length) : rows.length}</span></div>`;
+    `</table></div><div class="crow">${o.noAdd ? '' : `<button id="${p}add" type="button" class="ghost">${o.addLabel || '+ wiersz'}</button>`}<span class="hint">${o.count ? o.count(rows.length) : rows.length}</span></div>`;
 }
 const rowTableSync = (p, cols, rows) => rows.map((r, i) => { const o = {...r}; cols.forEach(c => { const el = $('#' + p + c.key + i); if (el) o[c.key] = el.value; }); return o; });
 /* CSV tabeli wierszy (polski Excel): najpierw wiersze „klucz;wartość" (np. tryb), potem nagłówek i dane */
@@ -246,7 +257,8 @@ function paramsFromCSV(text, keys, cols = null, textKeys = []) {   // textKeys �
     if (!raw.trim()) return; const c = raw.split(';').map(s => s.trim()), ln = k + 1, key = c[0].toLowerCase();
     if (cols && !inTable && cols.some(col => col.label.toLowerCase() === key)) { inTable = true; map = c.map(x => cols.findIndex(col => col.label.toLowerCase() === x.toLowerCase())); return; }
     if (inTable) { const r = {}; map.forEach((ci, pos) => { if (ci >= 0) r[cols[ci].key] = num(c[pos] ?? '', ln, cols[ci].label); }); rows.push(r); return; }
-    const kk = keys.find(x => x === c[0]) || keys.find(x => x.toLowerCase() === key);   // najpierw dokładnie (np. n ≠ N) if (!kk) throw new Error(`wiersz ${ln}: nieznany parametr „${c[0]}".`);
+    const kk = keys.find(x => x === c[0]) || keys.find(x => x.toLowerCase() === key);   // najpierw dokładnie (np. n ≠ N)
+    if (!kk) throw new Error(`wiersz ${ln}: nieznany parametr „${c[0]}".`);
     meta[kk] = kk === 'model' || kk.startsWith('typ') || kk.startsWith('rodzaj') || textKeys.includes(kk) ? (c.slice(1).join(';') || '') : num(c[1] ?? '', ln, kk);
   });
   return {meta, rows};

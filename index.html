@@ -13,12 +13,17 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="OptiLab">
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
-<link rel="stylesheet" href="css/style.css?v=22">
+<link rel="stylesheet" href="css/style.css?v=23">
 </head>
 <body>
 <header>
  <img id="logo" alt="" width="40" height="40" style="border-radius:10px"><h1>OptiLab</h1><span id="tabname">Metoda graficzna</span>
- <button id="btn-export" class="ghost" type="button">Eksportuj raport</button>
+ <div class="expwrap"><button id="btn-export" class="ghost" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="exp-menu">Eksportuj raport</button>
+  <div id="exp-menu" class="expmenu" role="menu" hidden>
+   <button type="button" role="menuitem" data-exp="pdf"><b>PDF</b><span>drukuj lub zapisz jako PDF</span></button>
+   <button type="button" role="menuitem" data-exp="docx"><b>Word (.docx)</b><span>raport z tabelami do edycji</span></button>
+   <button type="button" role="menuitem" data-exp="csv"><b>Excel (.csv)</b><span>tabele i wyniki do arkusza</span></button>
+   <p class="hint">Eksport obejmuje tylko bieżącą zakładkę.</p></div></div>
 </header>
 <div class="app">
  <section id="tab-graph"><div class="card split">
@@ -61,68 +66,73 @@
 </nav>
 <div id="print-area"></div>
 
-<script src="js/core.js?v=22"></script>
-<script src="js/stats.js?v=22"></script>
-<script src="js/viz.js?v=22"></script>
-<script src="js/linalg.js?v=22"></script>
-<script src="js/expr.js?v=22"></script>
-<script src="js/solver.js?v=22"></script>
-<script src="js/lp-tab.js?v=22"></script>
-<script src="js/lp-gomory.js?v=22"></script>
-<script src="js/parametric.js?v=22"></script>
-<script src="js/ilp-solver.js?v=22"></script>
-<script src="js/render.js?v=22"></script>
-<script src="js/examples.js?v=22"></script>
-<script src="js/csv.js?v=22"></script>
-<script src="js/forms.js?v=22"></script>
-<script src="js/registry.js?v=22"></script>
-<script src="js/modules/lp.js?v=22"></script>
-<script src="js/net/netui.js?v=22"></script>
-<script src="js/net/transport-solver.js?v=22"></script>
-<script src="js/modules/transport.js?v=22"></script>
-<script src="js/net/assignment-solver.js?v=22"></script>
-<script src="js/modules/assignment.js?v=22"></script>
-<script src="js/net/shortestpath-solver.js?v=22"></script>
-<script src="js/modules/shortestpath.js?v=22"></script>
-<script src="js/net/maxflow-solver.js?v=22"></script>
-<script src="js/modules/maxflow.js?v=22"></script>
-<script src="js/pm/cpm-solver.js?v=22"></script>
-<script src="js/modules/cpm.js?v=22"></script>
-<script src="js/pm/sched-solver.js?v=22"></script>
-<script src="js/modules/scheduling.js?v=22"></script>
-<script src="js/inv/inventory-solver.js?v=22"></script>
-<script src="js/inv/lotsize.js?v=22"></script>
-<script src="js/modules/inventory.js?v=22"></script>
-<script src="js/fc/forecast-solver.js?v=22"></script>
-<script src="js/modules/forecast.js?v=22"></script>
-<script src="js/agg/agg-solver.js?v=22"></script>
-<script src="js/modules/aggplan.js?v=22"></script>
-<script src="js/mrp/mrp-solver.js?v=22"></script>
-<script src="js/modules/mrp.js?v=22"></script>
-<script src="js/queue/queue-solver.js?v=22"></script>
-<script src="js/modules/queue.js?v=22"></script>
-<script src="js/markov/markov-solver.js?v=22"></script>
-<script src="js/modules/markov.js?v=22"></script>
-<script src="js/qsim/qsim-solver.js?v=22"></script>
-<script src="js/modules/qsim.js?v=22"></script>
-<script src="js/dec/decision-solver.js?v=22"></script>
-<script src="js/modules/decision.js?v=22"></script>
-<script src="js/qc/spc-solver.js?v=22"></script>
-<script src="js/modules/spc.js?v=22"></script>
-<script src="js/qc/acceptance-solver.js?v=22"></script>
-<script src="js/modules/acceptance.js?v=22"></script>
-<script src="js/goal/goal-solver.js?v=22"></script>
-<script src="js/modules/goal.js?v=22"></script>
-<script src="js/dp/dp-solver.js?v=22"></script>
-<script src="js/modules/dp.js?v=22"></script>
-<script src="js/qp/qp-solver.js?v=22"></script>
-<script src="js/modules/qp.js?v=22"></script>
-<script src="js/nlp/nlp-solver.js?v=22"></script>
-<script src="js/modules/nlp.js?v=22"></script>
-<script src="js/loc/loc-solver.js?v=22"></script>
-<script src="js/modules/loc.js?v=22"></script>
-<script src="js/print.js?v=22"></script>
-<script src="js/app.js?v=22"></script>
-<script src="js/bg.js?v=22"></script>
+<script src="js/core.js?v=23"></script>
+<script src="js/stats.js?v=23"></script>
+<script src="js/viz.js?v=23"></script>
+<script src="js/linalg.js?v=23"></script>
+<script src="js/expr.js?v=23"></script>
+<script src="js/solver.js?v=23"></script>
+<script src="js/lp-tab.js?v=23"></script>
+<script src="js/lp-gomory.js?v=23"></script>
+<script src="js/parametric.js?v=23"></script>
+<script src="js/ilp-solver.js?v=23"></script>
+<script src="js/render.js?v=23"></script>
+<script src="js/examples.js?v=23"></script>
+<script src="js/csv.js?v=23"></script>
+<script src="js/paste.js?v=23"></script>
+<script src="js/forms.js?v=23"></script>
+<script src="js/registry.js?v=23"></script>
+<script src="js/modules/lp.js?v=23"></script>
+<script src="js/net/netui.js?v=23"></script>
+<script src="js/paste-ui.js?v=23"></script>
+<script src="js/net/transport-solver.js?v=23"></script>
+<script src="js/modules/transport.js?v=23"></script>
+<script src="js/net/assignment-solver.js?v=23"></script>
+<script src="js/modules/assignment.js?v=23"></script>
+<script src="js/net/shortestpath-solver.js?v=23"></script>
+<script src="js/modules/shortestpath.js?v=23"></script>
+<script src="js/net/maxflow-solver.js?v=23"></script>
+<script src="js/modules/maxflow.js?v=23"></script>
+<script src="js/pm/cpm-solver.js?v=23"></script>
+<script src="js/modules/cpm.js?v=23"></script>
+<script src="js/pm/sched-solver.js?v=23"></script>
+<script src="js/modules/scheduling.js?v=23"></script>
+<script src="js/inv/inventory-solver.js?v=23"></script>
+<script src="js/inv/lotsize.js?v=23"></script>
+<script src="js/modules/inventory.js?v=23"></script>
+<script src="js/fc/forecast-solver.js?v=23"></script>
+<script src="js/modules/forecast.js?v=23"></script>
+<script src="js/agg/agg-solver.js?v=23"></script>
+<script src="js/modules/aggplan.js?v=23"></script>
+<script src="js/mrp/mrp-solver.js?v=23"></script>
+<script src="js/modules/mrp.js?v=23"></script>
+<script src="js/queue/queue-solver.js?v=23"></script>
+<script src="js/modules/queue.js?v=23"></script>
+<script src="js/markov/markov-solver.js?v=23"></script>
+<script src="js/modules/markov.js?v=23"></script>
+<script src="js/qsim/qsim-solver.js?v=23"></script>
+<script src="js/modules/qsim.js?v=23"></script>
+<script src="js/dec/decision-solver.js?v=23"></script>
+<script src="js/modules/decision.js?v=23"></script>
+<script src="js/qc/spc-solver.js?v=23"></script>
+<script src="js/modules/spc.js?v=23"></script>
+<script src="js/qc/acceptance-solver.js?v=23"></script>
+<script src="js/modules/acceptance.js?v=23"></script>
+<script src="js/goal/goal-solver.js?v=23"></script>
+<script src="js/modules/goal.js?v=23"></script>
+<script src="js/dp/dp-solver.js?v=23"></script>
+<script src="js/modules/dp.js?v=23"></script>
+<script src="js/qp/qp-solver.js?v=23"></script>
+<script src="js/modules/qp.js?v=23"></script>
+<script src="js/nlp/nlp-solver.js?v=23"></script>
+<script src="js/modules/nlp.js?v=23"></script>
+<script src="js/loc/loc-solver.js?v=23"></script>
+<script src="js/modules/loc.js?v=23"></script>
+<script src="js/htmltree.js?v=23"></script>
+<script src="js/docx.js?v=23"></script>
+<script src="js/print.js?v=23"></script>
+<script src="js/export.js?v=23"></script>
+<script src="js/app.js?v=23"></script>
+<script src="js/bg.js?v=23"></script>
 </body>
 </html>

@@ -14,9 +14,11 @@ js/parametric.js        analiza parametryczna: dokładne punkty załamania (bez 
 js/render.js            HTML tablic, opisu zadania, zadania dualnego
 js/examples.js          przykładowe zadania (wystarczy dopisać wiersz)
 js/csv.js               import/eksport CSV (Excel) – bez DOM, testowalne
+js/paste.js             wklejanie ze schowka – bez DOM, testowalne (tests/paste.test.js): PASTE.parse (tabulator / średnik / przecinek / spacje, cudzysłowy), PASTE.num (przecinek dziesiętny, separatory tysięcy, %, minus z Worda), PASTE.plan (blok → komórki tabeli jak w Excelu: nagłówki z Excela, kolumna znaku pomijana dla A | b, przekątna, rozrost, błędy z miejscem), PASTE.toSemicolon (tekst z Excela → CSV modułu)
 js/forms.js             formularze, walidacja, kopiuj/wklej dane, błędy przy polach
 js/modules/lp.js        moduł Programowanie liniowe (graficzna, Simpleks, Całkowite)
 js/net/netui.js         fundamenty modeli sieciowych: edytor macierzy, rysunek sieci (SVG), pliki/CSV, błędy przy polach
+js/paste-ui.js          wklejanie w interfejsie: Ctrl+V / „Wklej” w komórce każdej table.mx i formularza LP ([data-lp]); rozrost tabeli przez listy rozmiaru (matrixHTML: o.grow = {r, c} lub {sq} → data-gr/data-gc/data-sq) albo przycisk „+ wiersz” (rowTableHTML: data-p, data-add); przy błędzie cofnięcie rozrostu i czerwone pola
 js/net/transport-solver.js  zagadnienie transportowe (NW, min. element, VAM, MODI) – bez DOM, testowalne
 js/modules/transport.js moduł Transport: formularz i raport dydaktyczny
 js/net/assignment-solver.js  metoda węgierska (kroki, pokrycie zer, rozwiązania alternatywne) – bez DOM
@@ -69,10 +71,13 @@ PROGRESS.md             stan prac nad kolejnymi modułami
 js/net/maxflow-solver.js     Ford-Fulkerson / Edmonds-Karp, przekrój minimalny, superźródło – bez DOM
 js/modules/maxflow.js        moduł Maksymalny przepływ (sieć rezydualna w każdej iteracji)
 js/registry.js          rejestr modułów (registerModule) i lista modułów „wkrótce"
+js/htmltree.js          drzewo HTML raportu (HT.parse, HT.text, HT.grid – siatka tabeli z colspan/rowspan) i eksport wyników do CSV (HT.reportCSV: nagłówki, tabele, ramki .sum/.msg, treść zadania; polski Excel) – bez DOM, testowalne (tests/export_csv.test.js)
+js/docx.js              raport do Worda bez bibliotek – bez DOM, testowalne (tests/docx.test.js): DOCX.build (WordprocessingML: style Title/Heading/Sum/Msg/Formula/Hint/ListPara, tabele z gridSpan/vMerge, powtarzany nagłówek, cantSplit, kolory z data-bg/data-fg albo klas raportu, obrazy PNG, stopka ze stroną), DOCX.zip (ZIP z CRC-32, bez kompresji lub deflate)
+js/export.js            eksport w przeglądarce: wygląd komórek z CSS (data-*), SVG → PNG (canvas 2×), kompresja CompressionStream, pobranie .docx / .csv
 js/print.js             składanie wydruku/PDF (PRINT.geom, PRINT.paginate): długie tabele na kawałki z powtórzonym nagłówkiem, nagłówki sklejone z treścią (.keep) – działa też w Safari na iPhonie
-js/app.js               zakładki, eksport PDF, start
+js/app.js               zakładki, przycisk „Eksportuj raport” z menu (PDF – druk jak dotąd, Word, CSV; reportSections = sekcje bieżącej zakładki), start
 js/bg.js                tło: powolna animowana sieć z pomarańczowymi wyładowaniami (canvas #bgnet; tylko ozdoba, ładowany ostatni)
-tests/                  testy w Node (solver, metoda dwufazowa, parametryczna, CSV, przykłady, ładowanie, interfejs); odcięcia Gomory'ego: gomory.test.js (solver), gomory_report.test.js (raport krok po kroku, limity), gomory_ui.test.js (zakładka Całkowite, dane do PDF)
+tests/                  testy w Node (solver, metoda dwufazowa, parametryczna, CSV, wklejanie, eksport CSV i DOCX, przykłady, ładowanie, interfejs); tests/browser_check.py – przeglądarka (Playwright), w tym prawdziwe Ctrl+V i pobrane pliki .docx/.csv sprawdzane zipfile/XML/LibreOffice; odcięcia Gomory'ego: gomory.test.js (solver), gomory_report.test.js (raport krok po kroku, limity), gomory_ui.test.js (zakładka Całkowite, dane do PDF)
 tools/bundle.py         skleja projekt w jeden plik (podgląd na telefonie / wgranie z telefonu)
 manifest.webmanifest, icon-192.png, icon-512.png   ikona skrótu na telefonie/komputerze
 ```

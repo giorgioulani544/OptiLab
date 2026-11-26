@@ -22,7 +22,7 @@ function mkNormalize(d) {
 function mkRender() {
   const n = MK.st.rn.length; $('#' + MKP + 'mode').value = MK.mode; $('#' + MKP + 'size').value = n; $('#' + MKP + 'names').value = MK.st.rn.join(', '); $('#' + MKP + 'n').value = MK.n;
   $('#' + MKP + 'nbox').hidden = MK.mode !== 'dtmc';
-  $('#' + MKP + 'grid').innerHTML = matrixHTML(MKP, MK.st, {corner: MK.mode === 'dtmc' ? 'z \\ do' : 'intensywność z \\ do', staticNames: true, noMsg: true, diag: MK.mode === 'ctmc', ...(MK.mode === 'dtmc' ? {xrLabel: 'Rozkład początkowy'} : {})});
+  $('#' + MKP + 'grid').innerHTML = matrixHTML(MKP, MK.st, {corner: MK.mode === 'dtmc' ? 'z \\ do' : 'intensywność z \\ do', staticNames: true, noMsg: true, diag: MK.mode === 'ctmc', grow: {sq: MKP + 'size'}, ...(MK.mode === 'dtmc' ? {xrLabel: 'Rozkład początkowy'} : {})});
   matrixPolish($('#' + MKP + 'top'));
 }
 function mkSync() {

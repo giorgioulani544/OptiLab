@@ -65,10 +65,10 @@ function mfRender() {
   if (MF.mode === 'matrix') {
     const cells = Array.from({length: n}, () => Array(n).fill(''));
     MF.edges.forEach(e => { if (e.a !== e.b) { cells[e.a][e.b] = e.c; if (!MF.directed) cells[e.b][e.a] = e.c; } });
-    box.innerHTML = matrixHTML(MFP, {rn: MF.names, cn: MF.names, cells}, {corner: 'Od \\ Do', staticNames: true, blank: true, diag: true, noMsg: true, allowM: true}) +
+    box.innerHTML = matrixHTML(MFP, {rn: MF.names, cn: MF.names, cells}, {corner: 'Od \\ Do', staticNames: true, blank: true, diag: true, noMsg: true, allowM: true, grow: {sq: MFP + 'n'}}) +
       `<p class="hint">Puste pole = brak łuku, M = przepustowość nieograniczona.${MF.directed ? '' : ' W sieci nieskierowanej wystarczy wypełnić jedno z pól (A, B) lub (B, A).'}</p>`;
   } else {
-    box.innerHTML = '<div class="tw"><table class="mx elist"><tr><th>Od</th><th>Do</th><th>Przepustowość</th><th></th></tr>' + MF.edges.map((e, k) =>
+    box.innerHTML = '<div class="tw"><table class="mx elist" data-p="' + MFP + 'e" data-add="' + MFP + 'add"><tr><th>Od</th><th>Do</th><th>Przepustowość</th><th></th></tr>' + MF.edges.map((e, k) =>
       `<tr><td><select id="${MFP}a${k}" aria-label="łuk ${k + 1}: od">${mfOpts(e.a)}</select></td><td><select id="${MFP}b${k}" aria-label="łuk ${k + 1}: do">${mfOpts(e.b)}</select></td>` +
       `<td><input class="num" data-num data-m inputmode="decimal" id="${MFP}w${k}" value="${esc(e.c)}" aria-label="łuk ${k + 1}: przepustowość"></td><td><button type="button" class="ghost" data-del="${k}" aria-label="usuń łuk ${k + 1}">✕</button></td></tr>`).join('') +
       `</table></div><div class="crow"><button id="${MFP}add" type="button" class="ghost">+ ${MF.directed ? 'łuk' : 'krawędź'}</button><span class="hint">${MF.edges.length} ${MF.directed ? (MF.edges.length === 1 ? 'łuk' : 'łuków') : (MF.edges.length === 1 ? 'krawędź' : 'krawędzi')}</span></div>`;

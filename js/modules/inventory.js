@@ -75,7 +75,7 @@ function ivInit() {
     get: () => { ivSync(); return JSON.parse(JSON.stringify(IV)); }, set: d => { IV = d; ivRender(); },
     toCSV: d => paramsToCSV([['model', d.model], ['typ rabatu', d.type], ['rodzaj kosztu utrzymania', d.hMode], ['rozkład', d.dist], ...ivFields(d).map(f => [f.key, d[f.key]]).filter(([, x]) => x !== '')],
       d.model === 'disc' ? IV_TIER : d.model === 'lot' ? IV_REQ : d.model === 'news' && d.dist === 'discrete' ? IV_DISC : null, d.model === 'disc' ? d.tiers : d.model === 'lot' ? d.req : d.table),
-    fromCSV: t => { const r = paramsFromCSV(t, keys, [...IV_TIER, ...IV_DISC, ...IV_REQ]); const m = r.meta;
+    fromCSV: t => { const r = paramsFromCSV(t, keys, [...IV_TIER, ...IV_DISC, ...IV_REQ], ['rozkład']); const m = r.meta;   // rozkład = tekst (normal, discrete)
       return {...m, model: m.model, type: m['typ rabatu'], hMode: m['rodzaj kosztu utrzymania'], dist: m['rozkład'], tiers: r.rows.filter(x => x.from !== undefined), table: r.rows.filter(x => x.d !== undefined), req: r.rows.filter(x => x.r !== undefined)}; }});
   $('#btn-inv').onclick = ivSolveUI;
   ivRender();

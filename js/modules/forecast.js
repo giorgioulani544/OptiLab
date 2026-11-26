@@ -44,9 +44,14 @@ function fcInit() {
      ${netToolsHTML(FCP, FC_EXAMPLES)}</details>
     <p class="hint">Wpisz kolejne wartości szeregu (od najstarszej). Program policzy prognozy, błędy i prognozę na kolejne okresy.</p>`;
   ['method', 'opt', 'crit'].forEach(k => $('#' + FCP + k).onchange = () => { fcSync(); clearErr(); fcRender(); });
-  $('#' + FCP + 'colgo').onclick = () => { fcSync(); const nums = String($('#' + FCP + 'col').value).replace(/\r/g, '').split(/[\n;\t ]+/).map(s => s.trim()).filter(Boolean);
-    const vals = nums.map(s => Number(s.replace(/\s/g, '').replace(',', '.'))), badIx = vals.findIndex(v => !isFinite(v));
-    if (!nums.length) return netFail(FCP, null, 'pole do wklejenia jest puste.', ['col']);
+  $('#' + FCP + 'colgo').onclick = () => { fcSync(); const src = String($('#' + FCP + 'col').value);
+    if (!src.trim()) return netFail(FCP, null, 'pole do wklejenia jest puste.', ['col']);
+    let blk; try { blk = PASTE.parse(src); } catch (err) { return netFail(FCP, null, esc(err.message), ['col']); }   // wspólny parser schowka (js/paste.js)
+    const isN = v => !isNaN(PASTE.num(v)); let rows = blk.rows;
+    if (rows.length > 1 && rows[0].every(v => v === '' || !isN(v))) rows = rows.slice(1);                                   // nagłówek kolumny z Excela
+    if (blk.C > 1 && rows.every(r => r[0] === '' || !isN(r[0])) && rows.some(r => r.slice(1).some(isN))) rows = rows.map(r => r.slice(1));   // kolumna z nazwami okresów
+    const nums = rows.flat().filter(v => v !== ''), vals = nums.map(v => PASTE.num(v)), badIx = vals.findIndex(v => isNaN(v));
+    if (!nums.length) return netFail(FCP, null, 'brak liczb w wklejonym tekście.', ['col']);
     if (badIx >= 0) return netFail(FCP, null, `pozycja ${badIx + 1}: „${esc(nums[badIx])}" nie jest liczbą.`, ['col']);
     if (vals.length > FC_MAX) return netFail(FCP, null, `za dużo wartości (${vals.length}) – maksimum to ${FC_MAX}.`, ['col']);
     clearErr(); FC.data = fcSer(vals); fcRender(); };

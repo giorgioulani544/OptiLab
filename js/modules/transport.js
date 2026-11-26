@@ -36,7 +36,7 @@ const trTopHTML = () => {
   <p class="hint">W komórkach wpisz koszt przewozu jednostki (przy maksymalizacji – zysk). Trasa zakazana: wpisz M albo włącz zaznaczanie w opcjach zaawansowanych. Gdy podaż ≠ popyt, program sam doda fikcyjnego dostawcę lub odbiorcę.</p>`;
 };
 function trRender() {
-  $('#' + TRP + 'grid').innerHTML = matrixHTML(TRP, TS, {corner: 'Od \\ Do', xcLabel: 'Podaż', xrLabel: 'Popyt', allowM: true});
+  $('#' + TRP + 'grid').innerHTML = matrixHTML(TRP, TS, {corner: 'Od \\ Do', xcLabel: 'Podaż', xrLabel: 'Popyt', allowM: true, grow: {r: TRP + 'm', c: TRP + 'n'}});
   $('#' + TRP + 'm').value = TS.rn.length; $('#' + TRP + 'n').value = TS.cn.length; $('#' + TRP + 'goal').value = TS.maxi ? 'max' : 'min';
   matrixPolish($('#' + TRP + 'grid'));
 }
