@@ -37,23 +37,27 @@ document.querySelectorAll('nav button').forEach(b => b.onclick = () => goTab(b.d
   nav.addEventListener('click', e => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);   // przeciągnięcie to nie kliknięcie w moduł
 })();
 $('#logo').src = $('link[rel=icon]').href;     // logo w nagłówku = ta sama ikona
-$('#btn-export').onclick = async () => {
-  // Raport obejmuje WYŁĄCZNIE bieżącą zakładkę (wcześniej łączył wyniki ze wszystkich zakładek)
-  const t = curTab, sec = [];
-  if (t === 'graph' && last.graph) {
-    const img = await Plotly.toImage('plot', {format: 'png', width: 900, height: 560});
-    sec.push(['Metoda graficzna', `<img src="${img}" style="max-width:100%">${last.graph}`]);
-  }
+/* Sekcje raportu BIEŻĄCEJ zakładki – te same dla PDF, Worda i CSV (wcześniej raport łączył wyniki ze wszystkich zakładek).
+   img – obraz wykresu z zakładki Metoda graficzna (Plotly.toImage) */
+function reportSections(t, img = '') {
+  const sec = [];
+  if (t === 'graph' && last.graph) sec.push(['Metoda graficzna', (img ? `<img src="${img}" style="max-width:100%" alt="Wykres – metoda graficzna" data-w="900" data-h="560">` : '') + last.graph]);
   if (t === 'simplex') { if (last.simplex) sec.push(['Metoda simpleks', last.simplex]); if (last.dual) sec.push(['Zadanie dualne', last.dual]); if (last.par) sec.push(['Analiza parametryczna', last.par]); }
   if (t === 'ilp' && last.ilp) sec.push(['Programowanie całkowitoliczbowe', `<div class="tree">${last.ilp}</div>`]);
   if (t === 'ilp' && last.ilp && last.ilpCuts) sec.push(['Odcięcia Gomory\'ego krok po kroku', last.ilpCuts]);   // tylko gdy w raporcie zaznaczono „dołącz do raportu i PDF”
   const md = MODULES.find(x => x.id === t); if (md && last[md.id]) sec.push([md.title, last[md.id]]);
-  if (!sec.length) {
-    const eb = $('#btn-export'); eb.classList.add('bad'); eb.textContent = 'Najpierw rozwiąż zadanie w tej zakładce';
-    setTimeout(() => { eb.classList.remove('bad'); eb.textContent = 'Eksportuj raport'; }, 2500); return;
-  }
+  return sec;
+}
+const exportNone = () => {
+  const eb = $('#btn-export'); eb.classList.add('bad'); eb.textContent = 'Najpierw rozwiąż zadanie w tej zakładce';
+  setTimeout(() => { eb.classList.remove('bad'); eb.textContent = 'Eksportuj raport'; }, 2500);
+};
+async function exportPDF() {
+  const t = curTab; let sec = reportSections(t);
+  if (!sec.length) return exportNone();
+  if (t === 'graph') sec = reportSections(t, await Plotly.toImage('plot', {format: 'png', width: 900, height: 560}));
   // bardzo długi raport (np. setki odcięć Gomory'ego) składa się kilka sekund – wtedy najpierw napis na przycisku, potem składanie;
-  // zwykłe raporty drukujemy od razu, jak dotąd
+  // zwykłe raporty drukujemy od razu, jak dotąd (bez czekania między kliknięciem a drukiem – ważne w Safari na iPhonie)
   const big = sec.reduce((n, [, body]) => n + body.length, 0) > 1e6, eb = $('#btn-export');
   if (big) { eb.textContent = 'Przygotowuję raport…'; eb.disabled = true; await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0))); }
   try {
@@ -75,7 +79,35 @@ $('#btn-export').onclick = async () => {
     PRINT.paginate(pa, G);   // długie tabele na kawałki z nagłówkiem, nagłówki sklejone z treścią – także w Safari (js/print.js)
     pa.style.cssText = ''; window.print();
   } finally { if (big) { eb.textContent = 'Eksportuj raport'; eb.disabled = false; } }
-};
+}
+/* Word i Excel: plik do pobrania (js/export.js); napis na przycisku w czasie przygotowania */
+async function exportFile(kind) {
+  const t = curTab, eb = $('#btn-export'); let sec = reportSections(t);
+  if (!sec.length) return exportNone();
+  eb.textContent = 'Przygotowuję plik…'; eb.disabled = true;
+  try {
+    if (t === 'graph' && kind === 'docx') sec = reportSections(t, await Plotly.toImage('plot', {format: 'png', width: 900, height: 560}));
+    await EXPORT[kind](sec, t, `Raport z obliczeń – ${TITLES[t]}`);
+    eb.disabled = false; flash(eb, 'Zapisano ✓');
+  } catch (err) { console.error(err); eb.disabled = false; flash(eb, 'Nie udało się zapisać pliku', true); }
+  finally { eb.disabled = false; setTimeout(() => { if (!eb.classList.contains('bad')) eb.textContent = 'Eksportuj raport'; }, 1900); }
+}
+/* Jeden przycisk „Eksportuj raport” → wybór formatu: PDF (druk / zapis jako PDF), Word (.docx), wyniki do Excela (.csv) */
+(() => {
+  const eb = $('#btn-export'), menu = $('#exp-menu'); if (!eb || !menu || !document.addEventListener) return;
+  const close = () => { menu.hidden = true; eb.setAttribute('aria-expanded', 'false'); };
+  eb.onclick = () => {
+    if (!reportSections(curTab).length) { close(); return exportNone(); }
+    menu.hidden = !menu.hidden; eb.setAttribute('aria-expanded', String(!menu.hidden));
+    if (!menu.hidden) menu.querySelector('button')?.focus();
+  };
+  menu.addEventListener('click', e => {
+    const b = e.target.closest('[data-exp]'); if (!b) return; close();
+    if (b.dataset.exp === 'pdf') exportPDF(); else exportFile(b.dataset.exp);
+  });
+  document.addEventListener('click', e => { if (!menu.hidden && !e.target.closest('#exp-menu, #btn-export')) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden) { close(); eb.focus(); } });
+})();
 
 MODS.forEach(initModule);
 MODULES.forEach(md => md.init && md.init());

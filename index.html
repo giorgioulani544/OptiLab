@@ -18,7 +18,12 @@
 <body>
 <header>
  <img id="logo" alt="" width="40" height="40" style="border-radius:10px"><h1>OptiLab</h1><span id="tabname">Metoda graficzna</span>
- <button id="btn-export" class="ghost" type="button">Eksportuj raport</button>
+ <div class="expwrap"><button id="btn-export" class="ghost" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="exp-menu">Eksportuj raport</button>
+  <div id="exp-menu" class="expmenu" role="menu" hidden>
+   <button type="button" role="menuitem" data-exp="pdf"><b>PDF</b><span>drukuj lub zapisz jako PDF</span></button>
+   <button type="button" role="menuitem" data-exp="docx"><b>Word (.docx)</b><span>raport z tabelami do edycji</span></button>
+   <button type="button" role="menuitem" data-exp="csv"><b>Excel (.csv)</b><span>tabele i wyniki do arkusza</span></button>
+   <p class="hint">Eksport obejmuje tylko bieżącą zakładkę.</p></div></div>
 </header>
 <div class="app">
  <section id="tab-graph"><div class="card split">
@@ -123,7 +128,10 @@
 <script src="js/modules/nlp.js?v=22"></script>
 <script src="js/loc/loc-solver.js?v=22"></script>
 <script src="js/modules/loc.js?v=22"></script>
+<script src="js/htmltree.js?v=22"></script>
+<script src="js/docx.js?v=22"></script>
 <script src="js/print.js?v=22"></script>
+<script src="js/export.js?v=22"></script>
 <script src="js/app.js?v=22"></script>
 <script src="js/bg.js?v=22"></script>
 </body>

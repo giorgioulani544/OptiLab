@@ -297,3 +297,11 @@ table.gfr td,table.gfr th{text-align:center;min-width:44px}
 /* wklejanie ze schowka: krótka informacja o wklejonym bloku (js/paste-ui.js) */
 .pnote{background:#eef6ff;border:1.5px solid #9cc3ee;color:var(--ink);padding:6px 10px;border-radius:8px;margin:6px 0;font-size:.9rem;flex-basis:100%}
 @media print{.pnote{display:none}}
+/* Eksport: jeden przycisk „Eksportuj raport” z wyborem formatu (PDF, Word, Excel) */
+.expwrap{position:relative}
+.expmenu{position:absolute;right:0;top:calc(100% + 6px);z-index:20;width:270px;max-width:calc(100vw - 20px);background:var(--card);border:1px solid var(--fline);border-radius:16px;padding:6px;box-shadow:0 12px 32px -10px rgba(80,55,25,.35);display:flex;flex-direction:column;gap:4px}
+.expmenu button{display:flex;flex-direction:column;align-items:flex-start;gap:0;width:100%;text-align:left;min-height:48px;padding:6px 12px;background:#fff;border-color:var(--fline);box-shadow:none;line-height:1.25}
+.expmenu button span{font-size:.82rem;color:#6b7390}
+.expmenu .hint{margin:4px 8px 2px;font-size:.78rem}
+@media(hover:hover){.expmenu button:hover{background:var(--or-pale);border-color:var(--or-soft);filter:none}}
+@media print{.expwrap{display:none!important}}
