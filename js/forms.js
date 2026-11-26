@@ -76,8 +76,8 @@ function initModule(k) {
     <button id="${p}addc" class="ghost" type="button">+ ograniczenie</button>
     <button id="${p}copy" class="ghost" type="button">Kopiuj dane</button>
     <button id="${p}paste" class="ghost" type="button">Wklej dane</button></div>
-    <div id="${p}form"></div>
-    <details class="adv"><summary>Opcje zaawansowane</summary><div id="${p}types"></div><div id="${p}advbody"></div></details><p class="hint">Zmienne są nieujemne (x ≥ 0). Przecinek lub kropka jako separator. „Kopiuj dane" i „Wklej dane" przenoszą zadanie między modułami.${k === 'ilp' ? ' Wszystkie zmienne są domyślnie całkowite.' : ''}</p>`;
+    <div id="${p}form" data-lp="${k}"></div>
+    <details class="adv"><summary>Opcje zaawansowane</summary><div id="${p}types"></div><div id="${p}advbody"></div></details><p class="hint">Zmienne są nieujemne (x ≥ 0). Przecinek lub kropka jako separator. Blok liczb z Excela wklej wprost do pola (Ctrl+V) – np. współczynniki ograniczeń z prawą stroną. „Kopiuj dane" i „Wklej dane" przenoszą zadanie między modułami.${k === 'ilp' ? ' Wszystkie zmienne są domyślnie całkowite.' : ''}</p>`;
   const f = $('#' + p + 'form');
   // Blokada liter: zostają cyfry, jeden minus na początku i jeden separator dziesiętny
   f.addEventListener('input', e => {
@@ -108,9 +108,15 @@ function initModule(k) {
     try { await navigator.clipboard.writeText(txt); } catch (_) {}
     flash(e.target, 'Skopiowano ✓');
   };
+  // „Wklej dane”: zadanie skopiowane w OptiLab (JSON) albo tabela z Excela / tekst CSV w układzie eksportu (wiersz „max”/„min”, ograniczenia)
   $('#' + p + 'paste').onclick = async e => {
     let txt = null; try { txt = await navigator.clipboard.readText(); } catch (_) {}
-    let m = null; try { m = parseModel(k, txt); } catch (_) { try { m = parseModel(k, sharedData); } catch (_) {} }
+    let m = null; try { m = parseModel(k, txt); } catch (_) {}
+    if (!m && txt && /[\t;\n]/.test(txt.trim()) && !txt.trim().startsWith('{')) {
+      try { m = parseModel(k, parseLPcsv(txt)); }
+      catch (err) { K = k; return fail('#out-' + k, 'nie udało się odczytać wklejonej tabeli – ' + (err.message === 'format' ? 'to nie jest zadanie.' : err.message) + ' Układ jak w eksporcie do Excela: wiersz „max” lub „min” ze współczynnikami celu, pod nim ograniczenia (etykieta; współczynniki; znak; prawa strona). Same liczby wklejaj wprost do pól (Ctrl+V lub przytrzymaj palcem → Wklej).', ['paste'], true); }
+    }
+    if (!m) try { m = parseModel(k, sharedData); } catch (_) {}
     if (!m) return flash(e.target, 'Brak skopiowanych danych', true);
     clearErr(); models[k] = m; renderForm(k); flash(e.target, 'Wklejono ✓');   // liczba zmiennych ustawia się sama
   };

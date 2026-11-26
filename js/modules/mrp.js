@@ -32,8 +32,8 @@ function mrRender() {
   mrFitMats(); $('#' + MRP + 'T').value = MR.T; $('#' + MRP + 'adv').checked = MR.adv;
   $('#' + MRP + 'items').innerHTML = rowTableHTML(MRP + 'i', mrCols(), MR.items, {addLabel: '+ pozycja', count: n => `${n} pozycji`});
   $('#' + MRP + 'bom').innerHTML = rowTableHTML(MRP + 'b', MR_BOM, MR.bom.length ? MR.bom : [], {addLabel: '+ składnik w strukturze', count: n => `${n} powiązań`});
-  $('#' + MRP + 'indep').innerHTML = matrixHTML(MRP + 'g', MR.indep, {corner: 'Pozycja \\ okres', staticNames: true, noMsg: true});
-  $('#' + MRP + 'sr').innerHTML = matrixHTML(MRP + 's', MR.sr, {corner: 'Pozycja \\ okres', staticNames: true, noMsg: true});
+  $('#' + MRP + 'indep').innerHTML = matrixHTML(MRP + 'g', MR.indep, {corner: 'Pozycja \\ okres', staticNames: true, noMsg: true, grow: {c: MRP + 'T'}});
+  $('#' + MRP + 'sr').innerHTML = matrixHTML(MRP + 's', MR.sr, {corner: 'Pozycja \\ okres', staticNames: true, noMsg: true, grow: {c: MRP + 'T'}});
   $('#' + MRP + 'iadd').onclick = () => { mrSync(); if (MR.items.length >= MR_MAXI) return; MR.items.push(mrItem('P' + (MR.items.length + 1), 1, 0)); mrRender(); };
   $('#' + MRP + 'badd').onclick = () => { mrSync(); MR.bom.push({parent: MR.items[0]?.code || '', child: '', qty: '1'}); mrRender(); };
   matrixPolish($('#' + MRP + 'top'));

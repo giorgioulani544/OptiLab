@@ -294,3 +294,6 @@ table.gfr td,table.gfr th{text-align:center;min-width:44px}
  #print-area h1,#print-area h2,#print-area h3,#print-area h4{page-break-after:avoid}
  #print-area tr{page-break-inside:avoid}
 }
+/* wklejanie ze schowka: krótka informacja o wklejonym bloku (js/paste-ui.js) */
+.pnote{background:#eef6ff;border:1.5px solid #9cc3ee;color:var(--ink);padding:6px 10px;border-radius:8px;margin:6px 0;font-size:.9rem;flex-basis:100%}
+@media print{.pnote{display:none}}

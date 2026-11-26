@@ -61,10 +61,10 @@ function spRender() {
   if (SPS.mode === 'matrix') {
     const cells = Array.from({length: n}, () => Array(n).fill(''));
     SPS.edges.forEach(e => { if (e.a !== e.b) { cells[e.a][e.b] = e.w; if (!SPS.directed) cells[e.b][e.a] = e.w; } });
-    box.innerHTML = matrixHTML(SPP, {rn: SPS.names, cn: SPS.names, cells}, {corner: 'Od \\ Do', staticNames: true, blank: true, diag: true, noMsg: true}) +
+    box.innerHTML = matrixHTML(SPP, {rn: SPS.names, cn: SPS.names, cells}, {corner: 'Od \\ Do', staticNames: true, blank: true, diag: true, noMsg: true, grow: {sq: SPP + 'n'}}) +
       `<p class="hint">Puste pole = brak krawędzi.${SPS.directed ? '' : ' W grafie nieskierowanym wystarczy wypełnić jedno z pól (A, B) lub (B, A).'}</p>`;
   } else {
-    box.innerHTML = '<div class="tw"><table class="mx elist"><tr><th>Od</th><th>Do</th><th>Waga</th><th></th></tr>' + SPS.edges.map((e, k) =>
+    box.innerHTML = '<div class="tw"><table class="mx elist" data-p="' + SPP + 'e" data-add="' + SPP + 'add"><tr><th>Od</th><th>Do</th><th>Waga</th><th></th></tr>' + SPS.edges.map((e, k) =>
       `<tr><td><select id="${SPP}a${k}" aria-label="krawędź ${k + 1}: od">${spOpts(e.a)}</select></td><td><select id="${SPP}b${k}" aria-label="krawędź ${k + 1}: do">${spOpts(e.b)}</select></td>` +
       `<td><input class="num" data-num inputmode="decimal" id="${SPP}w${k}" value="${esc(e.w)}" aria-label="krawędź ${k + 1}: waga"></td><td><button type="button" class="ghost" data-del="${k}" aria-label="usuń krawędź ${k + 1}">✕</button></td></tr>`).join('') +
       `</table></div><div class="crow"><button id="${SPP}add" type="button" class="ghost">+ krawędź</button><span class="hint">${SPS.edges.length} ${SPS.edges.length === 1 ? 'krawędź' : 'krawędzi'}</span></div>`;

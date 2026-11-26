@@ -34,7 +34,7 @@ const qcVar = () => ['xr', 'xs'].includes(QC.type);
 function qcRender() {
   const t = QC.type, box = $('#' + QCP + 'data'); $('#' + QCP + 'type').value = t;
   if (qcVar()) box.innerHTML = `<div class="crow"><label for="${QCP}ns">Liczba próbek</label><select id="${QCP}ns">${Array.from({length: QC_MAXS - 1}, (_, k) => `<option${k + 2 === QC.sub.rn.length ? ' selected' : ''}>${k + 2}</option>`).join('')}</select>` +
-      `<label for="${QCP}nn">Liczność próbki n</label><select id="${QCP}nn">${Array.from({length: 24}, (_, k) => `<option${k + 2 === QC.sub.cn.length ? ' selected' : ''}>${k + 2}</option>`).join('')}</select></div>` + matrixHTML(QCP + 'S', QC.sub, {corner: 'próbka \\ pomiar', staticNames: true, noMsg: true});
+      `<label for="${QCP}nn">Liczność próbki n</label><select id="${QCP}nn">${Array.from({length: 24}, (_, k) => `<option${k + 2 === QC.sub.cn.length ? ' selected' : ''}>${k + 2}</option>`).join('')}</select></div>` + matrixHTML(QCP + 'S', QC.sub, {corner: 'próbka \\ pomiar', staticNames: true, noMsg: true, grow: {r: QCP + 'ns', c: QCP + 'nn'}});
   else box.innerHTML = rowTableHTML(QCP + 'r', QC_COLS[t], QC.rows, {addLabel: t === 'pareto' ? '+ przyczyna' : '+ próbka', count: n => `${n} wierszy`});
   ['ns', 'nn'].forEach(id => { const el = $('#' + QCP + id); if (el) el.onchange = () => { qcSync(); const R = +$('#' + QCP + 'ns').value, C = +$('#' + QCP + 'nn').value;
     QC.sub = {rn: Array.from({length: R}, (_, i) => String(i + 1)), cn: Array.from({length: C}, (_, j) => 'x' + (j + 1)), cells: Array.from({length: R}, (_, i) => Array.from({length: C}, (_, j) => QC.sub.cells[i]?.[j] ?? ''))}; clearErr(); qcRender(); }; });
@@ -63,10 +63,17 @@ function qcInit() {
      ${netToolsHTML(QCP, QC_EXAMPLES)}</details>
     <p class="hint">Karty kontrolne pokazują, czy proces jest stabilny (zmienność tylko losowa), czy działa przyczyna specjalna. Punkty poza granicami i nielosowe układy punktów (reguły Nelsona) oznaczamy na czerwono.</p>`;
   $('#' + QCP + 'type').onchange = () => { qcSync(); clearErr(); qcRender(); };
-  $('#' + QCP + 'pastego').onclick = () => { qcSync(); const lines = String($('#' + QCP + 'paste').value).replace(/\r/g, '').split('\n').map(l => l.trim()).filter(Boolean), cells = lines.map(l => l.split(/[;\t ]+/).filter(Boolean));
-    const badI = cells.findIndex(r => r.some(v => !isFinite(Number(v.replace(',', '.'))))); if (!lines.length) return netFail(QCP, null, 'pole do wklejenia jest puste.', ['paste']);
-    if (badI >= 0) return netFail(QCP, null, `wiersz ${badI + 1}: „${esc(cells[badI].find(v => !isFinite(Number(v.replace(',', '.')))))}" nie jest liczbą.`, ['paste']);
-    const nr = cells.map(r => r.map(v => String(Number(v.replace(',', '.')))));
+  $('#' + QCP + 'pastego').onclick = () => { qcSync(); const src = String($('#' + QCP + 'paste').value);
+    if (!src.trim()) return netFail(QCP, null, 'pole do wklejenia jest puste.', ['paste']);
+    let blk; try { blk = PASTE.parse(src); } catch (err) { return netFail(QCP, null, esc(err.message), ['paste']); }   // wspólny parser schowka (js/paste.js)
+    const isN = v => !isNaN(PASTE.num(v)), lab = blk.rows[0][0] !== '' && !isN(blk.rows[0][0]);
+    let cells = blk.rows.map(r => { let k = r.length; while (k > 0 && r[k - 1] === '') k--; return r.slice(0, k); }), dr = 0, dc = 0;   // puste komórki na końcu wiersza (Excel) pomijamy
+    if (cells.length > 1 && cells[0].every(v => v === '' || !isN(v))) { cells = cells.slice(1); dr = 1; }                       // wiersz nagłówka z Excela
+    if (cells.every(r => r.length > 1 && r[0] !== '' && !isN(r[0]))) { cells = cells.map(r => r.slice(1)); dc = 1; }            // kolumna z numerami/nazwami próbek
+    const badI = cells.findIndex(r => r.some(v => !isN(v)));
+    if (badI >= 0) { const j = cells[badI].findIndex(v => !isN(v)), v = cells[badI][j]; return netFail(QCP, null, `wiersz ${badI + 1 + dr}, kolumna ${j + 1 + dc}: ${v === '' ? 'pusta komórka' : `„${esc(v)}" nie jest liczbą`}.`, ['paste']); }
+    if (!cells.length || !cells[0].length) return netFail(QCP, null, `brak liczb w wklejonym tekście${lab ? ' (są tylko opisy)' : ''}.`, ['paste']);
+    const nr = cells.map(r => r.map(v => String(PASTE.num(v))));
     if (qcVar()) { const w = nr[0].length; if (w < 2 || nr.some(r => r.length !== w)) return netFail(QCP, null, 'każdy wiersz (próbka) musi mieć tyle samo pomiarów, co najmniej 2.', ['paste']); if (nr.length > QC_MAXS) return netFail(QCP, null, `za dużo próbek (maksimum ${QC_MAXS}).`, ['paste']); QC.sub = qcSub(nr); }
     else { const cols = QC_COLS[QC.type].slice(1); QC.rows = (nr.length === 1 && cols.length === 1 ? nr[0].map(v => [v]) : nr).map((r, i) => { const o = {label: String(i + 1), v: '', n: '', c: ''}; cols.forEach((col, k) => { o[col.key] = r[k] ?? ''; }); return o; }); }
     clearErr(); qcRender(); };
@@ -98,7 +105,8 @@ function qcRead() {
       X.D.n.forEach((n, i) => { if (!(n > 0) || (t !== 'u' && !Number.isInteger(n))) bad.push('rn' + i); }); X.D.c.forEach((c, i) => { if (!(c >= 0) || (t !== 'pareto' && !Number.isInteger(c))) bad.push('rc' + i); if (['p', 'np'].includes(t) && c > X.D.n[i]) bad.push('rc' + i); });
       if (bad.length) return netFail(QCP, out, 'liczebności – liczby całkowite dodatnie; liczby wadliwych i wad – całkowite nieujemne (wadliwych nie więcej niż n).', bad);
       if (t === 'np' && new Set(X.D.n).size > 1) return netFail(QCP, out, 'karta np wymaga stałej liczebności próbek – przy zmiennej użyj karty p.', X.D.n.map((_, i) => 'rn' + i));
-      if (t !== 'pareto' && X.D.c.every(v => v === 0)) return netFail(QCP, out, 'wszystkie liczby wad są zerowe – karta nie ma sensu (granice równe 0).', X.D.c.map((_, i) => 'rc' + i)); } }
+      if (t !== 'pareto' && X.D.c.every(v => v === 0)) return netFail(QCP, out, 'wszystkie liczby wad są zerowe – karta nie ma sensu (granice równe 0).', X.D.c.map((_, i) => 'rc' + i));
+      if (t === 'pareto' && X.D.c.every(v => v === 0)) return netFail(QCP, out, 'wszystkie liczby przypadków są zerowe – nie ma czego uporządkować na wykresie Pareto.', X.D.c.map((_, i) => 'rc' + i)); } }
   const LSL = num(QC.LSL, 'LSL', true), USL = num(QC.USL, 'USL', true); if (bad.length) return netFail(QCP, out, 'granice tolerancji muszą być liczbami.', bad);
   if (LSL !== null && USL !== null && !(USL > LSL)) return netFail(QCP, out, 'górna granica tolerancji musi być większa od dolnej.', ['LSL', 'USL']); X.LSL = LSL; X.USL = USL;
   if (QC.cusum || QC.ewma) { X.adv = {cusum: QC.cusum, ewma: QC.ewma, mu0: num(QC.mu0, 'mu0', true), sg: num(QC.sg, 'sg', true), K: num(QC.K, 'K'), H: num(QC.H, 'H'), lam: num(QC.lam, 'lam'), Lw: num(QC.Lw, 'Lw')};

@@ -21,7 +21,7 @@ function asNormalize(d) {
 }
 const asCsvOpt = {allowM: true};
 function asRender() {
-  $('#' + ASP + 'grid').innerHTML = matrixHTML(ASP, AS, {corner: 'Kto \\ Co', allowM: true});
+  $('#' + ASP + 'grid').innerHTML = matrixHTML(ASP, AS, {corner: 'Kto \\ Co', allowM: true, grow: {r: ASP + 'm', c: ASP + 'n'}});
   $('#' + ASP + 'm').value = AS.rn.length; $('#' + ASP + 'n').value = AS.cn.length; $('#' + ASP + 'goal').value = AS.maxi ? 'max' : 'min';
   matrixPolish($('#' + ASP + 'grid'));
 }

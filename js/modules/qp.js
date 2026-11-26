@@ -21,7 +21,7 @@ function qpNormalize(d) {
 const qpCCols = () => [...Array.from({length: QPS.n}, (_, j) => ({key: 'a' + j, label: 'x' + (j + 1), type: 'num'})), {key: 'rel', label: 'Znak', type: 'sel', opts: [['<=', '≤'], ['>=', '≥'], ['=', '=']]}, {key: 'b', label: 'Prawa strona', type: 'num'}];
 function qpRender() {
   $('#' + QPP + 'n').value = QPS.n; $('#' + QPP + 'maxi').value = QPS.maxi ? '1' : '0';
-  $('#' + QPP + 'Q').innerHTML = matrixHTML(QPP + 'M', QPS.Q, {corner: 'Q', staticNames: true, noMsg: true, xrLabel: 'c (część liniowa)'});
+  $('#' + QPP + 'Q').innerHTML = matrixHTML(QPP + 'M', QPS.Q, {corner: 'Q', staticNames: true, noMsg: true, xrLabel: 'c (część liniowa)', grow: {sq: QPP + 'n'}});
   $('#' + QPP + 'cons').innerHTML = rowTableHTML(QPP + 'c', qpCCols(), QPS.cons, {addLabel: '+ ograniczenie', count: k => `${k} ograniczeń`});
   $('#' + QPP + 'cadd').onclick = () => { qpSync(); if (QPS.cons.length < QP_MAXM) QPS.cons.push({rel: '<=', b: '0', ...Object.fromEntries(Array.from({length: QPS.n}, (_, j) => ['a' + j, '0']))}); qpRender(); };
   matrixPolish($('#' + QPP + 'top'));
