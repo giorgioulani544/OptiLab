@@ -18,7 +18,7 @@ const PASTEUI = (() => {
   const posOf = (els, t) => { for (let r = 0; r < els.length; r++) { const c = els[r].indexOf(t); if (c >= 0) return [r, c]; } return null; };
   /* błąd: czerwone pola + komunikat pod tabelą (albo w wierszu pola formularza) */
   function showErr(anchor, msg, bad = []) {
-    clearErr(); bad.forEach(e => e.classList.add('bad'));
+    clearErr(); document.querySelectorAll('.pnote').forEach(x => x.remove()); bad.forEach(e => e.classList.add('bad'));
     const h = `<div class="fmsg">Błąd: ${esc(msg)}</div>`, tw = anchor.closest('table.mx')?.closest('.tw'), row = anchor.closest('.crow');
     if (tw) tw.insertAdjacentHTML('afterend', h); else if (row) row.insertAdjacentHTML('beforeend', h); else anchor.insertAdjacentHTML('afterend', h);
     (bad[0] || anchor).scrollIntoView?.({block: 'center'});
@@ -27,8 +27,8 @@ const PASTEUI = (() => {
   let noteTimer = null;
   function note(anchor, msg) {                                        // krótka informacja o udanym wklejeniu (znika sama)
     document.querySelectorAll('.pnote').forEach(x => x.remove()); clearTimeout(noteTimer);
-    const h = `<div class="pnote" role="status">${esc(msg)}</div>`, tw = anchor.closest('table.mx')?.closest('.tw'), row = anchor.closest('.crow');
-    if (tw) tw.insertAdjacentHTML('afterend', h); else if (row) row.insertAdjacentHTML('beforeend', h);
+    const h = `<div class="pnote" role="status">${esc(msg)}</div>`, tw = anchor.closest('table.mx')?.closest('.tw'), lp = anchor.closest('[data-lp]'), row = anchor.closest('.crow');
+    if (tw) tw.insertAdjacentHTML('afterend', h); else if (lp) lp.insertAdjacentHTML('beforeend', h); else if (row) row.insertAdjacentHTML('beforeend', h);
     noteTimer = setTimeout(() => document.querySelectorAll('.pnote').forEach(x => x.remove()), 6000);
   }
   function put(el, v) {

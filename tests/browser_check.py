@@ -31,7 +31,7 @@ async def main():
         await pg.click('nav button[data-tab=mf]'); await pg.click('#btn-mf')
         print('Maksymalny przepływ:', 'OK' if 'maksymalny przepływ = <b>23</b>' in await pg.inner_html('#out-mf') else 'BŁĄD')
         await pg.evaluate("window.print = () => {}"); await pg.click('nav button[data-tab=transport]'); await pg.click('#btn-transport')
-        await pg.click('nav button[data-tab=sp]'); await pg.click('#btn-export'); pa = await pg.inner_html('#print-area')
+        await pg.click('nav button[data-tab=sp]'); await pg.click('#btn-export'); await pg.click('[data-exp=pdf]'); pa = await pg.inner_html('#print-area')
         print('Eksport tylko bieżącej zakładki:', 'OK' if 'Najkrótsza ścieżka' in pa and 'Zagadnienie transportowe' not in pa else 'BŁĄD')
         print('Nagłówki tabel powtarzane (thead):', 'OK' if '<thead>' in pa else 'BŁĄD')
         await pg.click('nav button[data-tab=cpm]'); await pg.click('#btn-cpm')
@@ -66,7 +66,7 @@ async def main():
         # Odcięcia krok po kroku (2026-11-17): każde odcięcie rozpisane w osobnej sekcji; przełącznik „dołącz do raportu i PDF” decyduje o PDF
         await pg.evaluate("window.print = () => {}")
         async def export():
-            await pg.click('#btn-export'); await pg.wait_for_function("!document.querySelector('#btn-export').disabled")
+            await pg.click('#btn-export'); await pg.click('[data-exp=pdf]'); await pg.wait_for_function("!document.querySelector('#btn-export').disabled")
             return await pg.evaluate("[document.querySelectorAll('#print-area .gcut').length, [...document.querySelectorAll('#print-area h2')].map(h => h.textContent).join('|'), document.querySelectorAll('#print-area input').length]")
         n = int(re.search(r'Potrzebne odcięcia: (\d+)', await pg.inner_text('#out-ilp')).group(1))
         cnt = await pg.eval_on_selector_all('#out-ilp .gcut', 'e => e.length'); dets = await pg.eval_on_selector_all('#out-ilp .gcbody details', 'e => e.length')
@@ -100,6 +100,66 @@ async def main():
             await pg.click(f'#btn-{tab}'); await pg.wait_for_timeout(150); before = await pg.inner_text(f'#out-{tab}')
             await pg.fill('#' + cell, val); await pg.click(f'#btn-{tab}'); await pg.wait_for_timeout(150)
             print(f'Edycja macierzy ({tab}):', 'OK' if await pg.inner_text(f'#out-{tab}') != before else 'BŁĄD')
+        # Wklejanie ze schowka i eksport (2026-11-26): prawdziwe Ctrl+V (schowek przeglądarki), tabela z Excela (tabulatory, przecinek dziesiętny),
+        # rozrost tabeli, błąd przy polu bez zmian w danych, „Wklej dane”, eksport do Worda i CSV sprawdzany niezależnie (zipfile, XML, LibreOffice)
+        cctx = await b.new_context(viewport={'width': 1280, 'height': 900}, accept_downloads=True); await cctx.grant_permissions(['clipboard-read', 'clipboard-write'])
+        cp = await cctx.new_page(); cp.on('pageerror', lambda e: errs.append('Schowek: ' + str(e)))
+        await cp.route('**/plotly-*.js', lambda r: r.fulfill(body='window.Plotly={newPlot(){},Plots:{resize(){}},toImage:async()=>""};', content_type='text/javascript'))
+        await cp.goto(URL); await cp.evaluate("(() => { window.print = () => { window.__printed = (window.__printed || 0) + 1; }; })()")   # bez „(() => …)()” Playwright wywołałby zwróconą funkcję
+        async def ctrlv(sel, text):
+            await cp.evaluate('t => navigator.clipboard.writeText(t)', text); await cp.click(sel); await cp.keyboard.press('Control+V'); await cp.wait_for_timeout(80)
+        await cp.click('nav button[data-tab=transport]')
+        taha = 'Od \\ Do\tO1\tO2\tO3\tO4\tPodaż\r\nD1\t10\t2\t20\t11\t15\r\nD2\t12\t7\t9\t20\t25\r\nD3\t4\t14\t16\t18\t10\r\nPopyt\t5\t15\t15\t15\t\r\n'
+        await cp.select_option('#transport-m', '2'); await cp.select_option('#transport-n', '2')
+        await ctrlv('#transport-c0_0', taha)          # tabela z ekranu skopiowana do Excela i z powrotem (Taha: optimum 435)
+        dims = (await cp.input_value('#transport-m'), await cp.input_value('#transport-n'), await cp.input_value('#transport-cn3'), await cp.input_value('#transport-xr3'))
+        await cp.click('#btn-transport'); await cp.wait_for_timeout(150)
+        print('Wklejanie tabeli z Excela (Ctrl+V, nagłówki, powiększenie 2×2 → 3×4):', 'OK' if dims == ('3', '4', 'O4', '15') and 'minimalny koszt = <b>435</b>' in await cp.inner_html('#out-transport') else 'BŁĄD', dims)
+        await ctrlv('#transport-c0_0', '1\t2\t3\t4\t5\t6\n7\t8\t9\t10\t11\tabc\n1\t1\t1\t1\t1\t1\n1\t1\t1\t1\t1\t1\n1\t1\t1\t1\t1\t1')
+        msg = await cp.inner_text('#tab-transport .fmsg') if await cp.query_selector('#tab-transport .fmsg') else ''
+        print('Błąd wklejania: komunikat z miejscem, tabela bez zmian:', 'OK' if 'wiersz 2, kolumna 6 wklejonych danych: „abc”' in msg and 'Nic nie zostało zmienione' in msg and await cp.input_value('#transport-m') == '3' and await cp.input_value('#transport-c0_0') == '10' and await cp.query_selector('#transport-c0_0') else 'BŁĄD', msg[:90])
+        await ctrlv('#transport-xc0', '1 234,5'); v1 = await cp.input_value('#transport-xc0'); await ctrlv('#transport-xc0', '12,5%'); v2 = await cp.input_value('#transport-xc0')
+        print('Wklejenie liczby w zapisie Excela (1 234,5; 12,5%):', 'OK' if (v1, v2) == ('1234.5', '0.125') else 'BŁĄD', (v1, v2))
+        await cp.click('nav button[data-tab=simplex]')
+        await ctrlv('#simplex-a0_0', '2\t1\t3\t<=\t10\n1\t4\t1\t>=\t8\n1\t1\t1\t=\t6\n0\t2\t1\t<=\t7')
+        await cp.fill('#simplex-c2', '4'); md = await cp.evaluate("(sync('simplex'), models.simplex)")
+        print('Programowanie liniowe: blok A | znak | b ustawia 3 zmienne i 4 ograniczenia:', 'OK' if md['n'] == 3 and len(md['rows']) == 4 and md['rows'][1]['rel'] == '>=' and md['rows'][3]['b'] == '7' and md['c'][2] == '4' else 'BŁĄD')
+        await cp.click('nav button[data-tab=cpm]')
+        n0 = await cp.eval_on_selector_all('#tab-cpm table.mx tr', 'e => e.length')
+        await ctrlv('#cpm-name0', 'Czynność\tPoprzedniki\ta\tm\tb\n' + '\n'.join(f'Z{k}\t\t1\t2,5\t4' for k in range(n0 + 1)))
+        n1 = await cp.eval_on_selector_all('#tab-cpm table.mx tr', 'e => e.length'); last = await cp.input_value(f'#cpm-m{n0}')
+        print('Tabela czynności: nagłówek pominięty, dodane wiersze, przecinek dziesiętny:', 'OK' if n1 == n0 + 2 and last == '2.5' and await cp.input_value('#cpm-name0') == 'Z0' else 'BŁĄD', (n0, n1, last))
+        await cp.click('nav button[data-tab=sp]'); await cp.click('#tab-sp details.adv summary'); await cp.select_option('#sp-mode', 'matrix'); await cp.select_option('#sp-n', '3')
+        await ctrlv('#sp-c0_1', '0\t4\t1\n4\t0\t2\n1\t2\t0')          # pełna macierz wklejona w pierwsze pole (za przekątną)
+        sv = [await cp.input_value(f'#sp-c{a}_{b2}') for a, b2 in ((0, 1), (0, 2), (1, 2), (2, 0))]
+        print('Macierz z przekątną: blok n × n wklejony w pierwsze pole trafia od przekątnej:', 'OK' if sv == ['4', '1', '2', '1'] else 'BŁĄD', sv)
+        await cp.click('nav button[data-tab=assign]'); await cp.click('#tab-assign details.adv summary')
+        await cp.evaluate("t => navigator.clipboard.writeText(t)", '\tZ1\tZ2\tZ3\r\nW1\t9\t2\t7\r\nW2\t6\t4\t3\r\nW3\t5\t8\t1\r\ncel\tmin\r\n')
+        await cp.click('#assign-paste'); await cp.wait_for_timeout(150); await cp.click('#btn-assign'); await cp.wait_for_timeout(150)
+        print('„Wklej dane” z tabelą z Excela (Przydział):', 'OK' if await cp.input_value('#assign-c2_2') == '1' and 'minimalny koszt = <b>9</b>' in await cp.inner_html('#out-assign') else 'BŁĄD')
+        await cp.evaluate("t => navigator.clipboard.writeText(t)", 'a\tb\n1\tx'); await cp.click('#assign-paste'); await cp.wait_for_timeout(100)
+        print('„Wklej dane” – czytelny błąd złego formatu:', 'OK' if 'nie udało się odczytać wklejonej tabeli' in await cp.inner_text('#assign-msg') else 'BŁĄD')
+        # eksport: jeden przycisk – PDF (druk), Word, CSV
+        await cp.click('nav button[data-tab=transport]'); await cp.fill('#transport-xc0', '15'); await cp.click('#btn-transport'); await cp.wait_for_timeout(150)
+        await cp.click('#btn-export'); menu = await cp.is_visible('#exp-menu'); await cp.click('[data-exp=pdf]'); await cp.wait_for_timeout(100)
+        pr = (await cp.evaluate('window.__printed'), 'Zagadnienie transportowe' in await cp.inner_html('#print-area'))
+        print('Eksport: menu i PDF (druk) jak dotąd:', 'OK' if menu and pr == (1, True) else 'BŁĄD', pr)
+        import zipfile, xml.dom.minidom, io, shutil, subprocess, tempfile
+        await cp.click('#btn-export')
+        async with cp.expect_download() as dl: await cp.click('[data-exp=docx]')
+        d = await dl.value; dp = tempfile.mkdtemp(); fn = pathlib.Path(dp) / 'raport.docx'; await d.save_as(fn)
+        z = zipfile.ZipFile(fn); okz = z.testzip() is None; [xml.dom.minidom.parseString(z.read(n)) for n in z.namelist() if n.endswith(('.xml', '.rels'))]
+        docx = z.read('word/document.xml').decode(); ntab = (await cp.inner_html('#out-transport')).count('<table')
+        print('Eksport do Worda: poprawny ZIP i XML, tabele Worda, obraz sieci, wynik 435:', 'OK' if okz and docx.count('<w:tbl>') == ntab and any(n.startswith('word/media/') for n in z.namelist()) and '435' in docx and d.suggested_filename.endswith('.docx') else 'BŁĄD', f'({docx.count("<w:tbl>")}/{ntab} tabel)')
+        if shutil.which('soffice'):
+            subprocess.run(['soffice', '--headless', '--convert-to', 'pdf', '--outdir', dp, str(fn)], capture_output=True, timeout=180)
+            txt = subprocess.run(['pdftotext', '-layout', str(fn.with_suffix('.pdf')), '-'], capture_output=True, text=True).stdout if fn.with_suffix('.pdf').exists() else ''
+            print('Eksport do Worda: plik otwiera LibreOffice (tekst raportu w PDF):', 'OK' if 'minimalny koszt = 435' in txt and 'Made by Aleksander Kruszelnicki' in txt else 'BŁĄD')
+        await cp.wait_for_timeout(2000); await cp.click('#btn-export')
+        async with cp.expect_download() as dl: await cp.click('[data-exp=csv]')
+        d = await dl.value; await d.save_as(pathlib.Path(dp) / 'w.csv'); csv = (pathlib.Path(dp) / 'w.csv').read_text('utf-8-sig')
+        print('Eksport wyników do CSV (średnik, przecinek dziesiętny, wynik):', 'OK' if 'minimalny koszt = 435' in csv and ';Podaż' in csv and d.suggested_filename.endswith('.csv') else 'BŁĄD')
+        shutil.rmtree(dp, ignore_errors=True); await cctx.close()
         # Wydruk w Safari (2026-11-18): Safari (iPhone) nie powtarza nagłówków tabel, tnie wiersze tabel i ignoruje „nie łam po nagłówku”.
         # Emulacja w Chromium: agent użytkownika iPhone'a + wyłączone te trzy mechanizmy + marginesy strony jak w PDF z iOS 26.
         # Składanie wydruku (js/print.js) ma dać: tabelę odcięć w kawałkach z nagłówkiem, nagłówki sklejone z treścią, brak <details>.
@@ -114,7 +174,7 @@ async def main():
         await sp.click('nav button[data-tab=ilp]')
         await sp.evaluate("(() => { const s = document.getElementById('ilp-ex'); s.value = '9'; s.dispatchEvent(new Event('change')); document.getElementById('ilp-method').value = 'gom'; })()")
         await sp.click('#btn-ilp'); await sp.wait_for_timeout(300); ncut = int(re.search(r'Potrzebne odcięcia: (\d+)', await sp.inner_text('#out-ilp')).group(1))
-        await sp.click('#btn-export'); await sp.wait_for_function('window.__printed >= 1')
+        await sp.click('#btn-export'); await sp.click('[data-exp=pdf]'); await sp.wait_for_function('window.__printed >= 1')
         r = await sp.evaluate("""() => { const pa = document.querySelector('#print-area'), G = PRINT.geom(); pa.style.cssText = `display:block;position:absolute;left:-9999px;width:${G.W}px;font-size:10pt`;
             const ch = [...pa.querySelectorAll('table')].filter(t => t.tHead && /Nierówność odcięcia/.test(t.tHead.textContent));
             const r = {W: G.W, CH: G.CH, n: ch.length, rows: ch.reduce((s, t) => s + t.tBodies[0].rows.length, 0), maxH: Math.max(...ch.map(t => t.closest('.tw').getBoundingClientRect().height)),

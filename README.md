@@ -12,7 +12,7 @@
 
 <p align="center">
   ![moduły](https://img.shields.io/badge/modu%C5%82y-24%20gotowe-1f3a5f)
-  ![testy automatyczne](https://img.shields.io/badge/testy%20automatyczne-12736%20%E2%9C%93-2e7d32)
+  ![testy automatyczne](https://img.shields.io/badge/testy%20automatyczne-12878%20%E2%9C%93-2e7d32)
   ![instalacja](https://img.shields.io/badge/instalacja-niepotrzebna-c9a227)
   ![język](https://img.shields.io/badge/j%C4%99zyk-polski-b0413e)
 </p>
@@ -96,8 +96,8 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 ## 🚀 Jak zacząć
 
 1. **Otwórz aplikację** i wybierz moduł na dolnym pasku. Na komputerze pasek przewiniesz kółkiem myszy, przeciągnięciem albo strzałkami.
-2. **Wczytaj przykład** z „Opcji zaawansowanych" albo wpisz własne dane – możesz je wkleić prosto z Excela.
-3. **Kliknij przycisk obliczeń** i przeczytaj raport z krokami. Jednym kliknięciem zapiszesz go do PDF.
+2. **Wczytaj przykład** z „Opcji zaawansowanych" albo wpisz własne dane – możesz je wkleić prosto z Excela: zaznacz komórki w arkuszu, skopiuj (Ctrl+C) i wklej w pole tabeli (Ctrl+V lub przytrzymaj palcem → Wklej).
+3. **Kliknij przycisk obliczeń** i przeczytaj raport z krokami. Przycisk **„Eksportuj raport”** zapisze go do PDF, do Worda (.docx) albo wyniki do Excela (.csv).
 
 ## 💡 Dlaczego OptiLab, a nie WinQSB?
 
@@ -106,25 +106,30 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 | Uruchomienie | instalacja na Windows | przeglądarka – komputer, tablet, telefon |
 | Język | angielski | polski |
 | Wyjaśnienia | wynik i wybrane tablice | opis każdego kroku: dlaczego i skąd liczba |
-| Dane | własny format plików | kopiuj/wklej z Excela, CSV (polski Excel), JSON |
-| Raport | wydruk | PDF z bieżącego modułu, czytelne tabele i wykresy |
+| Dane | własny format plików | wklejanie bloków komórek prosto z Excela do każdej tabeli, CSV (polski Excel), JSON |
+| Raport | wydruk | PDF i Word (.docx) z bieżącego modułu – tabele jako prawdziwe tabele, wykresy; wyniki do Excela (.csv) |
 | Błędy w danych | ogólny komunikat | czerwone pole i wyjaśnienie, co poprawić |
 
 ## ✅ Na wynikach można polegać
 
-- **12 736 automatycznych sprawdzeń** – wszystkie przechodzą.
+- **12 878 automatycznych sprawdzeń** – wszystkie przechodzą.
 - Wyniki porównujemy z **przykładami z literatury** (m.in. Hillier i Lieberman, Heizer i Render, Render i Stair, Chopra i Meindl, Montgomery, Taylor) oraz **niezależnymi obliczeniami**: przeglądem wszystkich możliwych rozwiązań, wzorami zamkniętymi i symulacją Monte Carlo.
 - Każdy moduł jest sprawdzany w prawdziwej przeglądarce na ekranie komputera i telefonu.
 - Gdy wynik nie jest pewny (np. przekroczony limit obliczeń), aplikacja mówi to wprost – **nigdy nie pokazuje niepewnego wyniku jako poprawnego**.
 
 ## 📂 Praca z danymi
 
-- 📋 **Kopiuj / Wklej dane** – przenoszenie zadań między modułami i urządzeniami
+- 📋 **Wklejanie z Excela** – blok komórek (także z nagłówkami i nazwami wierszy) wklejasz w dowolne pole macierzy lub tabeli; tabela sama się powiększa, a przecinek dziesiętny, spacje w tysiącach i procenty są rozpoznawane. Błędna komórka jest zaznaczona na czerwono z opisem, gdzie leży w schowku – i nic się nie zmienia
+- 🔁 **Kopiuj / Wklej dane** – przenoszenie zadań między modułami i urządzeniami; „Wklej dane” przyjmuje też całą tabelę skopiowaną z Excela
 - 📊 **Excel (.csv)** – eksport i import w formacie polskiego Excela (średnik, przecinek dziesiętny)
 - 💾 **Plik .json** – zapis i wczytanie całego zadania
 - 🖨️ **PDF** – raport tylko z bieżącego modułu, tabele nie są rozcinane między stronami; długie tabele przechodzą na kolejne strony z powtórzonym nagłówkiem kolumn – także na iPhonie (Safari)
+- 📝 **Word (.docx)** – ten sam raport do edycji: tabele Worda z kolorami raportu i powtarzanym nagłówkiem, ramki z wynikiem, wykresy i sieci jako obrazy
+- 📈 **Wyniki do Excela (.csv)** – wszystkie tabele raportu, wynik i komunikaty w jednym pliku dla polskiego Excela
 
 ## 🏁 Stan projektu
+📋 **Nowość (listopad 2026): wklejanie z Excela i eksport do Worda** – bloki komórek z Excela (tabulator, średnik, przecinek dziesiętny) wkleisz do każdej macierzy i tabeli we wszystkich modułach, a jeden przycisk „Eksportuj raport” zapisuje raport do PDF, do Worda (.docx – tabele jako tabele, nie zrzuty) albo wyniki do Excela (.csv).
+
 🖨️ **Poprawka (listopad 2026): PDF z iPhone'a** – Safari dzieliło długie tabele w połowie wierszy i zostawiało nagłówki na dole strony. Teraz raport sam układa strony: długa tabela przechodzi na następną stronę z powtórzonym nagłówkiem kolumn, a nagłówki zawsze trzymają się swojej treści.
 
 🔢 **Nowość (listopad 2026): odcięcia Gomory'ego krok po kroku** – w zakładce „Całkowite” każde odcięcie jest rozpisane w całości, niezależnie od ich liczby (do 500). Jednym przełącznikiem decydujesz, czy szczegóły trafią do raportu PDF (nawet ponad 100 stron obliczeń), czy wystarczy tabela podsumowania.

@@ -19,4 +19,4 @@ Otwórz plik `index.html` w repozytorium → **History** → wybierz poprzedni z
 Jeśli układ strony jest rozbity (brak kolorów), prawie zawsze oznacza to, że folder `css` lub `js` nie został wgrany razem z `index.html`.
 
 ## Przy każdej kolejnej zmianie kodu
-W `index.html` podnieś numer `?v=22` do `?v=23` przy plikach `.css` i `.js`, żeby przeglądarki pobrały nową wersję.
+W `index.html` podnieś numer `?v=23` do `?v=24` przy plikach `.css` i `.js`, żeby przeglądarki pobrały nową wersję.
