@@ -57,7 +57,7 @@ const LPL = (() => {
       return {n: ex.c.length, maxi: ex.maxi, c: ex.c.slice(), A: ex.rows.map(r => r.slice(0, -2)), rel: ex.rows.map(r => r[r.length - 2]), b: ex.rows.map(r => r[r.length - 1]), t: ex.c.map(() => 'c'), example: ex.name}; }
     return {n: t.c.length, t: t.c.map(() => 'c'), ...t, A: t.A.map(r => r.slice())};
   };
-  const toData = M => ({optilab: 1, maxi: M.maxi, c: M.c.map(String), rows: M.A.map((a, i) => ({a: a.map(String), rel: M.rel[i], b: String(M.b[i])}))});
+  const toData = M => ({optilab: 1, maxi: M.maxi, c: M.c.map(String), ...(M.t && M.t.some(t => t !== 'c') ? {t: M.t.slice()} : {}), rows: M.A.map((a, i) => ({a: a.map(String), rel: M.rel[i], b: String(M.b[i])}))});
   const pick = (arr, k) => arr[k % arr.length];
 
   /* ---------- tablice simpleksu w jednym zapisie (tabSolve: liczby + symboliczne M; gomSolve: ułamki dokładne) ---------- */
@@ -65,7 +65,7 @@ const LPL = (() => {
     return {names: R.names.map(vn), kinds: R.kinds, cost: R.cost, cB: T.cB, basis: T.basis, A: T.A, b: T.b, zj: T.zj, cmz: T.cmz, z: T.z, pc: T.pc, pr: T.pr, ratios: T.ratios}; };
   const uGom = (T, costMap) => { const N = FR.toNum, cost = T.cost.map(f => sym(N(f)));
     return {names: T.names.map(vn), kinds: T.kinds, cost, cB: T.basis.map(j => cost[j]), basis: T.basis, A: T.A.map(r => r.map(N)), b: T.b.map(N), zj: T.zj.map(f => sym(N(f))), cmz: T.cmz.map(f => sym(N(f))),
-      z: sym(N(T.z)), pc: T.pc ?? -1, pr: T.pr ?? -1, ratios: T.ratios ? T.ratios.map(q => q ? N(q) : null) : null, ...(costMap || {})}; };
+      z: sym(N(T.z)), pc: T.pc ?? -1, pr: T.pr ?? -1, ratios: T.ratios ? T.ratios.map(q => q ? N(q) : null) : null, dratios: T.dratios ? T.dratios.map(q => q ? N(q) : null) : null, ...(costMap || {})}; };
   const geo = U => { const N = U.names.length, m = U.A.length; return {col: j => 2 + j, b: N + 2, q: N + 3, zr: m, cr: m + 1}; };
   function tspec(U, o = {}) {
     const N = U.names.length, m = U.A.length, g = geo(U), mk = o.mark, rq = o.ratios && U.ratios && U.pc >= 0;
@@ -73,11 +73,12 @@ const LPL = (() => {
     const head = [[{v: 'C<sub>j</sub>', span: 2, c: 0}, ...U.cost.map((c, j) => ({v: sf(c), c: g.col(j), cls: mk && j === U.pc ? 'pcol' : ''})), {v: 'b', rspan: 2, c: g.b}, ...(rq ? [{v: 'iloraz<br>b / a', rspan: 2, c: g.q}] : [])],
       [{v: 'C<sub>B</sub>', c: 0}, {v: 'Baza', c: 1}, ...U.names.map((n, j) => ({v: n, c: g.col(j), cls: mk && j === U.pc ? 'pcol' : ''}))]];
     const bl = (i, j) => o.blank && o.blank[0] === i && o.blank[1] === j;   // komórka ukryta – uczeń ma ją policzyć
-    const rows = U.A.map((row, i) => [{v: sf(U.cB[i])}, {v: U.names[U.basis[i]], th: true}, ...row.map((v, j) => ({v: bl(i, j) ? '<b>?</b>' : nf(v), cls: cls(i, j)})), {v: bl(i, N) ? '<b>?</b>' : nf(U.b[i]), cls: mk && i === U.pr ? 'pr' : ''},
+    const rows = U.A.map((row, i) => [{v: sf(U.cB[i])}, {v: U.names[U.basis[i]], th: true}, ...row.map((v, j) => ({v: bl(i, j) ? '<b>?</b>' : nf(v), cls: cls(i, j)})), {v: bl(i, N) ? '<b>?</b>' : nf(U.b[i]), cls: (mk && i === U.pr ? 'pr' : '') + (o.negb && U.b[i] < -EPS ? ' negb' : '')},
       ...(rq ? [{v: U.ratios[i] === null ? '–' : nf(U.ratios[i]) + (i === U.pr ? ' <b>min</b>' : ''), cls: mk && i === U.pr ? 'pivot' : ''}] : [])]);
     rows.push(['', {v: 'z<sub>j</sub>', th: true}, ...U.zj.map(v => sf(v)), {v: '<b>' + sf(U.z) + '</b>', cls: 'zval'}, ...(rq ? [''] : [])]);
     rows.push(['', {v: 'c<sub>j</sub> − z<sub>j</sub>', th: true}, ...U.cmz.map((v, j) => ({v: bl('c', j) ? '<b>?</b>' : sf(v), cls: mk && j === U.pc ? 'pivot' : ''})), '', ...(rq ? [''] : [])]);
-    const rowCls = []; rowCls[m] = rowCls[m + 1] = 'zrow';
+    if (o.dual && U.dratios) rows.push(['', {v: '|c<sub>j</sub> − z<sub>j</sub>| / |a<sub>rj</sub>|', th: true}, ...U.dratios.map((v, j) => ({v: v === null ? '–' : nf(v) + (j === U.pc ? ' <b>min</b>' : ''), cls: mk && j === U.pc ? 'pivot' : ''})), '', ...(rq ? [''] : [])]);
+    const rowCls = []; rowCls[m] = rowCls[m + 1] = rowCls[m + 2] = 'zrow';
     return {head, rows, cls: 'tabcj', rowCls};
   }
   const nonBasic = U => U.names.map((_, j) => j).filter(j => !U.basis.includes(j));
@@ -240,7 +241,7 @@ const LPL = (() => {
       bigm: ['Jak liczy OptiLab?', 'W alternatywnej metodzie tabelarycznej M jest symbolem: liczby zapisujemy jako a + m·M i porównujemy najpierw część z M. Opcja „metoda dużego M” wstawia za M konkretną wielką liczbę – przy bardzo różnych skalach danych bywa to niedokładne, dlatego domyślna jest metoda dwufazowa.']
     }[kind];
     return {title: t[0], say: 'Zdradzę Ci, co robię w środku.', text: t[1],
-      action: {label: 'Wczytaj to zadanie do zakładki Simpleks', tab: 'simplex', data: toData(M), method: kind === 'twophase' ? '2F' : 'TAB'}};
+      action: {label: 'Wczytaj to zadanie do zakładki Simpleks', tab: 'simplex', data: toData(M), sets: {'simplex-method': kind === 'twophase' ? '2F' : 'TAB'}}};
   }
   function features(tab, M) {
     const T = {
@@ -248,7 +249,7 @@ const LPL = (() => {
       graph: 'W zakładce Metoda graficzna możesz przybliżać wykres palcami, stuknąć wierzchołek, żeby zobaczyć jego Z, i włączyć punkty całkowite – gwiazdka pokaże najlepszy z nich.'
     }[tab];
     return {title: 'Co jeszcze potrafi moduł?', mood: 'surprise', say: 'Ciekawostka: to dopiero początek!', text: T,
-      action: {label: `Otwórz to zadanie w zakładce ${tab === 'graph' ? 'Metoda graficzna' : 'Simpleks'}`, tab, data: toData(M), method: tab === 'simplex' ? 'TAB' : undefined}};
+      action: {label: `Otwórz to zadanie w zakładce ${tab === 'graph' ? 'Metoda graficzna' : 'Simpleks'}`, tab, data: toData(M), sets: tab === 'simplex' ? {'simplex-method': 'TAB'} : {}}};
   }
 
   /* ---------- METODA DWUFAZOWA (gomSolve: faza I i II w zapisie c_j − z_j, dokładne ułamki) ---------- */
@@ -367,6 +368,8 @@ const LPL = (() => {
       const one = {n: 2, c: [0, 0], A: [M.A[o.half]], rel: [M.rel[o.half]], b: [M.b[o.half]]}, V = lpVertices(one, L).P;
       if (V.length) h += `<polygon class="lg-half" data-hl="pol${o.half + 1}" points="${V.map(p => sx(p.x) + ',' + sy(p.y)).join(' ')}"/>`;
     }
+    if (o.strip) { const [j, lo, hi] = o.strip, a = sx(j ? 0 : lo), b2 = sx(j ? L : hi), c1 = sy(j ? lo : 0), c2 = sy(j ? hi : L);
+      h += `<rect class="lg-strip" data-hl="pas" x="${Math.min(a, b2)}" y="${Math.min(c1, c2)}" width="${Math.abs(b2 - a)}" height="${Math.abs(c2 - c1)}"/>`; }
     if (o.region) { const V = lpVertices(M, L).P; if (V.length) h += `<polygon class="lg-reg" data-hl="obszar" points="${V.map(p => sx(p.x) + ',' + sy(p.y)).join(' ')}"/>`; }
     const seg = (a, b, r) => {                                    // odcinek prostej a·x + b·y = r w kwadracie [0, L]²
       const pts = [];
@@ -376,8 +379,12 @@ const LPL = (() => {
       if (u.length < 2) return null; u.sort((p, q) => p[0] - q[0] || p[1] - q[1]); return [u[0], u[u.length - 1]];
     };
     (o.level || []).forEach((z, k) => { const s = seg(M.c[0], M.c[1], z); if (s) h += `<line class="lg-lev${k === (o.level.length - 1) ? ' last' : ''}" data-hl="poziom${k}" x1="${sx(s[0][0])}" y1="${sy(s[0][1])}" x2="${sx(s[1][0])}" y2="${sy(s[1][1])}"/>`; });
+    (o.dashed || []).forEach(([a, b2, r], k) => { const s = seg(a, b2, r); if (s) h += `<line class="lg-bnd" data-hl="gr${k}" x1="${sx(s[0][0])}" y1="${sy(s[0][1])}" x2="${sx(s[1][0])}" y2="${sy(s[1][1])}"/>`; });
     (o.lines || []).forEach(i => { const s = seg(M.A[i][0], M.A[i][1], M.b[i]); if (s) h += `<line class="lg-l" style="stroke:${PAL[i % PAL.length]}" data-hl="ogr${i + 1}" x1="${sx(s[0][0])}" y1="${sy(s[0][1])}" x2="${sx(s[1][0])}" y2="${sy(s[1][1])}"/>`; });
     h += '</g>';
+    if (o.lattice) for (let x = 0; x <= L; x++) for (let y = 0; y <= L; y++) {      // punkty całkowite (ponad przycięciem – także na osiach)
+      const ok = M.A.every((a, i) => { const v = a[0] * x + a[1] * y; return M.rel[i] === '<=' ? v <= M.b[i] + 1e-9 : M.rel[i] === '>=' ? v >= M.b[i] - 1e-9 : Math.abs(v - M.b[i]) < 1e-9; });
+      h += `<circle class="lg-int${ok ? ' in' : ''}" cx="${sx(x)}" cy="${sy(y)}" r="${ok ? 3.6 : 1.8}"/>`; }
     if (o.arrow) { const n = Math.hypot(M.c[0], M.c[1]), f = L * 0.22 * (M.maxi ? 1 : -1), x0 = o.arrow[0], y0 = o.arrow[1];
       h += `<line class="lg-arrow" data-hl="kierunek" x1="${sx(x0)}" y1="${sy(y0)}" x2="${sx(x0 + f * M.c[0] / n)}" y2="${sy(y0 + f * M.c[1] / n)}" marker-end="url(#lsarr)"/>`; }
     (o.lines || []).forEach(i => { const s = seg(M.A[i][0], M.A[i][1], M.b[i]); if (!s) return; const p = s[1][1] > L * 0.85 ? s[0] : s[1], q = [(s[0][0] * 0.35 + s[1][0] * 0.65), (s[0][1] * 0.35 + s[1][1] * 0.65)]; void p;
@@ -476,7 +483,7 @@ const LPL = (() => {
     steps.push(resultCard([B.x, B.y], zopt));
     return {title: 'Metoda graficzna – ' + LESSON_LEVEL(level), steps, result: {x: [B.x, B.y], z: zopt}, model: M};
   }
-  return {nf, sf, lin, model, uTab, uGom, tspec, lpVertices, graphSVG, graph, simplex, twophase, bigm, toData};
+  return {nf, sf, vn, lin, rs, sym, taskHTML, model, uTab, uGom, geo, tspec, nonBasic, valsOf, lpVertices, graphSVG, resultCard, graph, simplex, twophase, bigm, toData};
 })();
 const LESSON_LEVEL = l => ({warm: 'Rozgrzewka', test: 'Sprawdzian', challenge: 'Wyzwanie'})[l] || l;
 /* Rejestracja tematów w menu „Czego chcesz się dziś nauczyć?” (zakładki modułu LP) */
@@ -486,6 +493,4 @@ const LESSON_LEVEL = l => ({warm: 'Rozgrzewka', test: 'Sprawdzian', challenge: '
   LESSON.register({id: 'lp-simplex', title: 'Simpleks – podstawy', group: 'Simpleks', note: 'tablica cⱼ − zⱼ, kolumna, iloraz, pivot', tabs, build: LPL.simplex});
   LESSON.register({id: 'lp-2f', title: 'Metoda dwufazowa', group: 'Simpleks', ext: true, note: 'znaki ≥ i =, zmienne sztuczne', tabs, build: LPL.twophase});
   LESSON.register({id: 'lp-bigm', title: 'Metoda dużego M', group: 'Simpleks', ext: true, note: 'kara M w funkcji celu', tabs, build: LPL.bigm});
-  LESSON.register({id: 'lp-gomory', title: 'Odcięcia Gomory\'ego', group: 'Zadania całkowitoliczbowe', tabs, soon: true, build: () => { throw new Error('wkrótce'); }});
-  LESSON.register({id: 'lp-bb', title: 'Podział i ograniczenia', group: 'Zadania całkowitoliczbowe', tabs, soon: true, build: () => { throw new Error('wkrótce'); }});
 })();

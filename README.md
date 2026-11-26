@@ -12,7 +12,7 @@
 
 <p align="center">
   ![moduły](https://img.shields.io/badge/modu%C5%82y-24%20gotowe-1f3a5f)
-  ![testy automatyczne](https://img.shields.io/badge/testy%20automatyczne-13115%20%E2%9C%93-2e7d32)
+  ![testy automatyczne](https://img.shields.io/badge/testy%20automatyczne-13264%20%E2%9C%93-2e7d32)
   ![instalacja](https://img.shields.io/badge/instalacja-niepotrzebna-c9a227)
   ![język](https://img.shields.io/badge/j%C4%99zyk-polski-b0413e)
 </p>
@@ -35,10 +35,15 @@ W zakładkach programowania liniowego (Wykres, Simpleks, Całkowite) obok „Eks
 | 🧾 | **Simpleks – podstawy** | zmienne swobodne, z<sub>j</sub> i c<sub>j</sub> − z<sub>j</sub>, wybór kolumny, iloraz tylko z dodatnich, element centralny, przekształcenie wierszy, test optymalności, samodzielne sprawdzenie wyniku |
 | ➕ | **Metoda dwufazowa** *(rozszerzenie)* | zmienne sztuczne, cel fazy I, dlaczego kolumny sztuczne znikają po fazie I |
 | ➕ | **Metoda dużego M** *(rozszerzenie)* | kara M w funkcji celu, porównywanie liczb z M |
+| ✂️ | **Odcięcia Gomory'ego** | mnożenie przez NWW, część ułamkowa (także ujemnych liczb), wzór odcięcia i dlaczego nie wycina punktów całkowitych, dualny simpleks, **znikające odcięcia** – „płot, który stoi daleko”, zakreślony różdżką przed i po usunięciu wiersza i kolumny |
+| 🌳 | **Podział i ograniczenia** | relaksacja jako granica, rozgałęzienie x ≤ ⌊a⌋ / x ≥ ⌈a⌉ na rysunku, drzewo rosnące węzeł po węźle, trzy powody odcięcia gałęzi i dlaczego są uczciwe |
 
 Każdy temat ma trzy poziomy: **Rozgrzewka** (zadanie do policzenia w głowie, pełne prowadzenie), **Sprawdzian** (Ty decydujesz na każdym rozdrożu, na końcu wynik, np. 7/9) i **Wyzwanie** (większy przykład z modułu – ten sam schemat). Błędna odpowiedź? Pivot wyjaśnia konkretną pomyłkę, a po trzech próbach proponuje powrót do wyjaśnienia albo pokazuje odpowiedź. Różdżka zakreśla w tablicy kolumnę, wiersz, element centralny i liczbę, o której mowa. Maskotkę można ukryć – aplikacja to zapamięta. Wszystkie liczby w lekcjach liczą te same solvery co raporty.
 
-<p align="center"><img src="docs/img/nauka-pivot.png" alt="Lekcja Nauka: Pivot zakreśla różdżką element centralny w tablicy simpleksu" width="720"></p>
+| | |
+|---|---|
+| ![Lekcja Nauka: Pivot zakreśla różdżką element centralny w tablicy simpleksu](docs/img/nauka-pivot.png) | ![Lekcja Gomory'ego: odcięcie, które już nie przeszkadza – wiersz i kolumna zakreślone przed usunięciem](docs/img/nauka-gomory-plot.png) |
+| *Simpleks: element centralny* | *Gomory: „płot” daleko – wiersz i kolumna znikną* |
 
 ## 🧭 Co znajdziesz w aplikacji
 
@@ -127,7 +132,7 @@ Każdy temat ma trzy poziomy: **Rozgrzewka** (zadanie do policzenia w głowie, p
 
 ## ✅ Na wynikach można polegać
 
-- **12 878 automatycznych sprawdzeń** – wszystkie przechodzą.
+- **13 264 automatycznych sprawdzeń** – wszystkie przechodzą.
 - Wyniki porównujemy z **przykładami z literatury** (m.in. Hillier i Lieberman, Heizer i Render, Render i Stair, Chopra i Meindl, Montgomery, Taylor) oraz **niezależnymi obliczeniami**: przeglądem wszystkich możliwych rozwiązań, wzorami zamkniętymi i symulacją Monte Carlo.
 - Każdy moduł jest sprawdzany w prawdziwej przeglądarce na ekranie komputera i telefonu.
 - Gdy wynik nie jest pewny (np. przekroczony limit obliczeń), aplikacja mówi to wprost – **nigdy nie pokazuje niepewnego wyniku jako poprawnego**.
@@ -143,10 +148,11 @@ Każdy temat ma trzy poziomy: **Rozgrzewka** (zadanie do policzenia w głowie, p
 - 📈 **Wyniki do Excela (.csv)** – wszystkie tabele raportu, wynik i komunikaty w jednym pliku dla polskiego Excela
 
 ## 🏁 Stan projektu
-🎓 **Nowość (listopad 2026): Nauka z Pivotem** – interaktywne lekcje metody graficznej i simpleksu (z metodą dwufazową i dużym M) na trzech poziomach, z pytaniami, wyjaśnieniem błędów i wynikiem Sprawdzianu.
+🎓 **Nowość (listopad 2026): Nauka z Pivotem** – interaktywne lekcje całego programowania liniowego: metoda graficzna, simpleks (z metodą dwufazową i dużym M), odcięcia Gomory'ego i metoda podziału i ograniczeń – każda na trzech poziomach, z pytaniami, wyjaśnieniem błędów i wynikiem Sprawdzianu.
 
 ### 🛠️ W przygotowaniu
-- 🎓 Lekcje „Nauka” dla zadań całkowitoliczbowych: **odcięcia Gomory'ego** (z obrazowym wyjaśnieniem, dlaczego znikają wiersze i kolumny odcięć) oraz **metoda podziału i ograniczeń**.
+- 🎓 Lekcje „Nauka” dla kolejnych modułów (np. Transport i Przydział) – silnik lekcji jest gotowy, wystarczy dopisać lekcję dla metody (opis na dole strony).
+- 🐣 Docelowa postać maskotki Pivot (obecna jest tymczasowa).
 
 📋 **Nowość (listopad 2026): wklejanie z Excela i eksport do Worda** – bloki komórek z Excela (tabulator, średnik, przecinek dziesiętny) wkleisz do każdej macierzy i tabeli we wszystkich modułach, a jeden przycisk „Eksportuj raport” zapisuje raport do PDF, do Worda (.docx – tabele jako tabele, nie zrzuty) albo wyniki do Excela (.csv).
 

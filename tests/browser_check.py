@@ -233,5 +233,35 @@ async def main():
             ov = await lp.evaluate("(() => { const b = document.querySelector('.ls-body'); return b.scrollWidth > b.clientWidth + 1; })()")
             print(f'Nauka {vw}px – bez poziomego przewijania karty:', 'OK' if not ov else 'BŁĄD')
             await lp.close()
+        # Nauka – etap 2: Gomory (znikanie wierszy i kolumn zakreślone przed i po) i podział i ograniczenia (drzewo), wczytanie do zakładki Całkowite
+        for vw, vh in ((1280, 860), (390, 844)):
+            lp = await b.new_page(viewport={'width': vw, 'height': vh}, has_touch=vw < 500); lp.on('pageerror', lambda e: errs.append(str(e)))
+            await lp.route('**/plotly-*.js', lambda r: r.fulfill(body='window.Plotly={newPlot(){},Plots:{resize(){}},toImage:async()=>"",relayout(){}};', content_type='text/javascript'))
+            await lp.goto(URL); await lp.click('nav button[data-tab=ilp]'); await lp.click('#btn-learn')
+            act = await lp.eval_on_selector_all('.ls-topic[data-id=lp-gomory]:not([disabled]), .ls-topic[data-id=lp-bb]:not([disabled])', 'e => e.length')
+            await lp.click('.ls-topic[data-id=lp-gomory]'); await lp.click('.ls-lvl[data-l=warm]')
+            seen = {}
+            for _ in range(30):
+                cur = await lp.evaluate("LESSON.current() && LESSON.current().id || ''")
+                if cur.startswith('plot') or cur.startswith('zdejmij'):
+                    await lp.wait_for_timeout(1400); seen[cur[:4]] = {'rings': await lp.eval_on_selector_all('.ls-ring', 'e => e.length'), 'pose': await lp.get_attribute('.ls-pivot', 'data-pose'), 'rows': await lp.eval_on_selector_all('.ls-table tr', 'e => e.length')}
+                if cur.startswith('wolno'): break
+                if await lp.is_disabled('.ls-next'):
+                    await lp.evaluate("(() => { const q = LESSON.current().q; if (q.type === 'choice') document.querySelectorAll('.ls-opt')[q.options.findIndex(o => o.ok)].click(); else { const i = document.querySelector('.ls-num input'); i.value = String(q.answer); document.querySelector('.ls-chk').click(); } })()")
+                await lp.click('.ls-next')
+            okg = 'plot' in seen and 'zdej' in seen and seen['plot']['rings'] >= 2 and seen['zdej']['rings'] >= 1 and seen['plot']['pose'] == 'point' and seen['zdej']['pose'] == 'point' and seen['zdej']['rows'] == seen['plot']['rows'] - 1
+            print(f'Nauka {vw}px – Gomory: tematy aktywne, odcięcie zakreślone przed i po usunięciu (wiersz mniej):', 'OK' if act == 2 and okg else 'BŁĄD', seen)
+            await lp.keyboard.press('Escape'); await lp.click('#btn-learn'); await lp.click('.ls-topic[data-id=lp-bb]'); await lp.click('.ls-lvl[data-l=challenge]')
+            tn = 0
+            for _ in range(30):
+                tn = max(tn, await lp.eval_on_selector_all('.ls-tree .lt-n', 'e => e.length'))
+                if await lp.query_selector('.ls-action'): break
+                if await lp.is_disabled('.ls-next'):
+                    await lp.evaluate("(() => { const q = LESSON.current().q; if (q.type === 'choice') document.querySelectorAll('.ls-opt')[q.options.findIndex(o => o.ok)].click(); else { const i = document.querySelector('.ls-num input'); i.value = String(q.answer); document.querySelector('.ls-chk').click(); } })()")
+                await lp.click('.ls-next')
+            await lp.click('.ls-action'); await lp.wait_for_timeout(300)
+            out = await lp.inner_html('#out-ilp'); tab = await lp.evaluate('curTab')
+            print(f'Nauka {vw}px – B&B: drzewo z 5 węzłami, wczytanie zadania do zakładki Całkowite liczy ten sam wynik:', 'OK' if tn == 5 and tab == 'ilp' and 'Z<sub>opt</sub> = <b>10</b>' in out and not await lp.is_visible('#lesson') else 'BŁĄD', tab)
+            await lp.close()
         print('Błędy JS:', errs or 'brak'); await b.close()
 asyncio.run(main())
