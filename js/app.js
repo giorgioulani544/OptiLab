@@ -19,6 +19,7 @@ function goTab(t) {
   $('#soon-title').textContent = title; $('#tabname').textContent = title; window.scrollTo(0, 0);
   $('nav button[aria-selected=true]').scrollIntoView({inline: 'center', block: 'nearest'});
   if (t === 'graph') Plotly.Plots.resize('plot');
+  if (typeof LESSON_TAB === 'function') LESSON_TAB(t);   // przycisk „Nauka” tylko w zakładkach z lekcjami (js/lesson.js)
 }
 document.querySelectorAll('nav button').forEach(b => b.onclick = () => goTab(b.dataset.tab));
 /* Przewijanie paska modułów na komputerze: przeciąganie myszą, kółko myszy, strzałki na końcach (na dotyku – zwykłe przesuwanie palcem) */
@@ -110,4 +111,5 @@ async function exportFile(kind) {
 })();
 
 MODS.forEach(initModule);
+if (typeof LESSON_TAB === 'function') LESSON_TAB(curTab);
 MODULES.forEach(md => md.init && md.init());

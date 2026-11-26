@@ -1,0 +1,161 @@
+/* ===== OptiLab – lekcje „Nauka” z maskotką Pivot (js/lesson.js) =====
+   Nakładka na całą stronę: na komputerze okno ~860 px, na telefonie pełny ekran. Tabele kart korzystają z tych samych klas co raporty (pivot, pr, pcol, zrow). */
+header .learn{display:inline-flex;align-items:center;gap:6px;font-weight:700}
+header .learn svg{width:20px;height:20px;fill:none;stroke:var(--or-deep);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+html.ls-lock,html.ls-lock body{overflow:hidden}
+.ls-ov{position:fixed;inset:0;z-index:50;background:rgba(27,42,78,.42);display:flex;align-items:center;justify-content:center;padding:16px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.ls-ov[hidden]{display:none!important}
+.ls-panel{position:relative;display:flex;flex-direction:column;width:min(880px,100%);height:min(92vh,820px);background:var(--card);border:1px solid var(--fline);border-radius:22px;box-shadow:0 24px 60px -20px rgba(27,42,78,.55);overflow:hidden}
+.ls-top{display:flex;align-items:center;gap:8px;padding:10px 12px 8px 18px;border-bottom:1px solid var(--fline)}
+.ls-tt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ls-tt b{font-size:1.05rem}#ls-sub{color:var(--or-deep);font-weight:600}
+.ls-top button{min-height:44px;padding:4px 12px;font-size:.88rem}
+.ls-top .ls-x{min-width:44px;font-size:1.1rem}
+.ls-prog{height:6px;background:#efe6d8}
+.ls-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--or),var(--pivot));border-radius:0 3px 3px 0;transition:width .35s ease}
+.ls-body{flex:1;overflow:auto;padding:14px 18px 18px;outline:none;-webkit-overflow-scrolling:touch}
+.ls-foot{display:flex;align-items:center;gap:10px;padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--fline);background:#fffaf2}
+.ls-foot .ls-cnt{flex:1;text-align:center;color:#6f6a63;font-size:.88rem;font-variant-numeric:tabular-nums}
+.ls-foot button{min-width:118px}
+.ls-foot .ls-next:disabled{opacity:.45}
+/* Pivot i dymek */
+.ls-talk{display:flex;align-items:flex-end;gap:10px;margin:0 0 10px}
+.ls-pivot{flex:0 0 auto;width:112px;height:112px}
+.ls-pivot svg{width:100%;height:100%;overflow:visible;animation:pv-bob 3.2s ease-in-out infinite;transform-origin:50% 90%}
+.ls-pivot svg>g[id^="poza-"]{display:none}
+.ls-pivot[data-pose=explain] #poza-explain,.ls-pivot[data-pose=point] #poza-point,.ls-pivot[data-pose=think] #poza-think,
+.ls-pivot[data-pose=surprise] #poza-surprise,.ls-pivot[data-pose=happy] #poza-happy,.ls-pivot[data-pose=oops] #poza-oops{display:inline}
+.ls-pivot.pv-anim[data-pose=happy] svg{animation:pv-jump .7s cubic-bezier(.3,1.6,.5,1) 1,pv-bob 3.2s ease-in-out .7s infinite}
+.ls-pivot.pv-anim[data-pose=oops] svg{animation:pv-shake .5s ease-in-out 1,pv-bob 3.2s ease-in-out .5s infinite}
+.ls-pivot.pv-anim[data-pose=surprise] svg{animation:pv-pop .45s cubic-bezier(.3,1.8,.5,1) 1,pv-bob 3.2s ease-in-out .45s infinite}
+.ls-pivot.pv-anim[data-pose=point] svg,.ls-pivot.pv-anim[data-pose=explain] svg{animation:pv-in .35s ease-out 1,pv-bob 3.2s ease-in-out .35s infinite}
+.ls-pivot[data-pose=think] svg{animation:pv-tilt 3.6s ease-in-out infinite}
+.ls-pivot .pv-eyes{transform-box:fill-box;transform-origin:center;animation:pv-blink 5s infinite}
+.ls-pivot .pv-wand>use{transform-origin:0 0;animation:pv-wave 1.3s ease-in-out infinite}
+.ls-pivot .pv-star{transform-box:fill-box;transform-origin:center;animation:pv-twinkle 1.3s ease-in-out infinite}
+.ls-pivot .pv-fx{animation:pv-fade 1.6s ease-in-out infinite}
+@keyframes pv-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes pv-jump{0%{transform:translateY(0) scale(1,1)}30%{transform:translateY(-16px) scale(.96,1.05)}60%{transform:translateY(0) scale(1.06,.94)}100%{transform:translateY(0) scale(1)}}
+@keyframes pv-shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-7deg)}45%{transform:rotate(6deg)}70%{transform:rotate(-4deg)}}
+@keyframes pv-pop{0%{transform:scale(.85)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes pv-in{0%{transform:translateY(4px);opacity:.6}100%{transform:none;opacity:1}}
+@keyframes pv-tilt{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(3deg) translateY(-2px)}}
+@keyframes pv-blink{0%,94%,100%{transform:scaleY(1)}96.5%{transform:scaleY(.12)}}
+@keyframes pv-wave{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(12deg)}}
+@keyframes pv-twinkle{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.22) rotate(18deg)}}
+@keyframes pv-fade{0%,100%{opacity:1}50%{opacity:.35}}
+.ls-bubble{position:relative;flex:1;min-width:0;background:#fff;border:1.5px solid var(--or-soft);border-radius:18px;padding:10px 14px;font-weight:600;line-height:1.35;margin-bottom:26px;box-shadow:0 2px 8px -4px rgba(190,90,40,.35)}
+.ls-bubble::before{content:"";position:absolute;left:-9px;bottom:16px;width:16px;height:16px;background:#fff;border-left:1.5px solid var(--or-soft);border-bottom:1.5px solid var(--or-soft);transform:rotate(45deg)}
+.ls-ov.nopv .ls-pivot{display:none}
+.ls-ov.nopv .ls-bubble{margin-bottom:0;border-radius:12px;background:var(--or-pale)}
+.ls-ov.nopv .ls-bubble::before{display:none}
+/* Karta */
+.ls-h{margin:4px 0 10px}
+.ls-card h3{margin:0 0 6px;font-size:1.12rem}
+.ls-text{margin:0 0 10px;font-size:1.02rem;line-height:1.55;max-width:68ch}
+.ls-vis{position:relative;margin:6px 0 4px;display:flex;flex-wrap:wrap;gap:4px 18px;align-items:flex-start}
+.ls-vis>*{max-width:100%;min-width:0}
+.ls-vis .tw{position:relative;padding:22px 6px 8px}
+.ls-vis .ls-formula{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:2px 0 8px;line-height:1.9;font-variant-numeric:tabular-nums}
+.ls-vis [data-hl]{border-radius:6px;transition:background-color .3s,box-shadow .3s}
+.ls-formula .ls-on{background:var(--hl);box-shadow:0 0 0 3px var(--pivot);animation:ls-pulse 1.4s ease-in-out 2}
+.ls-svg{flex:0 1 420px}
+.ls-graph{width:100%;height:auto;display:block;background:#fff;border:1px solid var(--line);border-radius:12px}
+.ls-graph .lg-grid{stroke:#e7e9f0;stroke-width:1}
+.ls-graph .lg-axis{stroke:#1b2a4e;stroke-width:1.4}
+.ls-graph .lg-tick{font-size:10px;fill:#6b7390}
+.ls-graph .lg-ax{font-size:13px;fill:#1b2a4e;font-weight:700}
+.ls-graph .lg-l{stroke-width:2.2;fill:none}
+.ls-graph .lg-lab{font-size:11px;font-weight:700}
+.ls-graph .lg-reg{fill:rgba(26,111,214,.2);stroke:rgba(26,111,214,.8);stroke-width:1}
+.ls-graph .lg-half{fill:rgba(46,125,50,.16);stroke:none}
+.ls-graph .lg-lev{stroke:#1b2a4e;stroke-width:1.4;stroke-dasharray:5 4;opacity:.45}
+.ls-graph .lg-lev.last{opacity:1;stroke-width:2}
+.ls-graph .lg-arrow{stroke:#1b2a4e;stroke-width:2}
+.ls-graph .lg-v{fill:#1b2a4e;stroke:#fff;stroke-width:2}
+.ls-graph .lg-v.best{fill:var(--pivot);stroke:#1b2a4e}
+.ls-graph .lg-p{fill:var(--link);stroke:#fff;stroke-width:2}.ls-graph .lg-p.bad{fill:var(--err)}
+.ls-graph .lg-vt{font-size:11px;font-weight:700;fill:#1b2a4e;paint-order:stroke;stroke:#fff;stroke-width:3px}
+.ls-graph .ls-on{animation:ls-glow 1.3s ease-in-out 3}
+.ls-graph line.ls-on{stroke-width:4.5}
+.ls-graph polygon.ls-on{fill-opacity:1;stroke:#1b2a4e;stroke-width:2}
+.ls-graph circle.ls-on{r:8px;stroke:var(--or-deep);stroke-width:3}
+@keyframes ls-glow{0%,100%{filter:none}50%{filter:drop-shadow(0 0 5px rgba(232,145,92,.95))}}
+@keyframes ls-pulse{0%,100%{box-shadow:0 0 0 3px var(--pivot)}50%{box-shadow:0 0 0 6px rgba(255,183,3,.35)}}
+/* Tabela lekcji – jak w raportach */
+.ls-table{font-size:.94rem}
+.ls-table td,.ls-table th{border:1px solid var(--line);padding:5px 8px;text-align:center;min-width:42px;white-space:nowrap}
+.ls-table tr.zrow td,.ls-table tr.zrow th{background:#f7f3ea}
+.ls-table td.zval{background:#fff6c4}
+.ls-table td.pivot{background:var(--pivot);font-weight:700}
+/* Różdżka: rysowane kółko/ramka wokół fragmentu tabeli + etykieta */
+.ls-ring{position:absolute;pointer-events:none;overflow:visible;z-index:2}
+.ls-ring rect{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;animation:ls-draw .7s ease-out forwards}
+.ls-ring.tone-gold rect{stroke:#e09a00;filter:drop-shadow(0 0 3px rgba(255,183,3,.8))}
+.ls-ring.tone-blue rect{stroke:var(--link)}
+.ls-ring.tone-green rect{stroke:var(--ok)}
+.ls-ring.tone-red rect{stroke:var(--err);stroke-dasharray:6 4 100}
+.ls-ring.tone-gray rect{stroke:#8a8fa3;stroke-width:2}
+@keyframes ls-draw{to{stroke-dashoffset:0}}
+.ls-tag{position:absolute;z-index:3;pointer-events:none;font-size:.72rem;font-weight:700;line-height:1;padding:3px 7px;border-radius:999px;color:#fff;background:#b77d00;white-space:nowrap;opacity:0;animation:ls-tagin .3s ease-out forwards}
+.ls-tag.tone-blue{background:var(--link)}.ls-tag.tone-green{background:var(--ok)}.ls-tag.tone-red{background:var(--err)}.ls-tag.tone-gray{background:#6b7390}
+@keyframes ls-tagin{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+/* Pytania */
+.ls-q{margin:12px 0 0;padding:12px 14px;background:#fffaf2;border:1px solid #ecdcc6;border-radius:16px}
+.ls-prompt{margin:0 0 8px;font-weight:700}
+.ls-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.ls-opt{text-align:left;font-weight:600;min-height:48px}
+.ls-opt.bad{border-color:var(--err);background:#fdecea;color:#8e1b1b;opacity:1}
+.ls-opt.good{border-color:var(--ok);background:#e7f5ef;color:#1d5a22;opacity:1}
+.ls-opt:disabled:not(.good):not(.bad){opacity:.55}
+.ls-num{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ls-num input{width:140px;font-size:1.05rem;text-align:right}
+.ls-num input.good{border-color:var(--ok);background:#e7f5ef}
+.ls-fb{margin:8px 0 0;min-height:0}
+.ls-fb:empty{display:none}
+.ls-fb.bad{background:#fdecea;border:1.5px solid var(--err);color:#8e1b1b;padding:8px 12px;border-radius:10px}
+.ls-fb.ok{background:#e7f5ef;border:1.5px solid var(--ok);padding:8px 12px;border-radius:10px}
+.ls-help{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.ls-help button{font-size:.9rem}
+.ls-help:not(:has(button:not([hidden]))){display:none}
+.ls-acts{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+.ls-result{margin-top:10px;font-size:1.05rem}
+/* Menu */
+.ls-menu{display:grid;gap:10px;margin:4px 0 12px}
+.ls-grp{display:grid;gap:8px}
+.ls-gname{font-weight:700;margin:4px 0 0}
+.ls-topic,.ls-lvl{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;min-height:56px;padding:8px 14px}
+.ls-topic span,.ls-lvl span{font-size:.84rem;font-weight:400;color:#6f6a63}
+.ls-topic.ext{margin-left:22px;width:calc(100% - 22px)}
+.ls-ext{display:inline-block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--or-deep);background:var(--or-pale);border:1px solid var(--or-soft);border-radius:999px;padding:1px 7px;vertical-align:1px}
+.ls-lvl.rec{border-color:var(--or);box-shadow:0 0 0 3px rgba(232,145,92,.25)}
+.ls-rec{font-size:.72rem;color:#fff;background:var(--or-deep);border-radius:999px;padding:1px 8px;vertical-align:2px}
+.ls-done{font-size:.78rem;color:var(--ok)}
+.ls-end .ls-score{font-size:1.4rem;margin:6px 0}
+@media(hover:hover){.ls-topic:not(:disabled):hover,.ls-lvl:hover,.ls-opt:not(:disabled):hover{background:var(--or-pale);border-color:var(--or-soft)}}
+/* Telefon: pełny ekran, mniejszy Pivot obok dymka */
+@media(max-width:600px){
+ .ls-ov{padding:0}
+ .ls-panel{width:100%;height:100%;height:100dvh;border-radius:0;border:0}
+ .ls-top{padding:6px 8px 6px 12px}
+ .ls-top .ls-pvtog{font-size:.8rem;padding:4px 8px}
+ .ls-body{padding:10px 12px 16px}
+ .ls-pivot{width:74px;height:74px}
+ .ls-bubble{font-size:.94rem;padding:8px 12px;margin-bottom:16px}
+ .ls-text{font-size:.98rem}
+ .ls-foot button{min-width:0;flex:0 0 auto}
+ .ls-opts{grid-template-columns:1fr}
+ .ls-table{font-size:.86rem}
+ .ls-table td,.ls-table th{padding:4px 6px;min-width:36px}
+ .ls-svg{flex-basis:100%}
+}
+@media(max-width:380px){.ls-top .ls-pvtog{font-size:.74rem;padding:4px 6px}#ls-sub{display:none}}
+@media(prefers-reduced-motion:reduce){
+ .ls-pivot svg,.ls-pivot .pv-eyes,.ls-pivot .pv-wand>use,.ls-pivot .pv-star,.ls-pivot .pv-fx,.ls-graph .ls-on,.ls-formula .ls-on{animation:none!important}
+ .ls-ring rect{animation:none;stroke-dashoffset:0}.ls-tag{animation:none;opacity:1}
+ .ls-prog i{transition:none}
+}
+@media print{.ls-ov,header .learn{display:none!important}}
+/* Nagłówek na telefonie: „Nauka” i „Eksportuj raport” w jednej linii z logo */
+@media(max-width:480px){header{gap:6px}header .learn,header #btn-export{padding:4px 9px;font-size:.88rem}header .learn svg{width:17px;height:17px}header .learn{gap:4px}}
+@media(max-width:360px){header .learn svg{display:none}header h1{font-size:1.3rem}}

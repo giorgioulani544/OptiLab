@@ -1,12 +1,16 @@
 # OptiLab – dokumentacja techniczna
 Struktura plików, kolejność skryptów i informacje dla osób rozwijających projekt. Opis dla użytkowników: README.md.
 
+Lekcje „Nauka” z maskotką Pivot (moduł LP): metoda graficzna, simpleks, metoda dwufazowa, duże M.
+
 Moduły: Planowanie zagregowane, Prognozowanie, Zapasy, PERT/CPM, Harmonogramowanie, Metoda graficzna, Simpleks (duże M / dwufazowa, dual, analiza wrażliwości i parametryczna), Programowanie całkowitoliczbowe (Branch & Bound), Transport, Przydział, Najkrótsza ścieżka, Maksymalny przepływ.
 
 ## Struktura
 ```
 index.html              powłoka: nagłówek, dolny pasek zakładek, sekcje modułów
 css/style.css           wszystkie style (w tym druk do PDF)
+css/lesson.css          style lekcji „Nauka”: nakładka z kartami, dymek i animacje Pivota (mruganie, różdżka, skok, potrząśnięcie; prefers-reduced-motion = bez animacji), kółka różdżki, pytania, menu; telefon = pełny ekran
+assets/pivot_maskotka.svg  maskotka Pivot – JEDYNE źródło postaci (grupy poza-explain/point/think/surprise/happy/oops; klasy pv-eyes, pv-wand, pv-star, pv-fx do animacji)
 js/core.js              narzędzia wspólne (formatowanie liczb, indeksy <sub>)
 js/solver.js            matematyka bez DOM: simpleks, typy zmiennych, dual (testowalne)
 js/ilp-solver.js        Branch & Bound (statusy węzłów, limity, wynik niepewny) – bez DOM, testowalne
@@ -74,10 +78,14 @@ js/registry.js          rejestr modułów (registerModule) i lista modułów „
 js/htmltree.js          drzewo HTML raportu (HT.parse, HT.text, HT.grid – siatka tabeli z colspan/rowspan) i eksport wyników do CSV (HT.reportCSV: nagłówki, tabele, ramki .sum/.msg, treść zadania; polski Excel) – bez DOM, testowalne (tests/export_csv.test.js)
 js/docx.js              raport do Worda bez bibliotek – bez DOM, testowalne (tests/docx.test.js): DOCX.build (WordprocessingML: style Title/Heading/Sum/Msg/Formula/Hint/ListPara, tabele z gridSpan/vMerge, powtarzany nagłówek, cantSplit, kolory z data-bg/data-fg albo klas raportu, obrazy PNG, stopka ze stroną), DOCX.zip (ZIP z CRC-32, bez kompresji lub deflate)
 js/export.js            eksport w przeglądarce: wygląd komórek z CSS (data-*), SVG → PNG (canvas 2×), kompresja CompressionStream, pobranie .docx / .csv
+js/pivot-svg.js         PLIK GENEROWANY z assets/pivot_maskotka.svg (python3 tools/pivot_svg.py) – SVG wstawiane do strony, by przełączać pozy po id także z file:// i w jednym pliku; test pilnuje zgodności
+js/lesson.js            silnik lekcji „Nauka” (LESSON): format lekcji opisany w komentarzu na górze pliku, rejestr tematów (LESSON.register), menu startowe i wybór poziomu, karty z Wstecz/Dalej/postępem, pytania (wybór, liczba; wyjaśnienia typowych pomyłek, pokaż odpowiedź, po 3 błędach powrót), wynik Sprawdzianu, różdżka (ramki SVG na komórkach data-r/data-c, podświetlenie data-hl), przełącznik maskotki w localStorage; czyste funkcje parseNum/numMatch/check/tableHTML/validate testowane w Node
+js/lessons/lp-lessons.js  lekcje LP (LPL) – czyste funkcje bez DOM: metoda graficzna (lpVertices, graphSVG), simpleks (tabSolve), metoda dwufazowa (gomSolve: faza I i II), duże M (tabSolve, symboliczne M); zadania lekcyjne w LPL_TASKS (tylko dane wejściowe – liczby na kartach liczą solvery), q.tag = skąd odpowiedź (testy)
 js/print.js             składanie wydruku/PDF (PRINT.geom, PRINT.paginate): długie tabele na kawałki z powtórzonym nagłówkiem, nagłówki sklejone z treścią (.keep) – działa też w Safari na iPhonie
 js/app.js               zakładki, przycisk „Eksportuj raport” z menu (PDF – druk jak dotąd, Word, CSV; reportSections = sekcje bieżącej zakładki), start
 js/bg.js                tło: powolna animowana sieć z pomarańczowymi wyładowaniami (canvas #bgnet; tylko ozdoba, ładowany ostatni)
 tests/                  testy w Node (solver, metoda dwufazowa, parametryczna, CSV, wklejanie, eksport CSV i DOCX, przykłady, ładowanie, interfejs); tests/browser_check.py – przeglądarka (Playwright), w tym prawdziwe Ctrl+V i pobrane pliki .docx/.csv sprawdzane zipfile/XML/LibreOffice; odcięcia Gomory'ego: gomory.test.js (solver), gomory_report.test.js (raport krok po kroku, limity), gomory_ui.test.js (zakładka Całkowite, dane do PDF)
+tools/pivot_svg.py      generuje js/pivot-svg.js z assets/pivot_maskotka.svg (uruchom po każdej zmianie maskotki)
 tools/bundle.py         skleja projekt w jeden plik (podgląd na telefonie / wgranie z telefonu)
 manifest.webmanifest, icon-192.png, icon-512.png   ikona skrótu na telefonie/komputerze
 ```
@@ -89,6 +97,12 @@ Kolejność plików w `index.html` ma znaczenie (każdy kolejny korzysta z poprz
 2. Dodaj `<script src="...?v=N">` w `index.html` po `js/registry.js`, a przed `js/app.js`.
 3. Usuń moduł z listy `SOON` w `js/registry.js`. Zakładka, sekcja i eksport do PDF (`last[id]`) powstają automatycznie.
 4. Dopisz testy w `tests/` (najlepiej porównanie z podręcznikiem lub z innym solverem).
+
+## Dodawanie lekcji „Nauka” dla kolejnej metody
+1. Utwórz `js/lessons/nazwa-lessons.js` z czystą funkcją `build(level)` (level: `warm` | `test` | `challenge`), która rozwiązuje zadanie lekcyjne istniejącym solverem i zwraca `{title, steps, result}` w formacie z komentarza na górze `js/lesson.js`. Liczby, tabele i poprawne odpowiedzi biorą się z wyniku solvera; zadanie lekcyjne to tylko dane wejściowe.
+2. Zarejestruj temat: `LESSON.register({id, title, group, note, tabs: ['id-zakładki'], build})`. Przycisk „Nauka” pojawi się w podanych zakładkach, a temat w menu.
+3. Dodaj `<script>` po `js/lesson.js` (przed `js/app.js`) i podnieś `?v=N`.
+4. Testy (wzór: `tests/lesson.test.js`): `LESSON.validate` bez uwag, limit kart, każde pytanie z `q.tag` porównane z solverem lub niezależnym przeglądem, ostatnia karta = wynik raportu modułu.
 
 ## Aktualizacja na GitHub Pages
 Wgraj cały folder (zachowaj podfoldery). Po zmianie pliku podnieś numer `?v=1` → `?v=2` w `index.html`,
