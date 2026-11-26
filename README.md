@@ -12,7 +12,7 @@
 
 <p align="center">
   ![moduły](https://img.shields.io/badge/modu%C5%82y-24%20gotowe-1f3a5f)
-  ![testy automatyczne](https://img.shields.io/badge/testy%20automatyczne-12878%20%E2%9C%93-2e7d32)
+  ![testy automatyczne](https://img.shields.io/badge/testy%20automatyczne-13115%20%E2%9C%93-2e7d32)
   ![instalacja](https://img.shields.io/badge/instalacja-niepotrzebna-c9a227)
   ![język](https://img.shields.io/badge/j%C4%99zyk-polski-b0413e)
 </p>
@@ -24,6 +24,21 @@
 **OptiLab** to darmowa aplikacja do rozwiązywania zadań z badań operacyjnych i zarządzania produkcją – nowoczesna alternatywa dla programu WinQSB. Działa w przeglądarce, na komputerze i na telefonie.
 
 Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest opisany po polsku, z tabelami, kolorowymi wyróżnieniami i wykresami. Dlatego nadaje się zarówno do rozwiązywania zadań, jak i do nauki oraz sprawdzania obliczeń wykonanych ręcznie.
+
+## 🎓 Nauka z Pivotem
+
+W zakładkach programowania liniowego (Wykres, Simpleks, Całkowite) obok „Eksportuj raport” jest przycisk **„Nauka”**. Otwiera interaktywną lekcję, w której maskotka **Pivot** – złoty element centralny z różdżką – tłumaczy krok po kroku, jak samemu rozwiązać zadanie i jak liczy OptiLab. Krótkie zdania, jedna myśl na kartę, na każdej karcie odpowiedź na pytanie „dlaczego tak?”.
+
+| | Temat | Czego się nauczysz |
+|---|---|---|
+| 📈 | **Metoda graficzna** | skąd biorą się proste ograniczeń, po której stronie leży obszar, dlaczego optimum jest w wierzchołku, linia poziomu |
+| 🧾 | **Simpleks – podstawy** | zmienne swobodne, z<sub>j</sub> i c<sub>j</sub> − z<sub>j</sub>, wybór kolumny, iloraz tylko z dodatnich, element centralny, przekształcenie wierszy, test optymalności, samodzielne sprawdzenie wyniku |
+| ➕ | **Metoda dwufazowa** *(rozszerzenie)* | zmienne sztuczne, cel fazy I, dlaczego kolumny sztuczne znikają po fazie I |
+| ➕ | **Metoda dużego M** *(rozszerzenie)* | kara M w funkcji celu, porównywanie liczb z M |
+
+Każdy temat ma trzy poziomy: **Rozgrzewka** (zadanie do policzenia w głowie, pełne prowadzenie), **Sprawdzian** (Ty decydujesz na każdym rozdrożu, na końcu wynik, np. 7/9) i **Wyzwanie** (większy przykład z modułu – ten sam schemat). Błędna odpowiedź? Pivot wyjaśnia konkretną pomyłkę, a po trzech próbach proponuje powrót do wyjaśnienia albo pokazuje odpowiedź. Różdżka zakreśla w tablicy kolumnę, wiersz, element centralny i liczbę, o której mowa. Maskotkę można ukryć – aplikacja to zapamięta. Wszystkie liczby w lekcjach liczą te same solvery co raporty.
+
+<p align="center"><img src="docs/img/nauka-pivot.png" alt="Lekcja Nauka: Pivot zakreśla różdżką element centralny w tablicy simpleksu" width="720"></p>
 
 ## 🧭 Co znajdziesz w aplikacji
 
@@ -128,6 +143,11 @@ Nie podaje samego wyniku. Pokazuje, **jak do niego dojść**: każdy krok jest o
 - 📈 **Wyniki do Excela (.csv)** – wszystkie tabele raportu, wynik i komunikaty w jednym pliku dla polskiego Excela
 
 ## 🏁 Stan projektu
+🎓 **Nowość (listopad 2026): Nauka z Pivotem** – interaktywne lekcje metody graficznej i simpleksu (z metodą dwufazową i dużym M) na trzech poziomach, z pytaniami, wyjaśnieniem błędów i wynikiem Sprawdzianu.
+
+### 🛠️ W przygotowaniu
+- 🎓 Lekcje „Nauka” dla zadań całkowitoliczbowych: **odcięcia Gomory'ego** (z obrazowym wyjaśnieniem, dlaczego znikają wiersze i kolumny odcięć) oraz **metoda podziału i ograniczeń**.
+
 📋 **Nowość (listopad 2026): wklejanie z Excela i eksport do Worda** – bloki komórek z Excela (tabulator, średnik, przecinek dziesiętny) wkleisz do każdej macierzy i tabeli we wszystkich modułach, a jeden przycisk „Eksportuj raport” zapisuje raport do PDF, do Worda (.docx – tabele jako tabele, nie zrzuty) albo wyniki do Excela (.csv).
 
 🖨️ **Poprawka (listopad 2026): PDF z iPhone'a** – Safari dzieliło długie tabele w połowie wierszy i zostawiało nagłówki na dole strony. Teraz raport sam układa strony: długa tabela przechodzi na następną stronę z powtórzonym nagłówkiem kolumn, a nagłówki zawsze trzymają się swojej treści.
@@ -140,7 +160,11 @@ Wszystkie moduły WinQSB są gotowe 🎉 – od programowania liniowego po lokal
 
 ## 👩‍💻 Dla programistów
 
-Czyste HTML, CSS i JavaScript – bez instalacji zależności i bez bundlera. Struktura plików i zasady rozwoju: [DOKUMENTACJA-TECHNICZNA.md](DOKUMENTACJA-TECHNICZNA.md). Testy: `node tests/<nazwa>.test.js` (Node 18+), test w przeglądarce: `python3 tests/browser_check.py` (Playwright).
+Czyste HTML, CSS i JavaScript – bez instalacji zależności i bez bundlera.
+
+**Jak dopisać lekcję „Nauka” dla kolejnej metody:** (1) w pliku `js/lessons/nazwa-lessons.js` napisz czystą funkcję `build(level)` (`warm` / `test` / `challenge`), która rozwiązuje zadanie lekcyjne istniejącym solverem i zwraca listę kart w formacie opisanym na górze `js/lesson.js` – liczby, tabele i poprawne odpowiedzi biorą się z wyniku solvera; (2) zarejestruj temat: `LESSON.register({id, title, group, tabs: ['zakładka'], build})`; (3) dodaj `<script>` po `js/lesson.js` i podnieś `?v=N`; (4) dopisz test jak `tests/lesson.test.js` (format kart, limit kart, każde pytanie porównane z solverem, ostatnia karta = wynik raportu). Postać Pivota zmieniasz tylko w `assets/pivot_maskotka.svg`, potem `python3 tools/pivot_svg.py`.
+
+ Struktura plików i zasady rozwoju: [DOKUMENTACJA-TECHNICZNA.md](DOKUMENTACJA-TECHNICZNA.md). Testy: `node tests/<nazwa>.test.js` (Node 18+), test w przeglądarce: `python3 tests/browser_check.py` (Playwright).
 
 ---
 
