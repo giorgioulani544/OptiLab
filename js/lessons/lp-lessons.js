@@ -75,7 +75,7 @@ const LPL = (() => {
     const bl = (i, j) => o.blank && o.blank[0] === i && o.blank[1] === j;   // komórka ukryta – uczeń ma ją policzyć
     const rows = U.A.map((row, i) => [{v: sf(U.cB[i])}, {v: U.names[U.basis[i]], th: true}, ...row.map((v, j) => ({v: bl(i, j) ? '<b>?</b>' : nf(v), cls: cls(i, j)})), {v: bl(i, N) ? '<b>?</b>' : nf(U.b[i]), cls: (mk && i === U.pr ? 'pr' : '') + (o.negb && U.b[i] < -EPS ? ' negb' : '')},
       ...(rq ? [{v: U.ratios[i] === null ? '–' : nf(U.ratios[i]) + (i === U.pr ? ' <b>min</b>' : ''), cls: mk && i === U.pr ? 'pivot' : ''}] : [])]);
-    rows.push(['', {v: 'z<sub>j</sub>', th: true}, ...U.zj.map(v => sf(v)), {v: '<b>' + sf(U.z) + '</b>', cls: 'zval'}, ...(rq ? [''] : [])]);
+    rows.push(['', {v: 'z<sub>j</sub>', th: true}, ...U.zj.map(v => sf(v)), {v: bl('z', 0) ? '<b>?</b>' : '<b>' + sf(U.z) + '</b>', cls: 'zval'}, ...(rq ? [''] : [])]);
     rows.push(['', {v: 'c<sub>j</sub> − z<sub>j</sub>', th: true}, ...U.cmz.map((v, j) => ({v: bl('c', j) ? '<b>?</b>' : sf(v), cls: mk && j === U.pc ? 'pivot' : ''})), '', ...(rq ? [''] : [])]);
     if (o.dual && U.dratios) rows.push(['', {v: '|c<sub>j</sub> − z<sub>j</sub>| / |a<sub>rj</sub>|', th: true}, ...U.dratios.map((v, j) => ({v: v === null ? '–' : nf(v) + (j === U.pc ? ' <b>min</b>' : ''), cls: mk && j === U.pc ? 'pivot' : ''})), '', ...(rq ? [''] : [])]);
     const rowCls = []; rowCls[m] = rowCls[m + 1] = rowCls[m + 2] = 'zrow';
@@ -168,11 +168,12 @@ const LPL = (() => {
         table: tspec(U, {mark: true}), hl: [{r: U.pr, c: g.col(U.pc), tone: 'gold'}, {r: cq.r, c: cq.c, tone: 'blue', label: '?'}], q: cq.q});
       return out;
     }
-    // watch – Wyzwanie: jedna karta na iterację
+    // watch – Wyzwanie: jedna karta na iterację (gdy jest pytanie – najpierw czysta tablica bez podpowiedzi)
+    if (ctx.ask) out.push({title: `${ph}Iteracja ${ctx.it}: Twój ruch`, mood: 'think', say: 'Najpierw Ty – która kolumna?', text: 'Ten sam przepis co w Rozgrzewce. Spójrz na ostatni wiersz tablicy.',
+      table: tspec({...U, pc: -1, pr: -1}), q: enterQ(U, ctx, false)});
     out.push({title: `${ph}Iteracja ${ctx.it}`, mood: 'point', say: ctx.it === 1 ? 'Kolumna, iloraz, pivot – jak zawsze.' : pick(['Znów to samo!', 'Ten sam przepis.', 'I jeszcze raz!'], ctx.it),
       text: `Wchodzi ${en} (c<sub>j</sub> − z<sub>j</sub> = ${sf(U.cmz[U.pc])}), wychodzi ${lv} (najmniejszy iloraz ${nf(U.ratios[U.pr])}), element centralny = ${nf(p)}. Po przekształceniu ${zWord} = ${sf(U2.z)}.`,
-      table: tspec(U, {mark: true, ratios: true}), hl: [{r: g.cr, c: g.col(U.pc), tone: 'gold'}, {r: U.pr, c: g.q, tone: 'green'}, {r: U.pr, c: g.col(U.pc), tone: 'gold', label: 'pivot'}],
-      q: ctx.ask ? enterQ(U, ctx, false) : undefined});
+      table: tspec(U, {mark: true, ratios: true}), hl: [{r: g.cr, c: g.col(U.pc), tone: 'gold'}, {r: U.pr, c: g.q, tone: 'green'}, {r: U.pr, c: g.col(U.pc), tone: 'gold', label: 'pivot'}]});
     return out;
   }
   // karta „optimum” + odczyt wyniku + sprawdzenie samodzielne
@@ -185,15 +186,17 @@ const LPL = (() => {
     opt.q = {type: 'choice', prompt: 'Czy da się jeszcze poprawić Z?', score: ctx.mode === 'test', tag: {t: 'optimal'},
       options: [{t: 'nie – to optimum', ok: true}, ...nb.slice(0, 2).map(j => ({t: `tak – wprowadzając ${U.names[j]}`, why: `W kolumnie ${U.names[j]} c<sub>j</sub> − z<sub>j</sub> = ${sf(U.cmz[j])}. ${maxi ? 'Nie jest dodatnie' : 'Nie jest ujemne'}, więc ta zmiana nie poprawi Z.`}))],
       explain: `Wszystkie c<sub>j</sub> − z<sub>j</sub> są ${maxi ? '≤ 0' : '≥ 0'} – tablica jest optymalna.`};
-    if (ctx.mode === 'test') { opt.text = 'Ostatnia tablica. Zdecyduj sam.'; opt.hl = []; opt.say = 'Twoja decyzja!'; }
+    const exam = ctx.mode !== 'guide';
+    if (ctx.mode === 'test') { opt.text = 'Ostatnia tablica. Zdecyduj sam.'; opt.say = 'Twoja decyzja!'; }
+    if (exam) opt.hl = [];
     out.push(opt);
-    const xs = x.map((v, j) => `x${sub(j + 1)} = ${nf(v)}`).join(', ');
-    out.push({title: 'Odczyt wyniku', say: ctx.mode === 'test' ? 'Gdzie jest wynik?' : 'Wynik czytamy z kolumny b.',
-      text: ctx.mode === 'test' ? 'Tablica jest optymalna. Odczytaj z niej wartość funkcji celu.' : `Wartości zmiennych bazowych stoją w kolumnie b, zmienne spoza bazy są równe 0. Wartość funkcji celu stoi w wierszu z<sub>j</sub> pod kolumną b.`,
-      table: tspec(U), hl: ctx.mode === 'test' ? [] : [{c: g.b, tone: 'blue', label: 'wartości'}, {r: g.zr, c: g.b, tone: 'gold', label: 'Z'}],
-      q: {type: 'number', prompt: 'Ile wynosi optymalna wartość Z?', answer: z, score: ctx.mode === 'test', tag: {t: 'z'},
-        wrong: [...U.b.filter(v => Math.abs(v - z) > 1e-6).slice(0, 2).map(v => ({v, why: `${nf(v)} to wartość jednej ze zmiennych (kolumna b), a Z stoi w wierszu z<sub>j</sub> pod kolumną b.`})), ...(Math.abs(z) > EPS ? [{v: -z, why: 'Uważaj na znak – Z odczytujemy wprost z wiersza z<sub>j</sub>.'}] : [])].filter((w, k, a) => a.findIndex(q => Math.abs(q.v - w.v) < 1e-9) === k),
-        explain: `Z = ${nf(z)} przy ${xs}.`}});
+    const xs = x.map((v, j) => `x${sub(j + 1)} = ${nf(v)}`).join(', '), zc = M.c.map((v, j) => `${nf(v)}·${nf(x[j])}`).join(' + ');
+    out.push({title: exam ? 'Policz wynik' : 'Odczyt wyniku', say: exam ? 'Pole z Z zasłoniłem – policzysz?' : 'Wynik czytamy z kolumny b.',
+      text: exam ? 'Wartości zmiennych bazowych stoją w kolumnie b, pozostałe zmienne są równe 0. Policz z nich wartość funkcji celu Z.' : `Wartości zmiennych bazowych stoją w kolumnie b, zmienne spoza bazy są równe 0. Wartość funkcji celu stoi w wierszu z<sub>j</sub> pod kolumną b.`,
+      table: tspec(U, exam ? {blank: ['z', 0]} : {}), hl: exam ? [{c: g.b, tone: 'blue', label: 'wartości'}] : [{c: g.b, tone: 'blue', label: 'wartości'}, {r: g.zr, c: g.b, tone: 'gold', label: 'Z'}],
+      q: {type: 'number', prompt: exam ? `Ile wynosi Z = ${lin(M.c)}?` : 'Ile wynosi optymalna wartość Z?', answer: z, score: ctx.mode === 'test', tag: {t: 'z'},
+        wrong: [...U.b.filter(v => Math.abs(v - z) > 1e-6).slice(0, 2).map(v => ({v, why: `${nf(v)} to wartość jednej ze zmiennych (kolumna b). ${exam ? 'Z to suma: współczynnik celu × wartość zmiennej.' : 'Z stoi w wierszu z<sub>j</sub> pod kolumną b.'}`})), ...(Math.abs(z) > EPS ? [{v: -z, why: 'Uważaj na znak.'}] : [])].filter((w, k, a) => a.findIndex(q => Math.abs(q.v - w.v) < 1e-9) === k),
+        explain: `Z = ${zc} = ${nf(z)} (${xs}).`}});
     const lhs = M.A.map(a => a.reduce((s, v, j) => s + v * x[j], 0));
     out.push({title: 'Sprawdź się sam', mood: 'surprise', say: 'Ciekawostka: wynik da się sprawdzić w minutę!',
       text: 'Podstaw wynik do każdego ograniczenia i do funkcji celu. Jeśli wszystko się zgadza, nie pomyliłeś się w żadnej tablicy.',
@@ -279,14 +282,15 @@ const LPL = (() => {
         : mode === 'test' ? {type: 'choice', prompt: 'Jaki współczynnik ma zmienna sztuczna w celu fazy I (maksymalizacja −w)?', score: true, tag: {t: 'cost1'}, options: [{t: '−1', ok: true}, {t: '0', why: 'Zero mają zmienne x i swobodne. Zmienne sztuczne chcemy wyzerować, więc „karzemy” je kosztem −1.'}, {t: '+1', why: 'Przy maksymalizacji −w koszt +1 nagradzałby zmienne sztuczne – a my chcemy się ich pozbyć.'}], explain: 'max −w = −(suma a) → każda zmienna sztuczna ma koszt −1.'} : undefined});
     for (let k = 0; k < P1.length - 1; k++) steps.push(...iterCards(u1(P1[k]), u1(P1[k + 1]), {mode, it: k + 1, maxi: true, first: k === 0, phase: 'Faza I: ', zName: '−w', tag: {ph: 1, it: k}, ask: k === 0}));
     const U1e = u1(P1[P1.length - 1]);
-    steps.push({id: 'znikaja', title: 'Koniec fazy I: znikają kolumny sztuczne', mood: 'point', say: 'Rusztowanie zdejmujemy!',
-      text: `w = 0: wszystkie zmienne sztuczne wypadły z bazy i są równe 0, a reszta zmiennych spełnia prawdziwe ograniczenia. Kolumny sztuczne nie są już potrzebne – gdybyśmy je zostawili, simpleks mógłby wprowadzić je z powrotem i rozwiązanie znów łamałoby oryginalne ograniczenia.`,
-      table: tspec(U1e), hl: [...aIdx.map((j, k) => ({c: g1.col(j), tone: 'red', ...(k ? {} : {label: 'usuwamy'})})), {r: g1.zr, c: g1.b, tone: 'gold', label: '−w = 0'}],
+    steps.push({id: 'znikaja', title: mode === 'guide' ? 'Koniec fazy I: znikają kolumny sztuczne' : 'Koniec fazy I', mood: 'point', say: mode === 'guide' ? 'Rusztowanie zdejmujemy!' : 'Faza I skończona. I co dalej?',
+      text: mode === 'guide' ? `w = 0: wszystkie zmienne sztuczne wypadły z bazy i są równe 0, a reszta zmiennych spełnia prawdziwe ograniczenia. Kolumny sztuczne nie są już potrzebne – gdybyśmy je zostawili, simpleks mógłby wprowadzić je z powrotem i rozwiązanie znów łamałoby oryginalne ograniczenia.`
+        : 'w = 0: wszystkie zmienne sztuczne wypadły z bazy i są równe 0, a reszta zmiennych spełnia prawdziwe ograniczenia.',
+      table: tspec(U1e), hl: mode === 'guide' ? [...aIdx.map((j, k) => ({c: g1.col(j), tone: 'red', ...(k ? {} : {label: 'usuwamy'})})), {r: g1.zr, c: g1.b, tone: 'gold', label: '−w = 0'}] : aIdx.map(j => ({c: g1.col(j), tone: 'gray'})),
       q: mode === 'watch' ? undefined : {type: 'choice', prompt: 'Co robimy z kolumnami zmiennych sztucznych?', score: mode === 'test', tag: {t: 'dropArt'},
         options: [{t: 'usuwamy je – były tylko rusztowaniem', ok: true},
           {t: 'zostawiamy z kosztem 0', why: 'Z kosztem 0 simpleks mógłby wprowadzić je z powrotem do bazy z dodatnią wartością – a wtedy x nie spełniałyby oryginalnych ograniczeń.'},
           {t: 'zostawiamy z kosztem −1', why: 'Koszt −1 był celem fazy I. W fazie II liczy się już tylko oryginalna funkcja celu Z.'}],
-        explain: 'Po fazie I zmienne sztuczne są równe 0 i poza bazą, więc ich kolumny możemy usunąć bez zmiany rozwiązania.'}});
+        explain: 'Po fazie I zmienne sztuczne są równe 0 i poza bazą, więc ich kolumny usuwamy bez zmiany rozwiązania. Gdyby zostały, simpleks mógłby wprowadzić je z powrotem i rozwiązanie znów łamałoby oryginalne ograniczenia.'}});
     const U20 = uGom(P2[0]), g2 = geo(U20);
     steps.push({id: 'faza2', title: 'Faza II: wracamy do Z', say: 'Teraz prawdziwy cel!',
       text: `Wpisujemy oryginalne współczynniki celu do wiersza C<sub>j</sub> i liczymy z<sub>j</sub> oraz c<sub>j</sub> − z<sub>j</sub> od nowa. Startujemy z punktu znalezionego w fazie I: ${valsOf(U20)}.`,
@@ -396,9 +400,10 @@ const LPL = (() => {
   }
   const lineName = (M, k) => typeof k === 'number' ? `(${k + 1}) ${lin(M.A[k])} = ${nf(M.b[k])}` : k === 'x1' ? 'oś x₂ (x₁ = 0)' : 'oś x₁ (x₂ = 0)';
   const ptxt = p => `(${nf(p.x)}; ${nf(p.y)})`;
-  function vertTable(M, V, best, withZ) {
+  function vertTable(M, V, best, withZ, blank = []) {   // blank: [[wierzchołek, kolumna], …] – komórki zasłonięte („?”), uczeń ma je policzyć
+    const h = (k, c, v) => blank.some(([a, b]) => a === k && b === c) ? '<b>?</b>' : v;
     return {head: [[{v: 'Wierzchołek', c: 0}, {v: 'x<sub>1</sub>', c: 1}, {v: 'x<sub>2</sub>', c: 2}, ...(withZ ? [{v: 'Z = ' + lin(M.c), c: 3}] : [])]],
-      rows: V.map((p, k) => [{v: 'W' + (k + 1), th: true}, nf(p.x), nf(p.y), ...(withZ ? [{v: nf(p.z), cls: k === best ? 'pivot' : ''}] : [])])};
+      rows: V.map((p, k) => [{v: 'W' + (k + 1), th: true}, h(k, 1, nf(p.x)), h(k, 2, nf(p.y)), ...(withZ ? [{v: h(k, 3, nf(p.z)), cls: k === best ? 'pivot' : ''}] : [])])};
   }
   function graph(level) {
     const M = model(LPL_TASKS.graph[level]), mode = {warm: 'guide', test: 'test', challenge: 'watch'}[level];
@@ -410,29 +415,33 @@ const LPL = (() => {
     const ext = Math.max(...V.map(p => Math.max(p.x, p.y)), ...M.A.map((a, i) => Math.max(a[0] ? M.b[i] / a[0] : 0, a[1] ? M.b[i] / a[1] : 0)));
     const L = Math.ceil(ext * 1.15 + 0.5), all = M.A.map((_, i) => i), unb = M.rel.some(r => r === '>=');
     const steps = [], S = o => graphSVG(M, {L, ...o});
-    const ex = M.A.findIndex(a => a[0] && a[1]) >= 0 ? M.A.findIndex(a => a[0] && a[1]) : 0, a = M.A[ex], ix = a[0] ? M.b[ex] / a[0] : null, iy = a[1] ? M.b[ex] / a[1] : null;
+    // prosta do omówienia: obie zmienne, najlepiej ze współczynnikiem ≠ 1 (wtedy przecięcie z osią trzeba policzyć, a nie przepisać)
+    const both = M.A.map((r, i) => i).filter(i => M.A[i][0] && M.A[i][1]), ex = both.find(i => M.A[i].some(v => Math.abs(v) !== 1)) ?? both[0] ?? 0;
+    const a = M.A[ex], ix = a[0] ? M.b[ex] / a[0] : null, iy = a[1] ? M.b[ex] / a[1] : null, ax = Math.abs(a[0]) !== 1 || Math.abs(a[1]) === 1 ? 0 : 1;
+    const ia = ax ? iy : ix, io = ax ? ix : iy, xa = ax ? 'x₂' : 'x₁', xo = ax ? 'x₁' : 'x₂';
     steps.push({title: 'Zadanie', say: level === 'challenge' ? 'Minimum, znaki „≥”… Wygląda groźnie? Zobaczysz, że nie!' : 'Dwie zmienne? To można narysować!',
       text: level === 'challenge' ? `To przykład „${M.example}” z zakładki Metoda graficzna. Każdy punkt (x₁; x₂) to jeden możliwy plan, a my szukamy planu o najmniejszym koszcie Z.` : `Każdy punkt (x₁; x₂) na płaszczyźnie to jeden możliwy plan. Szukamy punktu, który spełnia wszystkie ograniczenia i daje ${M.maxi ? 'największe' : 'najmniejsze'} Z.`,
       formula: taskHTML(M)});
     steps.push({id: 'prosta', title: 'Skąd się bierze prosta?', mood: 'point', say: 'Zamieniam „≤” na „=” i mam prostą!',
       text: `Brzeg ograniczenia (${ex + 1}) to prosta ${lin(a)} = ${nf(M.b[ex])}. Najłatwiej narysować ją przez punkty na osiach: wstawiamy x₂ = 0, a potem x₁ = 0.`,
-      svg: S({lines: [ex], pts: [...(ix !== null ? [{x: ix, y: 0, t: `(${nf(ix)}; 0)`, key: 'px'}] : []), ...(iy !== null ? [{x: 0, y: iy, t: `(0; ${nf(iy)})`, key: 'py'}] : [])]}), hl: [{el: 'ogr' + (ex + 1)}],
-      q: ix === null ? undefined : {type: 'number', prompt: `W jakim punkcie prosta (${ex + 1}) przecina oś x₁ (podaj x₁)?`, answer: ix, score: mode === 'test', tag: {t: 'intercept', i: ex},
-        wrong: [...(iy !== null && Math.abs(iy - ix) > EPS ? [{v: iy, why: `${nf(iy)} to przecięcie z osią x₂ (wtedy x₁ = 0). Na osi x₁ mamy x₂ = 0.`}] : []), ...(a[0] !== 1 ? [{v: M.b[ex] * a[0], why: `Wstawiamy x₂ = 0: ${nf(a[0])}·x₁ = ${nf(M.b[ex])}, więc dzielimy, a nie mnożymy: x₁ = ${nf(M.b[ex])} / ${nf(a[0])}.`}] : []), {v: 0, why: 'Zero to początek układu. Wstaw x₂ = 0 do równania prostej i wylicz x₁.'}].filter((w, k, arr) => Math.abs(w.v - ix) > EPS && arr.findIndex(q => Math.abs(q.v - w.v) < EPS) === k),
-        explain: `x₂ = 0 ⇒ ${nf(a[0])}·x₁ = ${nf(M.b[ex])} ⇒ x₁ = ${nf(ix)}.`}});
+      svg: mode === 'guide' ? S({lines: [ex], pts: [...(ix !== null ? [{x: ix, y: 0, t: `(${nf(ix)}; 0)`, key: 'px'}] : []), ...(iy !== null ? [{x: 0, y: iy, t: `(0; ${nf(iy)})`, key: 'py'}] : [])]}) : S({}), hl: mode === 'guide' ? [{el: 'ogr' + (ex + 1)}] : [],
+      q: ia === null ? undefined : {type: 'number', prompt: `W jakim punkcie prosta (${ex + 1}) przecina oś ${xa} (podaj ${xa})?`, answer: ia, score: mode === 'test', tag: {t: 'intercept', i: ex, ax},
+        wrong: [...(io !== null && Math.abs(io - ia) > EPS ? [{v: io, why: `${nf(io)} to przecięcie z osią ${xo} (wtedy ${xa} = 0). Na osi ${xa} mamy ${xo} = 0.`}] : []), ...(Math.abs(a[ax]) !== 1 ? [{v: M.b[ex] * a[ax], why: `Wstawiamy ${xo} = 0: ${nf(a[ax])}·${xa} = ${nf(M.b[ex])}, więc dzielimy, a nie mnożymy: ${xa} = ${nf(M.b[ex])} / ${nf(a[ax])}.`}] : []), {v: 0, why: `Zero to początek układu. Wstaw ${xo} = 0 do równania prostej i wylicz ${xa}.`}].filter((w, k, arr) => Math.abs(w.v - ia) > EPS && arr.findIndex(q => Math.abs(q.v - w.v) < EPS) === k),
+        explain: `${xo} = 0 ⇒ ${nf(a[ax])}·${xa} = ${nf(M.b[ex])} ⇒ ${xa} = ${nf(ia)}.`}});
     const sideOk = M.rel[ex] === '<=' ? 0 <= M.b[ex] : 0 >= M.b[ex];
     steps.push({id: 'strona', title: 'Po której stronie?', say: 'Sprawdzam jeden punkt – najlepiej (0; 0).',
-      text: `Prosta dzieli płaszczyznę na dwie połowy; ograniczenie spełnia tylko jedna z nich. Wstawiamy punkt (0; 0): ${lin(a)} = 0 ${rs(M.rel[ex])} ${nf(M.b[ex])} jest ${sideOk ? 'prawdą, więc dobra jest połowa z początkiem układu' : 'fałszem, więc dobra jest połowa po drugiej stronie'}.`,
-      svg: S({lines: [ex], half: ex}), hl: [{el: 'pol' + (ex + 1)}],
+      text: mode === 'guide' ? `Prosta dzieli płaszczyznę na dwie połowy; ograniczenie spełnia tylko jedna z nich. Wstawiamy punkt (0; 0): ${lin(a)} = 0 ${rs(M.rel[ex])} ${nf(M.b[ex])} jest ${sideOk ? 'prawdą, więc dobra jest połowa z początkiem układu' : 'fałszem, więc dobra jest połowa po drugiej stronie'}.`
+        : 'Prosta dzieli płaszczyznę na dwie połowy; ograniczenie spełnia tylko jedna z nich. Którą? Wystarczy wstawić jeden punkt spoza prostej – najwygodniej (0; 0).',
+      svg: mode === 'guide' ? S({lines: [ex], half: ex}) : S({lines: [ex]}), hl: mode === 'guide' ? [{el: 'pol' + (ex + 1)}] : [{el: 'ogr' + (ex + 1)}],
       q: {type: 'choice', prompt: `Czy punkt (0; 0) spełnia ograniczenie (${ex + 1})?`, score: mode === 'test', tag: {t: 'origin', i: ex, ans: sideOk},
         options: [{t: 'tak', ok: sideOk, why: `Wstaw: lewa strona = 0, a 0 ${rs(M.rel[ex])} ${nf(M.b[ex])} to fałsz.`}, {t: 'nie', ok: !sideOk, why: `Wstaw: lewa strona = 0, a 0 ${rs(M.rel[ex])} ${nf(M.b[ex])} to prawda.`}],
-        explain: `0 ${rs(M.rel[ex])} ${nf(M.b[ex])} – ${sideOk ? 'prawda' : 'fałsz'}.`}});
+        explain: `0 ${rs(M.rel[ex])} ${nf(M.b[ex])} – ${sideOk ? 'prawda, więc dobra jest połowa z punktem (0; 0)' : 'fałsz, więc dobra jest połowa po drugiej stronie prostej'}.`}});
     // punkt niedopuszczalny (punkt kratowy łamiący dokładnie jedno ograniczenie) – do Sprawdzianu
     let bad = null;
     for (let s = 1; s <= L && !bad; s++) for (let x = 0; x <= s && !bad; x++) { const y = s - x, br = M.A.map((r, i) => ({i, v: r[0] * x + r[1] * y})).filter(({i, v}) => M.rel[i] === '<=' ? v > M.b[i] + 1e-9 : M.rel[i] === '>=' ? v < M.b[i] - 1e-9 : Math.abs(v - M.b[i]) > 1e-9); if (br.length === 1 && x + y >= L / 3) bad = {x, y, i: br[0].i, v: br[0].v}; }
     steps.push({id: 'obszar', title: 'Obszar dopuszczalny', say: 'Część wspólna wszystkich połówek!',
       text: `Rysujemy wszystkie proste i dla każdej wybieramy dobrą stronę. Część wspólna to obszar dopuszczalny – każdy jego punkt spełnia wszystkie ograniczenia naraz${unb ? '. Tutaj obszar nie ma końca w górę i w prawo – to nic złego, bo szukamy minimum' : ''}.`,
-      svg: S({lines: all, region: true, ...(bad && mode === 'test' ? {pts: [{x: bad.x, y: bad.y, t: ptxt(bad), cls: 'bad', key: 'pt'}]} : {})}), hl: [{el: 'obszar'}, ...(bad && mode === 'test' ? [{el: 'pt'}] : [])],
+      svg: S({lines: all, region: !(bad && mode === 'test'), ...(bad && mode === 'test' ? {pts: [{x: bad.x, y: bad.y, t: ptxt(bad), cls: 'bad', key: 'pt'}]} : {})}), hl: bad && mode === 'test' ? [{el: 'pt'}] : [{el: 'obszar'}],
       q: mode === 'test' && bad ? {type: 'choice', prompt: `Czy punkt ${ptxt(bad)} jest dopuszczalny?`, score: true, tag: {t: 'feasible', p: [bad.x, bad.y], ans: false},
         options: [{t: 'tak', why: `Sprawdź ograniczenie (${bad.i + 1}): ${lin(M.A[bad.i])} = ${nf(bad.v)}, a ma być ${rs(M.rel[bad.i])} ${nf(M.b[bad.i])}. Wystarczy jedno złamane ograniczenie, by punkt odpadł.`}, {t: 'nie', ok: true}],
         explain: `Łamie ograniczenie (${bad.i + 1}): ${nf(bad.v)} ${rs(M.rel[bad.i]) === '≤' ? '>' : '<'} ${nf(M.b[bad.i])}.`} : undefined});
@@ -440,11 +449,12 @@ const LPL = (() => {
     steps.push({id: 'wierzcholek', title: 'Dlaczego wierzchołek?', mood: 'surprise', say: 'Ciekawostka: optimum zawsze siedzi w rogu!',
       text: `Punkty o tym samym Z leżą na jednej prostej – to linia poziomu. Przesuwamy ją w stronę ${M.maxi ? 'większego' : 'mniejszego'} Z (strzałka), aż ostatni raz dotknie obszaru – zawsze stanie się to w wierzchołku (albo na całej krawędzi, gdy jest do niej równoległa).`,
       svg: S({lines: all, region: true, level: [...lv, zopt], arrow: [V[0].x * 0.5 + B.x * 0.5, V[0].y * 0.5 + B.y * 0.5].map(v => Math.min(v, L * 0.6))}), hl: [{el: 'poziom2'}, {el: 'kierunek'}]});
+    const vq = mode === 'watch' ? -1 : V.findIndex(p => p.on.filter(t => typeof t === 'number').length >= 2 && p.x > EPS && p.y > EPS);
     steps.push({id: 'tabw', title: 'Wierzchołki', mood: 'point', say: 'Każdy róg to przecięcie dwóch prostych.',
       text: `Wierzchołek to punkt, w którym przecinają się dwie proste (także osie). Współrzędne liczymy z układu dwóch równań. Tu obszar ma ${V.length} wierzchołki${V.length > 4 ? '' : ''}.`.replace(/ma (\d+) wierzchołki/, (s, n) => +n >= 5 ? `ma ${n} wierzchołków` : s),
-      svg: S({lines: all, region: true, vertices: true}), table: vertTable(M, V, -1, false),
+      svg: S({lines: all, region: true, vertices: true}), table: vertTable(M, V, -1, false, mode === 'guide' || vq < 0 ? [] : [[vq, 1]]),
       q: (() => { // współrzędna wierzchołka z przecięcia dwóch ograniczeń (nie osi)
-        const k = V.findIndex(p => p.on.filter(t => typeof t === 'number').length >= 2 && p.x > EPS && p.y > EPS); if (k < 0 || mode === 'watch') return undefined;
+        const k = vq; if (k < 0 || mode === 'watch') return undefined;
         const p = V[k], [i1, i2] = p.on.filter(t => typeof t === 'number');
         return {type: 'number', prompt: `Proste (${i1 + 1}) i (${i2 + 1}) przecinają się w W${k + 1}. Ile wynosi tam x₁?`, answer: p.x, score: mode === 'test', tag: {t: 'vertex', k, coord: 'x'},
           wrong: [{v: p.y, why: `${nf(p.y)} to x₂ tego punktu. Pytam o x₁ (pierwszą współrzędną).`}].filter(w => Math.abs(w.v - p.x) > EPS),
@@ -458,18 +468,20 @@ const LPL = (() => {
         explain: 'Optimum leży w wierzchołku, więc wystarczy porównać Z we wszystkich wierzchołkach.'}});
     const qk = V.findIndex((p, k) => k !== bi && p.x > EPS && p.y > EPS), zq = qk >= 0 ? qk : (bi + 1) % V.length;
     steps.push({id: 'zwierz', title: 'Z w wierzchołkach', say: 'Liczę Z w każdym rogu.', text: `Wstawiamy współrzędne każdego wierzchołka do Z = ${lin(M.c)}.`,
-      table: vertTable(M, V, mode === 'test' ? -1 : bi, true), hl: mode === 'test' ? [{r: zq, c: 3, tone: 'blue', label: '?'}] : [{r: bi, c: 3, tone: 'gold', label: M.maxi ? 'największe' : 'najmniejsze'}],
+      table: mode === 'watch' ? vertTable(M, V, -1, false) : vertTable(M, V, mode === 'test' ? -1 : bi, true, mode === 'test' ? [[zq, 3]] : []),
+      hl: mode === 'test' ? [{r: zq, c: 3, tone: 'blue'}] : mode === 'watch' ? [] : [{r: bi, c: 3, tone: 'gold', label: M.maxi ? 'największe' : 'najmniejsze'}],
       q: mode === 'test' ? {type: 'number', prompt: `Ile wynosi Z w W${zq + 1} ${ptxt(V[zq])}?`, answer: V[zq].z, score: true, tag: {t: 'zv', k: zq}, wrong: [{v: M.c[0] * V[zq].y + M.c[1] * V[zq].x, why: 'Zamieniłeś współrzędne: c₁ mnożymy przez x₁, a c₂ przez x₂.'}].filter(w => Math.abs(w.v - V[zq].z) > EPS),
           explain: `Z = ${nf(M.c[0])}·${nf(V[zq].x)} + ${nf(M.c[1])}·${nf(V[zq].y)} = ${nf(V[zq].z)}.`}
         : {type: 'choice', prompt: `Który wierzchołek daje ${M.maxi ? 'największe' : 'najmniejsze'} Z?`, tag: {t: 'best', k: bi},
           options: V.map((p, k) => ({t: `W${k + 1} ${ptxt(p)}`, ok: k === bi, why: `Tu Z = ${nf(p.z)}, a w W${bi + 1} jest ${nf(zopt)} – ${M.maxi ? 'więcej' : 'mniej'}.`})).filter((o, k) => k === bi || k < 3).slice(0, 4),
-          explain: `W${bi + 1}: Z = ${nf(zopt)}.`}});
-    if (mode === 'test') steps.push({title: 'Najlepszy wierzchołek', table: vertTable(M, V, -1, true), text: 'Teraz cała tabela jest uzupełniona.',
+          explain: V.map((p, k) => `W${k + 1}: Z = ${nf(p.z)}`).join('; ') + ` – najlepsze W${bi + 1}.`}});
+    const second = V.map((p, k) => k).filter(k => k !== bi).sort((p, q) => M.maxi ? V[q].z - V[p].z : V[p].z - V[q].z)[0];
+    if (mode === 'test') steps.push({title: 'Najlepszy wierzchołek', table: vertTable(M, V, -1, true, [[bi, 3], [second, 3]]), text: 'Dwie wartości Z zasłoniłem – policz je sam i porównaj.',
       q: {type: 'choice', prompt: 'Który wierzchołek jest optymalny?', score: true, tag: {t: 'best', k: bi},
         options: V.map((p, k) => ({t: `W${k + 1} ${ptxt(p)}`, ok: k === bi, why: `W W${k + 1} Z = ${nf(p.z)}, a w W${bi + 1} jest ${nf(zopt)} – ${M.maxi ? 'więcej' : 'mniej'}.`})),
-        explain: `W${bi + 1} ${ptxt(B)}: Z = ${nf(zopt)}.`}});
+        explain: `W${bi + 1} ${ptxt(B)} ma ${M.maxi ? 'największe' : 'najmniejsze'} Z.`}});
     steps.push({id: 'poziom', title: 'Linia poziomu przez optimum', mood: 'point', say: 'Cały obszar zostaje po jednej stronie!',
-      text: `Prosta Z = ${nf(zopt)} przechodzi przez W${bi + 1} i dotyka obszaru tylko tam. Cała reszta obszaru leży po stronie ${M.maxi ? 'mniejszego' : 'większego'} Z – dlatego nie trzeba sprawdzać punktów w środku, wystarczą wierzchołki albo przesuwanie linii poziomu.`,
+      text: `Prosta ${mode === 'test' ? 'poziomu' : `Z = ${nf(zopt)}`} przechodzi przez W${bi + 1} i dotyka obszaru tylko tam. Cała reszta obszaru leży po stronie ${M.maxi ? 'mniejszego' : 'większego'} Z – dlatego nie trzeba sprawdzać punktów w środku, wystarczą wierzchołki albo przesuwanie linii poziomu.`,
       svg: S({lines: all, region: true, vertices: true, best: bi, level: [zopt]}), hl: [{el: 'poziom0'}, {el: 'w' + (bi + 1)}],
       q: mode === 'test' ? {type: 'choice', prompt: 'Czy punkt wewnątrz obszaru może dać lepsze Z niż najlepszy wierzchołek?', score: true, tag: {t: 'interior'},
         options: [{t: 'nie', ok: true}, {t: 'tak, czasem', why: 'Z jest liniowe: z punktu wewnątrz zawsze da się przesunąć w stronę lepszego Z, aż do brzegu i dalej do wierzchołka. Środek nigdy nie wygrywa z najlepszym wierzchołkiem.'}],

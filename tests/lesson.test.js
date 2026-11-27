@@ -11,7 +11,9 @@ const strip = h => String(h).replace(/<sub>(\d+)<\/sub>/g, '$1').replace(/<[^>]+
 /* ---------- silnik: odpowiedzi liczbowe i wyboru ---------- */
 const P = LESSON.parseNum, NM = LESSON.numMatch;
 t('parseNum: 12, 1,5, −3/2, 2 500, pusty', P('12') === 12 && P('1,5') === 1.5 && P('−3/2') === -1.5 && P('2 500') === 2500 && isNaN(P('')) && isNaN(P('abc')) && isNaN(P('1/0')));
-t('numMatch: ułamek = dziesiętny, zaokrąglenie do 2 miejsc, ale nie do 1', NM('3/2', 1.5) && NM('1,5', 1.5) && NM('0,33', 1 / 3) && NM('0,333', 1 / 3) && !NM('0,3', 1 / 3) && !NM('0,34', 1 / 3 - 0.01) && NM('0,67', 2 / 3));
+t('numMatch: ułamek = dziesiętny; dla rozwinięć nieskończonych przybliżenie ucięte lub zaokrąglone (0,3 / 0,33 dla 1/3; 0,6 / 0,7 dla 2/3)', NM('3/2', 1.5) && NM('1,5', 1.5) && NM('0,3', 1 / 3) && NM('0,33', 1 / 3) && NM('0,333', 1 / 3) && NM('0,6', 2 / 3) && NM('0,7', 2 / 3) && NM('0,67', 2 / 3) && NM('0,66', 2 / 3) && NM('61,3', 184 / 3) && NM('−0,3', -1 / 3));
+t('numMatch: błędne przybliżenia i skończone rozwinięcia wpisane niedokładnie są odrzucane', !NM('0,4', 1 / 3) && !NM('0,34', 1 / 3) && !NM('0,5', 2 / 3) && !NM('0', 1 / 3) && !NM('2,2', 2.25) && !NM('2,3', 2.25) && !NM('1', 1.5) && !NM('0,3', -1 / 3) && !NM('3', 10 / 3));
+t('toFrac: 1/3, −5/2, liczba całkowita bez ułamka', LESSON.toFrac(1 / 3).join() === '1,3' && LESSON.toFrac(-2.5).join() === '-5,2' && LESSON.toFrac(4) === null);
 t('numMatch: duże liczby bez luzu', NM('18000', 18000) && !NM('18001', 18000));
 const qn = {type: 'number', answer: 6, wrong: [{v: 12, why: 'pomyłka A'}], why: 'ogólne'};
 t('check liczby: dobra, typowa pomyłka z własnym wyjaśnieniem, inna z ogólnym, pusty wpis', LESSON.check(qn, '6').ok && LESSON.check(qn, '12').why === 'pomyłka A' && LESSON.check(qn, '7').why === 'ogólne' && LESSON.check(qn, '').empty);
@@ -95,7 +97,7 @@ for (const [id, key] of [['lp-graph', 'graph'], ['lp-simplex', 'simplex'], ['lp-
     else if (tg.t === 'dropArt') { t(`${w}: kolumny sztuczne usuwamy`, strip(optOf(q).t).startsWith('usuwamy')); checked++; }
     else if (tg.t === 'cmpM') { const T0 = R.tables[0], d = G('sCmp')(T0.cmz[tg.j], T0.cmz[tg.other]);
       t(`${w}: ${M.maxi ? 'większa' : 'mniejsza'} liczba z M (porównanie: najpierw część z M)`, M.maxi ? d > 0 : d < 0); checked++; }
-    else if (tg.t === 'intercept') { const a = M.A[tg.i]; t(`${w}: przecięcie z osią x₁ = b/a₁`, near(q.answer, M.b[tg.i] / a[0])); checked++; }
+    else if (tg.t === 'intercept') { const a = M.A[tg.i]; t(`${w}: przecięcie z osią x${tg.ax + 1} = b/a`, near(q.answer, M.b[tg.i] / a[tg.ax])); checked++; }
     else if (tg.t === 'origin') { const v = 0, ok2 = M.rel[tg.i] === '<=' ? v <= M.b[tg.i] : v >= M.b[tg.i]; t(`${w}: (0; 0) ${ok2 ? 'spełnia' : 'nie spełnia'}`, strip(optOf(q).t) === (ok2 ? 'tak' : 'nie')); checked++; }
     else if (tg.t === 'feasible') { const [x, y] = tg.p, okp = M.A.every((a, i) => { const v = a[0] * x + a[1] * y; return M.rel[i] === '<=' ? v <= M.b[i] + 1e-9 : M.rel[i] === '>=' ? v >= M.b[i] - 1e-9 : Math.abs(v - M.b[i]) < 1e-9; });
       t(`${w}: punkt (${x}; ${y}) ${okp ? '' : 'nie'}dopuszczalny`, strip(optOf(q).t) === (okp ? 'tak' : 'nie')); checked++; }

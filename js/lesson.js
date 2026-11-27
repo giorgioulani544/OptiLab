@@ -70,12 +70,23 @@ const LESSON = (() => {
     if (m) return +m[2] === 0 ? NaN : +m[1] / +m[2];
     return /^-?(\d+\.?\d*|\.\d+)$/.test(t) ? +t : NaN;
   }
-  // Czy wpis pasuje do wartości: dokładnie (z tolerancją) albo poprawnie zaokrąglony / ucięty do co najmniej 2 miejsc po przecinku
+  // Czy wpis pasuje do wartości: dokładnie (z tolerancją, także jako ułamek 1/3) albo – gdy odpowiedź ma nieskończone rozwinięcie
+  // dziesiętne (1/3 = 0,333…, 2/3 = 0,666…) – jako jej przybliżenie z co najmniej 1 miejscem po przecinku: ucięte (0,6) lub zaokrąglone (0,7).
+  // Liczby o skończonym rozwinięciu (1,5; 2,25) trzeba wpisać dokładnie – „2,2” albo „2,3” dla 2,25 nie przechodzi.
   function numMatch(s, v) {
     const x = parseNum(s); if (!isFinite(x) || !isFinite(v)) return false;
     if (Math.abs(x - v) <= 1e-6 * Math.max(1, Math.abs(v))) return true;
-    const t = String(s).trim().replace(/[−–]/g, '-').replace(',', '.'), d = /\//.test(t) ? 0 : (t.split('.')[1] || '').length;
-    return d >= 2 && Math.abs(x - v) < Math.pow(10, -d) * (1 + 1e-9);
+    const t = String(s).trim().replace(/[−–]/g, '-').replace(/\s+/g, '').replace(',', '.'), d = /\//.test(t) ? 0 : (t.split('.')[1] || '').length;
+    const p = 1e6, a = Math.abs(v), repeating = Math.abs(a * p - Math.round(a * p)) > 1e-6 * Math.max(1, a * p) / 1e3;
+    if (d < 1 || !repeating || Math.sign(x) !== Math.sign(v)) return false;
+    const k = Math.pow(10, d), cand = [Math.trunc(a * k + 1e-9) / k, Math.round(a * k) / k];
+    return cand.some(c => Math.abs(Math.abs(x) - c) < 1e-9 * Math.max(1, c));
+  }
+  // liczba → [licznik, mianownik] (mianownik ≤ 1000) albo null – do pola-ułamka i podpowiedzi
+  function toFrac(v) {
+    if (!isFinite(v) || Math.abs(v - Math.round(v)) < 1e-9) return null;
+    for (let d = 2; d <= 1000; d++) { const n = Math.round(v * d); if (Math.abs(v - n / d) < 1e-9 * Math.max(1, Math.abs(v))) return [n, d]; }
+    return null;
   }
   // Sprawdzenie odpowiedzi: {ok, why} – why: konkretne wyjaśnienie pomyłki (osobne dla typowych błędów)
   function check(q, input) {
@@ -88,7 +99,8 @@ const LESSON = (() => {
     const w = (q.wrong || []).find(w => numMatch(input, w.v));
     return {ok: false, why: w ? w.why : q.why || 'Ta liczba się nie zgadza – policz jeszcze raz.'};
   }
-  const answerText = q => q.type === 'choice' ? q.options.find(o => o.ok).t : fmtA(q.answer) + (q.unit ? ' ' + q.unit : '');
+  const answerText = q => { if (q.type === 'choice') return q.options.find(o => o.ok).t; const f = toFrac(q.answer);
+    return (f ? `${f[0] < 0 ? '−' : ''}${Math.abs(f[0])}/${f[1]} ≈ ${fmtA(q.answer)}` : fmtA(q.answer)) + (q.unit ? ' ' + q.unit : ''); };
   const fmtA = v => typeof fmt === 'function' ? fmt(v) : String(v);
   // Tabela karty → HTML z data-r / data-c (komórki do zakreślenia)
   function tableHTML(t) {
@@ -141,7 +153,7 @@ const LESSON = (() => {
         <button type="button" class="ghost ls-pvtog" aria-pressed="false">Ukryj Pivota</button><button type="button" class="ghost ls-x" aria-label="Zamknij lekcję">✕</button></div>
       <div class="ls-prog" aria-hidden="true"><i></i></div>
       <div class="ls-body" tabindex="-1">
-        <div class="ls-talk"><div class="ls-pivot" data-pose="explain" aria-hidden="true">${typeof PIVOT_SVG === 'string' ? PIVOT_SVG : ''}</div><div class="ls-bubble" aria-live="polite"></div></div>
+        <div class="ls-talk"><div class="ls-pivot" data-pose="explain" aria-hidden="true">${typeof PIVOT_SVG === 'string' ? PIVOT_SVG : ''}</div><div class="ls-bubble"><svg class="ls-tail" viewBox="0 0 14 22" aria-hidden="true"><path class="f" d="M14 0L1 11L14 22Z"/><path class="s" d="M14 .8L1.4 11L14 21.2"/></svg><span class="ls-say" aria-live="polite"></span></div></div>
         <div class="ls-main"></div></div>
       <div class="ls-foot"><button type="button" class="ghost ls-back">← Wstecz</button><span class="ls-cnt"></span><button type="button" class="ls-next">Dalej →</button></div>
     </div></div>`);
@@ -162,7 +174,7 @@ const LESSON = (() => {
   function pose(mood, say) {
     const pv = q$('.ls-pivot'), m = MOODS.includes(mood) ? mood : 'explain';
     if (pv.dataset.pose !== m) { pv.dataset.pose = m; pv.classList.remove('pv-anim'); void pv.offsetWidth; pv.classList.add('pv-anim'); }
-    q$('.ls-bubble').innerHTML = say ?? BUBBLE[m];
+    q$('.ls-say').innerHTML = say ?? BUBBLE[m];
   }
   function onKey(e) {
     if (e.key === 'Escape') { e.preventDefault(); close(); return; }
@@ -270,7 +282,9 @@ const LESSON = (() => {
       if (q) {
         h += `<div class="ls-q"><p class="ls-prompt">${q.prompt}</p>`;
         if (q.type === 'choice') h += `<div class="ls-opts">${q.options.map((o, k) => `<button type="button" class="ghost ls-opt" data-k="${k}">${o.t}</button>`).join('')}</div>`;
-        else h += `<div class="ls-num"><input type="text" inputmode="decimal" autocomplete="off" aria-label="Twoja odpowiedź" placeholder="liczba">${q.unit ? `<span>${q.unit}</span>` : ''}<button type="button" class="ls-chk">Sprawdź</button></div>`;
+        else h += `<div class="ls-num"><div class="ls-frac"><input class="ls-nn" type="text" inputmode="decimal" autocomplete="off" aria-label="Twoja odpowiedź: liczba albo licznik ułamka" placeholder="?"><i aria-hidden="true"></i>` +
+          `<input class="ls-dd" type="text" inputmode="numeric" autocomplete="off" aria-label="Mianownik ułamka (puste = 1)" placeholder="1"></div>${q.unit ? `<span>${q.unit}</span>` : ''}<button type="button" class="ls-chk">Sprawdź</button>` +
+          '<p class="ls-numhint">Liczba (np. 1,5) albo ułamek – mianownik pod kreską. Przybliżenie (np. 0,33) też jest dobre.</p></div>';
         h += '<div class="ls-fb" aria-live="polite"></div><div class="ls-help"><button type="button" class="ghost ls-show" hidden>Pokaż odpowiedź</button><button type="button" class="ghost ls-goback" hidden></button></div></div>';
       }
       if (s.action) h += `<div class="ls-acts"><button type="button" class="ghost ls-action">${s.action.label}</button></div>`;
@@ -281,7 +295,7 @@ const LESSON = (() => {
       if (q) wireQ(s, x);
       if (s.action) q$('.ls-action').onclick = () => runAction(s.action);
       requestAnimationFrame(drawRings);
-      const f = q && !x.done ? q$('.ls-opt, .ls-num input') : q$('.ls-next:not([hidden]):not([disabled])');
+      const f = q && !x.done ? q$('.ls-opt, .ls-nn') : q$('.ls-next:not([hidden]):not([disabled])');
       if (f) f.focus({preventScroll: true});
     }
     function wireQ(s, x) {
@@ -290,7 +304,9 @@ const LESSON = (() => {
       const solved = (how) => {
         x.done = true; q$('.ls-card').classList.add('solved');
         if (q.type === 'choice') q$('.ls-main').querySelectorAll('.ls-opt').forEach(b => { b.disabled = true; if (q.options[+b.dataset.k].ok) b.classList.add('good'); });
-        else { const inp = q$('.ls-num input'); inp.value = inp.value || fmtA(q.answer); inp.disabled = true; inp.classList.add('good'); q$('.ls-chk').disabled = true; }
+        else { const nn = q$('.ls-nn'), dd = q$('.ls-dd'), fr = toFrac(q.answer);
+          if (how === 'shown' || !nn.value) { if (fr) { nn.value = String(fr[0]).replace('-', '−'); dd.value = String(fr[1]); } else { nn.value = fmtA(q.answer); dd.value = ''; } }
+          [nn, dd].forEach(e => { e.disabled = true; e.classList.add('good'); }); q$('.ls-chk').disabled = true; }
         fb.className = 'ls-fb ok'; fb.innerHTML = (how === 'shown' ? `<b>Poprawna odpowiedź:</b> ${answerText(q)}. ` : '<b>Dobrze!</b> ') + (q.explain || '');
         show.hidden = true; gb.hidden = true; setNav(i > 0, true, `${i + 1} / ${steps.length}`, i === steps.length - 1 ? 'Zakończ ✓' : 'Dalej →');
       };
@@ -306,8 +322,10 @@ const LESSON = (() => {
         if (x.tries >= 3) { const k = backIdx(); if (k >= 0) { gb.hidden = false; gb.textContent = `↩ Wróć do wyjaśnienia: ${(steps[k].title || 'poprzednia karta').replace(/<[^>]+>/g, '')}`; gb.onclick = () => S.go(k); } }
       };
       if (q.type === 'choice') q$('.ls-main').querySelectorAll('.ls-opt').forEach(b => b.onclick = () => { if (b.disabled) return; attempt(+b.dataset.k); if (!x.done) { b.disabled = true; b.classList.add('bad'); } });
-      else { const inp = q$('.ls-num input'); q$('.ls-chk').onclick = () => attempt(inp.value);
-        inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); attempt(inp.value); } }); }
+      else { const nn = q$('.ls-nn'), dd = q$('.ls-dd');
+        const val = () => { const a = nn.value.trim(), b = dd.value.trim(); return b && a ? `${a}/${b}` : a; };   // pusty mianownik = 1
+        q$('.ls-chk').onclick = () => attempt(val());
+        [nn, dd].forEach(e => e.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); attempt(val()); } })); }
       show.onclick = () => { x.shown = true; solved('shown'); pose('explain', 'Zapamiętaj to – przyda się!'); };
     }
     render();
@@ -354,7 +372,7 @@ const LESSON = (() => {
       const b = document.getElementById('btn-' + a.tab); if (b) b.click();
     }
   }
-  return {LEVELS, MOODS, topics, register, build, open, start, close, hasLessons, parseNum, numMatch, check, tableHTML, validate, answerText, esc,
+  return {LEVELS, MOODS, topics, register, build, open, start, close, hasLessons, parseNum, numMatch, toFrac, check, tableHTML, validate, answerText, esc,
     get active() { return !!(root && !root.hidden); }, current: () => (S && S.step ? S.step() : null)};
 })();
 /* Przycisk „Nauka” w nagłówku – widoczny w zakładkach, dla których są lekcje (app.js woła LESSON_TAB przy zmianie zakładki) */

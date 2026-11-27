@@ -213,11 +213,11 @@ async def main():
             await lp.keyboard.press('ArrowRight'); await lp.click('.ls-next'); await lp.wait_for_timeout(300)
             print(f'Nauka {vw}px – Dalej / Wstecz / strzałki:', 'OK' if t1 == 'Zadanie' and t2 == 'Zmienne swobodne' and t3 == 'Zadanie' and await lp.inner_text('.ls-card h3') == 'Tablica początkowa' else 'BŁĄD', t1, t2, t3)
             locked = await lp.is_disabled('.ls-next')
-            await lp.fill('.ls-num input', '0'); await lp.click('.ls-chk'); fb = await lp.inner_text('.ls-fb'); pose = await lp.get_attribute('.ls-pivot', 'data-pose')
+            await lp.fill('.ls-nn', '0'); await lp.click('.ls-chk'); fb = await lp.inner_text('.ls-fb'); pose = await lp.get_attribute('.ls-pivot', 'data-pose')
             still = await lp.is_disabled('.ls-next'); show = await lp.is_visible('.ls-show')
-            for _ in range(2): await lp.fill('.ls-num input', '0'); await lp.click('.ls-chk')
+            for _ in range(2): await lp.fill('.ls-nn', '0'); await lp.click('.ls-chk')
             back = await lp.is_visible('.ls-goback')
-            await lp.fill('.ls-num input', '4'); await lp.click('.ls-chk'); ok = await lp.inner_text('.ls-fb'); pose2 = await lp.get_attribute('.ls-pivot', 'data-pose')
+            await lp.fill('.ls-nn', '4'); await lp.click('.ls-chk'); ok = await lp.inner_text('.ls-fb'); pose2 = await lp.get_attribute('.ls-pivot', 'data-pose')
             print(f'Nauka {vw}px – zła odpowiedź (wyjaśnienie, mina ups, pokaż odpowiedź, po 3 błędach powrót):', 'OK' if locked and still and 'kolumnie b' in fb and pose == 'oops' and show and back else 'BŁĄD', fb[:80])
             print(f'Nauka {vw}px – dobra odpowiedź odblokowuje Dalej:', 'OK' if 'Dobrze' in ok and pose2 == 'happy' and not await lp.is_disabled('.ls-next') else 'BŁĄD')
             await lp.click('.ls-next'); await lp.click('.ls-opt >> text=wchodzi x')                 # wybór: pierwsza opcja to x₂? sprawdzamy zaznaczenie
@@ -247,7 +247,7 @@ async def main():
                     await lp.wait_for_timeout(1400); seen[cur[:4]] = {'rings': await lp.eval_on_selector_all('.ls-ring', 'e => e.length'), 'pose': await lp.get_attribute('.ls-pivot', 'data-pose'), 'rows': await lp.eval_on_selector_all('.ls-table tr', 'e => e.length')}
                 if cur.startswith('wolno'): break
                 if await lp.is_disabled('.ls-next'):
-                    await lp.evaluate("(() => { const q = LESSON.current().q; if (q.type === 'choice') document.querySelectorAll('.ls-opt')[q.options.findIndex(o => o.ok)].click(); else { const i = document.querySelector('.ls-num input'); i.value = String(q.answer); document.querySelector('.ls-chk').click(); } })()")
+                    await lp.evaluate("(() => { const q = LESSON.current().q; if (q.type === 'choice') document.querySelectorAll('.ls-opt')[q.options.findIndex(o => o.ok)].click(); else { const i = document.querySelector('.ls-nn'); i.value = String(q.answer); document.querySelector('.ls-chk').click(); } })()")
                 await lp.click('.ls-next')
             okg = 'plot' in seen and 'zdej' in seen and seen['plot']['rings'] >= 2 and seen['zdej']['rings'] >= 1 and seen['plot']['pose'] == 'point' and seen['zdej']['pose'] == 'point' and seen['zdej']['rows'] == seen['plot']['rows'] - 1
             print(f'Nauka {vw}px – Gomory: tematy aktywne, odcięcie zakreślone przed i po usunięciu (wiersz mniej):', 'OK' if act == 2 and okg else 'BŁĄD', seen)
@@ -257,11 +257,42 @@ async def main():
                 tn = max(tn, await lp.eval_on_selector_all('.ls-tree .lt-n', 'e => e.length'))
                 if await lp.query_selector('.ls-action'): break
                 if await lp.is_disabled('.ls-next'):
-                    await lp.evaluate("(() => { const q = LESSON.current().q; if (q.type === 'choice') document.querySelectorAll('.ls-opt')[q.options.findIndex(o => o.ok)].click(); else { const i = document.querySelector('.ls-num input'); i.value = String(q.answer); document.querySelector('.ls-chk').click(); } })()")
+                    await lp.evaluate("(() => { const q = LESSON.current().q; if (q.type === 'choice') document.querySelectorAll('.ls-opt')[q.options.findIndex(o => o.ok)].click(); else { const i = document.querySelector('.ls-nn'); i.value = String(q.answer); document.querySelector('.ls-chk').click(); } })()")
                 await lp.click('.ls-next')
             await lp.click('.ls-action'); await lp.wait_for_timeout(300)
             out = await lp.inner_html('#out-ilp'); tab = await lp.evaluate('curTab')
             print(f'Nauka {vw}px – B&B: drzewo z 5 węzłami, wczytanie zadania do zakładki Całkowite liczy ten sam wynik:', 'OK' if tn == 5 and tab == 'ilp' and 'Z<sub>opt</sub> = <b>10</b>' in out and not await lp.is_visible('#lesson') else 'BŁĄD', tab)
+            await lp.close()
+        # Nauka – pole-ułamek (licznik / mianownik), przybliżenia 0,3 i 0,7, dymek z ogonkiem przy krawędzi
+        for vw, vh in ((1280, 860), (390, 844)):
+            lp = await b.new_page(viewport={'width': vw, 'height': vh}, has_touch=vw < 500); lp.on('pageerror', lambda e: errs.append(str(e)))
+            await lp.route('**/plotly-*.js', lambda r: r.fulfill(body='window.Plotly={newPlot(){},Plots:{resize(){}},toImage:async()=>"",relayout(){}};', content_type='text/javascript'))
+            await lp.goto(URL); await lp.evaluate("localStorage.removeItem('optilab.nauka.hidePivot')"); await lp.reload()
+            res = {}
+            for lv, key in (('warm', 'frac'), ('test', 'dec')):
+                await lp.evaluate(f"LESSON.start('lp-gomory', '{lv}', 'ilp')")
+                for _ in range(12):
+                    tg = await lp.evaluate("(() => { const q = LESSON.current() && LESSON.current().q; return q && q.tag ? q.tag.t : ''; })()")
+                    if tg == 'f0': break
+                    if await lp.is_disabled('.ls-next'):
+                        await lp.evaluate("(() => { const q = LESSON.current().q; if (q.type === 'choice') document.querySelectorAll('.ls-opt')[q.options.findIndex(o => o.ok)].click(); else { const i = document.querySelector('.ls-nn'); i.value = String(q.answer); document.querySelector('.ls-chk').click(); } })()")
+                    await lp.click('.ls-next')
+                if key == 'frac': await lp.fill('.ls-nn', '1'); await lp.fill('.ls-dd', '3')
+                else: await lp.fill('.ls-nn', '0,3')
+                await lp.click('.ls-chk'); res[key] = 'Dobrze' in await lp.inner_text('.ls-fb')
+                await lp.keyboard.press('Escape')
+            await lp.evaluate("LESSON.start('lp-gomory', 'warm', 'ilp')")
+            for _ in range(12):
+                if await lp.evaluate("(() => { const q = LESSON.current() && LESSON.current().q; return !!(q && q.tag && q.tag.t === 'f0'); })()"): break
+                if await lp.is_disabled('.ls-next'):
+                    await lp.evaluate("(() => { const q = LESSON.current().q; if (q.type === 'choice') document.querySelectorAll('.ls-opt')[q.options.findIndex(o => o.ok)].click(); else { const i = document.querySelector('.ls-nn'); i.value = String(q.answer); document.querySelector('.ls-chk').click(); } })()")
+                await lp.click('.ls-next')
+            await lp.fill('.ls-nn', '0,4'); await lp.click('.ls-chk'); res['zle'] = 'Nie.' in await lp.inner_text('.ls-fb')
+            await lp.click('.ls-show'); shown = [await lp.input_value('.ls-nn'), await lp.input_value('.ls-dd')]
+            geo = await lp.evaluate("""(() => { const b = document.querySelector('.ls-bubble').getBoundingClientRect(), t = document.querySelector('.ls-tail').getBoundingClientRect();
+              return {gap: +(t.right - b.left).toFixed(1), inside: t.top >= b.top - 1 && t.bottom <= b.bottom + 1, w: +t.width.toFixed(1)}; })()""")
+            ok = res.get('frac') and res.get('dec') and res.get('zle') and shown == ['1', '3'] and 0 <= geo['gap'] <= 3 and geo['inside'] and geo['w'] > 10
+            print(f'Nauka {vw}px – ułamek 1/3 w dwóch polach, przybliżenie 0,3, odrzucone 0,4, „pokaż odpowiedź” jako ułamek, ogonek dymka przy krawędzi:', 'OK' if ok else 'BŁĄD', res, shown, geo)
             await lp.close()
         print('Błędy JS:', errs or 'brak'); await b.close()
 asyncio.run(main())
