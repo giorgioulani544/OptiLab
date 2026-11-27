@@ -189,3 +189,16 @@ html.ls-lock,html.ls-lock body{overflow:hidden}
 .ls-tree .lt-x{font-size:10.5px;fill:#4a5470}
 .ls-tree .ls-on rect{animation:ls-glow 1.3s ease-in-out 3;stroke:#e09a00;stroke-width:3.5}
 .ls-tree .lt-n.ask rect{fill:#fdf1e6;stroke:var(--or-deep);stroke-dasharray:4 3}
+/* Transport: koszt w rogu komórki, przewóz pośrodku, wskaźnik d kursywą, znaki cyklu; Przydział: zera i pokryte linie */
+.ls-table.ltr td.tcell{position:relative;padding:15px 10px 4px;min-width:54px;vertical-align:bottom}
+.ls-table.ltr .lc{position:absolute;top:2px;right:4px;font-size:.72em;color:#7b8296;font-weight:600}
+.ls-table.ltr .lx{font-size:1.05em}
+.ls-table.ltr .ld{color:#5b6b82;font-size:.92em}.ls-table.ltr .ld.neg{color:var(--err);font-weight:700}
+.ls-table.ltr td.bas{background:#eef4ff}
+.ls-table.ltr td.dim{background:#f1efea;color:#a8a39a}
+.ls-table.ltr .cy{position:absolute;top:2px;left:4px;font-weight:800;font-size:.95em}.ls-table.ltr .cy.p{color:var(--ok)}.ls-table.ltr .cy.m{color:var(--err)}
+.ls-table.las td{min-width:48px}
+.ls-table.las td.zero{color:var(--ok);font-weight:800;background:#e7f5ef}
+.ls-table.las td.cov{background-image:linear-gradient(rgba(26,111,214,.10),rgba(26,111,214,.10))}
+.ls-table td.pcol{background:var(--hl)}
+.ls-table.lperm td{white-space:normal;text-align:left;font-size:.88rem;line-height:1.35}

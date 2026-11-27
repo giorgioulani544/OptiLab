@@ -131,9 +131,11 @@ const netCopyHTML = p => `<div class="crow"><button id="${p}copy" class="ghost" 
 const netToolsHTML = (p, examples) => `<div class="crow"><label for="${p}ex">Przykład</label><select id="${p}ex"><option value="">– wybierz –</option>${examples.map((e, i) => `<option value="${i}">${esc(e.name)}</option>`).join('')}</select></div>
   <div class="crow"><button id="${p}open" class="ghost" type="button">Wczytaj z pliku (.json / .csv)</button><input type="file" id="${p}file" accept=".json,.csv,.txt,application/json,text/csv" hidden></div>
   <div class="crow"><button id="${p}save" class="ghost" type="button">Zapisz (.json)</button><button id="${p}csv" class="ghost" type="button">Eksport do Excela (.csv)</button></div>`;
+const NET_LOAD = {};                                                    // rodzaj zadania → funkcja wczytująca dane do formularza modułu
 function netToolsWire(p, cfg) {                                        // cfg: {kind, get, set, normalize, examples, toCSV, fromCSV, out}
   const date = () => new Date().toISOString().slice(0, 10), wrap = d => JSON.stringify({optilab: cfg.kind, ...d});
   const load = d => { cfg.set(cfg.normalize(d)); clearErr(); $(cfg.out).innerHTML = ''; };
+  NET_LOAD[cfg.kind] = load;                                            // wczytanie danych z zewnątrz (np. lekcja „Nauka” → „Wczytaj zadanie do zakładki”)
   $('#' + p + 'copy').onclick = async e => { const t = wrap(cfg.get()); netShared[cfg.kind] = t; try { await navigator.clipboard.writeText(t); } catch (_) {} flash(e.target, 'Skopiowano ✓'); };
   // „Wklej dane”: dane skopiowane w OptiLab (JSON) albo tabela z Excela / tekst CSV w układzie eksportu .csv tego modułu (tabulator lub średnik)
   $('#' + p + 'paste').onclick = async e => {
