@@ -1,7 +1,7 @@
 # OptiLab – dokumentacja techniczna
 Struktura plików, kolejność skryptów i informacje dla osób rozwijających projekt. Opis dla użytkowników: README.md.
 
-Lekcje „Nauka” z maskotką Pivot (moduł LP): metoda graficzna, simpleks, metoda dwufazowa, duże M, odcięcia Gomory'ego, podział i ograniczenia (testy: tests/lesson.test.js, tests/ilp_lesson.test.js).
+Lekcje „Nauka” z maskotką Pivot (moduł LP): metoda graficzna, simpleks, metoda dwufazowa, duże M, odcięcia Gomory'ego, podział i ograniczenia; Transport: zagadnienie transportowe i metody startowe; Przydział: metoda węgierska (testy: tests/lesson.test.js, tests/ilp_lesson.test.js, tests/net_lesson.test.js).
 
 Moduły: Planowanie zagregowane, Prognozowanie, Zapasy, PERT/CPM, Harmonogramowanie, Metoda graficzna, Simpleks (duże M / dwufazowa, dual, analiza wrażliwości i parametryczna), Programowanie całkowitoliczbowe (Branch & Bound), Transport, Przydział, Najkrótsza ścieżka, Maksymalny przepływ.
 
@@ -21,7 +21,7 @@ js/csv.js               import/eksport CSV (Excel) – bez DOM, testowalne
 js/paste.js             wklejanie ze schowka – bez DOM, testowalne (tests/paste.test.js): PASTE.parse (tabulator / średnik / przecinek / spacje, cudzysłowy), PASTE.num (przecinek dziesiętny, separatory tysięcy, %, minus z Worda), PASTE.plan (blok → komórki tabeli jak w Excelu: nagłówki z Excela, kolumna znaku pomijana dla A | b, przekątna, rozrost, błędy z miejscem), PASTE.toSemicolon (tekst z Excela → CSV modułu)
 js/forms.js             formularze, walidacja, kopiuj/wklej dane, błędy przy polach
 js/modules/lp.js        moduł Programowanie liniowe (graficzna, Simpleks, Całkowite)
-js/net/netui.js         fundamenty modeli sieciowych: edytor macierzy, rysunek sieci (SVG), pliki/CSV, błędy przy polach
+js/net/netui.js         fundamenty modeli sieciowych (NET_LOAD – wczytanie danych do modułu z zewnątrz, np. z lekcji): edytor macierzy, rysunek sieci (SVG), pliki/CSV, błędy przy polach
 js/paste-ui.js          wklejanie w interfejsie: Ctrl+V / „Wklej” w komórce każdej table.mx i formularza LP ([data-lp]); rozrost tabeli przez listy rozmiaru (matrixHTML: o.grow = {r, c} lub {sq} → data-gr/data-gc/data-sq) albo przycisk „+ wiersz” (rowTableHTML: data-p, data-add); przy błędzie cofnięcie rozrostu i czerwone pola
 js/net/transport-solver.js  zagadnienie transportowe (NW, min. element, VAM, MODI) – bez DOM, testowalne
 js/modules/transport.js moduł Transport: formularz i raport dydaktyczny
@@ -82,6 +82,7 @@ js/pivot-svg.js         PLIK GENEROWANY z assets/pivot_maskotka.svg (python3 too
 js/lesson.js            silnik lekcji „Nauka” (LESSON): format lekcji opisany w komentarzu na górze pliku, rejestr tematów (LESSON.register), menu startowe i wybór poziomu, karty z Wstecz/Dalej/postępem, pytania (wybór, liczba; wyjaśnienia typowych pomyłek, pokaż odpowiedź, po 3 błędach powrót), wynik Sprawdzianu, różdżka (ramki SVG na komórkach data-r/data-c, podświetlenie data-hl), przełącznik maskotki w localStorage; pole odpowiedzi jako ułamek (licznik/mianownik), dymek z ogonkiem SVG; czyste funkcje parseNum/numMatch (przybliżenia rozwinięć nieskończonych)/toFrac/check/tableHTML/validate testowane w Node
 js/lessons/lp-lessons.js  lekcje LP (LPL) – czyste funkcje bez DOM: metoda graficzna (lpVertices, graphSVG), simpleks (tabSolve), metoda dwufazowa (gomSolve: faza I i II), duże M (tabSolve, symboliczne M); zadania lekcyjne w LPL_TASKS (tylko dane wejściowe – liczby na kartach liczą solvery), q.tag = skąd odpowiedź (testy)
 js/lessons/ilp-lessons.js  lekcje zadań całkowitoliczbowych (ILPL) – czyste: odcięcia Gomory'ego z gomSolve (NWW, części ułamkowe, odcięcie, dualny simpleks, znikające odcięcia z C.dropped – withoutVar), podział i ograniczenia z ilpSolve (bbEvents – kolejność zdarzeń przeszukiwania w głąb, treeSVG – drzewo, nodeSVG – obszar węzła z granicami gałęzi); zadania w ILPL_TASKS
+js/lessons/net-lessons.js  lekcje Transportu i Przydziału (NETL) – czyste: zagadnienie transportowe (kąt NW, potencjały, cykl), metody startowe (minimalny element, VAM), metoda węgierska; tabele trTable/asTable; zadania w NETL_TASKS (Wyzwania z przykładów modułów)
 js/print.js             składanie wydruku/PDF (PRINT.geom, PRINT.paginate): długie tabele na kawałki z powtórzonym nagłówkiem, nagłówki sklejone z treścią (.keep) – działa też w Safari na iPhonie
 js/app.js               zakładki, przycisk „Eksportuj raport” z menu (PDF – druk jak dotąd, Word, CSV; reportSections = sekcje bieżącej zakładki), start
 js/bg.js                tło: powolna animowana sieć z pomarańczowymi wyładowaniami (canvas #bgnet; tylko ozdoba, ładowany ostatni)

@@ -48,7 +48,7 @@
        score: true             // liczone do wyniku Sprawdzianu (poprawnie za pierwszym razem)
      },
      action: {label: 'Wczytaj to zadanie do zakładki', tab: 'simplex', data: {...}, sets: {'simplex-method': 'TAB'}},   // (opcjonalnie) przycisk: dane do zakładki + wartości pól (id → wartość), potem „Rozwiąż”
-     result: {x: [...], z: liczba}   // (opcjonalnie) karta z wynikiem – ostatnia karta lekcji ma ten sam wynik co raport
+     result: {x: [...], z: liczba, html: '…'}   // (opcjonalnie) karta z wynikiem – ostatnia karta lekcji ma ten sam wynik co raport; html – własny opis wyniku (np. plan przewozów)
    }
    Liczby, tabele i poprawne odpowiedzi pochodzą z solvera – lekcja nie zawiera wyników wpisanych na stałe.
    Maskotka: assets/pivot_maskotka.svg (grupy poza-explain, poza-point, poza-think, poza-surprise, poza-happy, poza-oops);
@@ -278,7 +278,7 @@ const LESSON = (() => {
       progress(i / steps.length);
       let h = `<div class="ls-card" data-step="${i}">${s.title ? `<h3>${s.title}</h3>` : ''}${s.text ? `<p class="ls-text">${s.text}</p>` : ''}`;
       if (s.formula || s.svg || s.table) h += `<div class="ls-vis">${s.formula ? `<div class="formula ls-formula">${s.formula}</div>` : ''}${s.svg ? `<div class="ls-svg">${s.svg}</div>` : ''}${s.table ? tableHTML(s.table) : ''}</div>`;
-      if (s.result) h += `<div class="sum ls-result"><b>Wynik:</b> ${s.result.x.map((v, j) => `x${sub(j + 1)} = ${s.result.fx ? s.result.fx[j] : fmtA(v)}`).join(', ')}; Z<sub>opt</sub> = <b>${s.result.fz || fmtA(s.result.z)}</b></div>`;
+      if (s.result) h += `<div class="sum ls-result"><b>Wynik:</b> ${s.result.html || `${s.result.x.map((v, j) => `x${sub(j + 1)} = ${s.result.fx ? s.result.fx[j] : fmtA(v)}`).join(', ')}; Z<sub>opt</sub> = <b>${s.result.fz || fmtA(s.result.z)}</b>`}</div>`;
       if (q) {
         h += `<div class="ls-q"><p class="ls-prompt">${q.prompt}</p>`;
         if (q.type === 'choice') h += `<div class="ls-opts">${q.options.map((o, k) => `<button type="button" class="ghost ls-opt" data-k="${k}">${o.t}</button>`).join('')}</div>`;
@@ -365,7 +365,12 @@ const LESSON = (() => {
     });
   }
   function runAction(a) {
-    if (a.tab && typeof models !== 'undefined' && typeof parseModel === 'function') {
+    if (a.tab && typeof NET_LOAD !== 'undefined' && NET_LOAD[a.tab]) {          // moduły na wspólnych komponentach netui.js (Transport, Przydział)
+      NET_LOAD[a.tab](a.data);
+      Object.entries(a.sets || {}).forEach(([id, v]) => { const el = document.getElementById(id); if (el) el.value = v; });
+      close(); if (typeof goTab === 'function') goTab(a.tab);
+      const b = document.getElementById('btn-' + a.tab); if (b) b.click();
+    } else if (a.tab && typeof models !== 'undefined' && typeof parseModel === 'function') {
       models[a.tab] = parseModel(a.tab, a.data); renderForm(a.tab);
       Object.entries(a.sets || {}).forEach(([id, v]) => { const el = document.getElementById(id); if (el) el.value = v; });   // np. metoda w zakładce
       close(); if (typeof goTab === 'function') goTab(a.tab);

@@ -200,9 +200,9 @@ async def main():
             await lp.route('**/plotly-*.js', lambda r: r.fulfill(body='window.Plotly={newPlot(){},Plots:{resize(){}},toImage:async()=>"",relayout(){}};', content_type='text/javascript'))
             await lp.goto(URL); await lp.evaluate("localStorage.removeItem('optilab.nauka.hidePivot')"); await lp.reload()
             vis = {}
-            for tab in ('graph', 'simplex', 'ilp', 'transport'):
+            for tab in ('graph', 'simplex', 'ilp', 'transport', 'assign', 'sp'):
                 await lp.click(f'nav button[data-tab={tab}]'); vis[tab] = await lp.is_visible('#btn-learn')
-            print(f'Nauka {vw}px – przycisk tylko w LP:', 'OK' if vis == {'graph': True, 'simplex': True, 'ilp': True, 'transport': False} else 'BŁĄD', vis)
+            print(f'Nauka {vw}px – przycisk tylko w zakładkach z lekcjami (LP, Transport, Przydział):', 'OK' if vis == {'graph': True, 'simplex': True, 'ilp': True, 'transport': True, 'assign': True, 'sp': False} else 'BŁĄD', vis)
             await lp.click('nav button[data-tab=simplex]'); await lp.click('#btn-learn')
             menu = await lp.inner_text('.ls-main'); bub = await lp.inner_text('.ls-bubble')
             print(f'Nauka {vw}px – menu startowe:', 'OK' if 'Czego chcesz się dziś nauczyć?' in bub and all(t in menu for t in ('Metoda graficzna', 'Simpleks', 'Metoda dwufazowa', 'Metoda dużego M', "Odcięcia Gomory'ego", 'Podział i ograniczenia')) else 'BŁĄD')
@@ -293,6 +293,26 @@ async def main():
               return {gap: +(t.right - b.left).toFixed(1), inside: t.top >= b.top - 1 && t.bottom <= b.bottom + 1, w: +t.width.toFixed(1)}; })()""")
             ok = res.get('frac') and res.get('dec') and res.get('zle') and shown == ['1', '3'] and 0 <= geo['gap'] <= 3 and geo['inside'] and geo['w'] > 10
             print(f'Nauka {vw}px – ułamek 1/3 w dwóch polach, przybliżenie 0,3, odrzucone 0,4, „pokaż odpowiedź” jako ułamek, ogonek dymka przy krawędzi:', 'OK' if ok else 'BŁĄD', res, shown, geo)
+            await lp.close()
+        # Nauka – Transport i Przydział: menu w zakładce, przejście lekcji, „Wczytaj zadanie do zakładki” liczy ten sam wynik
+        for vw, vh in ((1280, 860), (390, 844)):
+            lp = await b.new_page(viewport={'width': vw, 'height': vh}, has_touch=vw < 500); lp.on('pageerror', lambda e: errs.append(str(e)))
+            await lp.route('**/plotly-*.js', lambda r: r.fulfill(body='window.Plotly={newPlot(){},Plots:{resize(){}},toImage:async()=>"",relayout(){}};', content_type='text/javascript'))
+            await lp.goto(URL); res = {}
+            for tab, topic, want in (('transport', 'tr-modi', 'minimalny koszt = <b>25</b>'), ('assign', 'as-hung', 'minimalny koszt = <b>27</b>')):
+                await lp.click(f'nav button[data-tab={tab}]'); await lp.click('#btn-learn')
+                topics = await lp.eval_on_selector_all('.ls-topic', 'e => e.map(x => x.dataset.id)')
+                await lp.click(f'.ls-topic[data-id={topic}]'); await lp.click('.ls-lvl[data-l=warm]')
+                for _ in range(25):
+                    if await lp.query_selector('.ls-action'): break
+                    if await lp.is_disabled('.ls-next'):
+                        await lp.evaluate("(() => { const q = LESSON.current().q; if (q.type === 'choice') document.querySelectorAll('.ls-opt')[q.options.findIndex(o => o.ok)].click(); else { const i = document.querySelector('.ls-nn'); i.value = String(q.answer); document.querySelector('.ls-chk').click(); } })()")
+                    await lp.click('.ls-next')
+                tbl = await lp.eval_on_selector_all('.ls-table', 'e => e.length')
+                await lp.click('.ls-action'); await lp.wait_for_timeout(300)
+                res[tab] = {'tematy': topics, 'wynik': want in await lp.inner_html(f'#out-{tab}'), 'zamknięta': not await lp.is_visible('#lesson'), 'zakładka': await lp.evaluate('curTab')}
+            ok = res['transport']['tematy'] == ['tr-modi', 'tr-start'] and res['assign']['tematy'] == ['as-hung'] and all(r['wynik'] and r['zamknięta'] for r in res.values()) and res['assign']['zakładka'] == 'assign'
+            print(f'Nauka {vw}px – Transport i Przydział: tematy w zakładkach, lekcja, „Wczytaj” liczy ten sam wynik w module:', 'OK' if ok else 'BŁĄD', res)
             await lp.close()
         print('Błędy JS:', errs or 'brak'); await b.close()
 asyncio.run(main())
