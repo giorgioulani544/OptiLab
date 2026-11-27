@@ -51,7 +51,7 @@ for (const id of ['lp-gomory', 'lp-bb']) for (const lv of ['warm', 'test', 'chal
       const okRows = rows.length === rowsNext.length && rows.every((r, i) => r.slice(2, 2 + width).every((cell, j) => strip(cell.v) === FR.str(rowsNext[i][j]).replace('-', '−')) && strip(r[2 + width].v) === FR.str(nx.b[i]).replace('-', '−'));
       t(`${nm}: odcięcie ${C.k}, po usunięciu ${dn}: tablica = stan solvera (bez wiersza i kolumny ${dn})`, okRows && !tbl.head[1].some(h => strip(h.v) === dn.replace(/\D+/, 's')));
       const before = L.steps.find(s => s.id === `plot${C.k}${dn}`), zb = strip(before.table.rows[before.table.rows.length - 2][2 + before.table.head[1].length - 2].v), za = strip(tbl.rows[tbl.rows.length - 2][2 + tbl.head[1].length - 2].v);
-      t(`${nm}: odcięcie ${C.k}: Z przed i po usunięciu ${dn} takie samo (${zb})`, zb === za && zb !== '');
+      t(`${nm}: odcięcie ${C.k}: Z przed i po usunięciu ${dn} takie samo (${zb})`, zb !== '' && (zb === za || (za === '?' && step.q && near(step.q.answer, FR.toNum(C.steps[C.steps.length - 1].z)) && zb === FR.str(C.steps[C.steps.length - 1].z).replace('-', '−'))));
       t(`${nm}: odcięcie ${C.k}: różdżka zakreśla przed (wiersz + kolumna ${dn}) i po`, before.hl.some(h => h.r !== undefined && h.c === undefined) && before.hl.some(h => h.c !== undefined && h.r === undefined) && step.hl.length >= 1);
     }));
     qs.forEach((q, k) => { const tg = q.tag || {}, w = `${nm}: pytanie ${k + 1} (${tg.t})`, C = G.cuts[(tg.k || 1) - 1];
@@ -102,12 +102,37 @@ Object.assign(TASKS.bb.warm, JSON.parse(save));
 t('menu: Gomory i B&B dostępne (bez „wkrótce”)', ['lp-gomory', 'lp-bb'].every(i => LESSON.topics.some(x => x.id === i && !x.soon)) && !LESSON.topics.some(x => x.soon));
 t('Sprawdzian B&B: bieżący węzeł bez podpowiedzi (stan „decyzja?”)', LESSON.build('lp-bb', 'test').steps.filter(s => s.q && s.q.tag && s.q.tag.t === 'node').every(s => /lt-n ask cur/.test(s.svg) && !new RegExp(`lt-n (open|int|bound|inf)( cur)?" data-hl="n${s.q.tag.id}"`).test(s.svg)));
 t('drzewo SVG: węzły z data-hl', /data-hl="n1"/.test(ILPL.treeSVG(T.R, {1: 'branch'}, 1, T.model)));
+// Efekt egzaminu (Sprawdzian i Wyzwanie): odpowiedzi nie da się odczytać z karty, na której pada pytanie – dla każdego rodzaju pytania osobna kontrola
+const cellV = x => strip(x && typeof x === 'object' ? x.v : x);
+for (const id of ['lp-graph', 'lp-simplex', 'lp-2f', 'lp-bigm', 'lp-gomory', 'lp-bb']) for (const lv of ['test', 'challenge']) {
+  const L = LESSON.build(id, lv), bad2 = [];
+  L.steps.forEach(s => { if (!s.q || !s.q.tag) return; const tg = s.q.tag, T = s.table, text = strip(s.text) + ' ' + strip(s.title) + ' ' + strip(s.say), labels = (s.hl || []).filter(h => h.label).length;
+    const zcell = T && T.rows.flat().find(x => x && typeof x === 'object' && x.cls === 'zval');
+    const fail = m => bad2.push(`${strip(s.title)} (${tg.t}): ${m}`);
+    if (['z', 'zcut', 'zdrop', 'lpz'].includes(tg.t) && zcell && cellV(zcell) !== '?') fail('widać Z w tablicy');
+    if (tg.t === 'zv' && cellV(T.rows[tg.k][3]) !== '?') fail('widać Z wierzchołka');
+    if (tg.t === 'vertex' && cellV(T.rows[tg.k][1]) !== '?') fail('widać współrzędną');
+    if (tg.t === 'best' && T && T.head[0].length > 3 && cellV(T.rows[tg.k][3]) !== '?') fail('widać Z najlepszego wierzchołka');
+    if (tg.t === 'enter' && (T.rows.flat().some(x => x && x.cls && /pivot|pcol/.test(x.cls)) || (s.hl || []).length)) fail('zaznaczona kolumna wejściowa');
+    if (tg.t === 'origin' && (/lg-half/.test(s.svg) || /prawdą|fałszem/.test(text))) fail('widać dobrą stronę prostej');
+    if (tg.t === 'feasible' && /lg-reg/.test(s.svg)) fail('narysowany obszar');
+    if (tg.t === 'intercept' && /lg-p/.test(s.svg)) fail('podpisane punkty na osiach');
+    if (tg.t === 'split' && (new RegExp('≤ ' + tg.lo + '\\b').test(text) || /lg-strip/.test(s.svg))) fail('podane gałęzie');
+    if (tg.t === 'bound0' && /żaden/.test(text)) fail('podany werdykt');
+    if (tg.t === 'branchvar' && /pierwsza ułamkowa zmienna/.test(text)) fail('podana zmienna');
+    if (tg.t === 'inactive' && (/nie ogranicza|daleko/.test(text) || labels)) fail('podany werdykt o odcięciu');
+    if (tg.t === 'dropArt' && (/znikają|nie są już potrzebne/.test(text) || labels)) fail('podane, co z kolumnami');
+    if (tg.t === 'optimal' && labels) fail('etykieta z odpowiedzią');
+    if ((tg.t === 'srcrow' || tg.t === 'f0') && T && T.rows.some(r => cellV(r[3]) !== '?')) fail('widać części ułamkowe');
+  });
+  t(`${id}/${lv}: efekt egzaminu – odpowiedzi nie da się odczytać z karty ${bad2.join('; ')}`, !bad2.length);
+}
 // Sprawdzian nie podpowiada: odpowiedź liczbowa nie stoi w treści karty ani w etykietach różdżki (wszystkie tematy)
 const LPL = G_('LPL'), txt = h => String(h || '').replace(/<sub>(\d+)<\/sub>/g, '_$1').replace(/<[^>]+>/g, ' ');
-for (const id of ['lp-graph', 'lp-simplex', 'lp-2f', 'lp-bigm', 'lp-gomory', 'lp-bb']) {
-  const L = LESSON.build(id, 'test'), leaks = L.steps.filter(s => s.q && s.q.score && s.q.type === 'number').filter(s => {
+for (const id of ['lp-graph', 'lp-simplex', 'lp-2f', 'lp-bigm', 'lp-gomory', 'lp-bb']) for (const lvl of ['test', 'challenge']) {
+  const L = LESSON.build(id, lvl), leaks = L.steps.filter(s => s.q && s.q.type === 'number').filter(s => {
     const a = LPL.nf(s.q.answer).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), re = new RegExp('(^|[^\\w/,_(])' + a + '([^\\w/,)]|$)');
-    return re.test(txt(s.text) + ' ' + (s.hl || []).map(h => h.label || '').join(' ')); }).map(s => s.title);
-  t(`${id}/test: karty Sprawdzianu nie zdradzają odpowiedzi liczbowej ${leaks.join('; ')}`, !leaks.length);
+    return re.test(txt(s.text) + ' ' + txt(s.say) + ' ' + (s.hl || []).map(h => h.label || '').join(' ')); }).map(s => s.title);
+  t(`${id}/${lvl}: karty nie zdradzają odpowiedzi liczbowej w tekście ${leaks.join('; ')}`, !leaks.length);
 }
 console.log(`Testy lekcji „Nauka” (całkowitoliczbowe): ${ok} OK, ${bad} błędów`); if (bad) process.exit(1);

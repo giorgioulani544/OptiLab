@@ -34,7 +34,7 @@ const ILPL = (() => {
       zj: idx.map(k => U.zj[k]), cmz: idx.map(k => U.cmz[k]), pc: -1, pr: -1, ratios: null, dratios: null};
   }
   function gomory(level) {
-    const M = imodel(ILPL_TASKS.gomory[level]), mode = MODE[level], score = mode === 'test';
+    const M = imodel(ILPL_TASKS.gomory[level]), mode = MODE[level], score = mode === 'test', exam = mode !== 'guide';
     if (M.rel.some(r => r !== '<=')) throw new Error('lekcja Gomory\'ego: tylko ograniczenia ≤');
     const G = gomSolve(M, GOM_OPT), BB = ilpSolve(M, {rule: 'most', search: 'best'});
     if (G.status !== 'optimal' || !G.cuts.length) throw new Error('zadanie lekcji: odcięcia nie dały wyniku (' + G.status + ')');
@@ -59,7 +59,7 @@ const ILPL = (() => {
     // 2. relaksacja LP
     steps.push({id: 'lp', title: 'Krok 1: relaksacja LP', say: 'Najpierw zwykły simpleks – bez całkowitości.',
       text: score ? 'Rozwiązujemy zadanie tak, jakby ułamki były dozwolone (jak w lekcji simpleksu). Wynik relaksacji to „sufit”: rozwiązanie całkowite nie może być lepsze.' : `Rozwiązujemy zadanie tak, jakby ułamki były dozwolone (jak w lekcji simpleksu). Wychodzi ${xs(G.lpX.map(FR.toNum))} i Z = ${fr(G.lpValue)}. To „sufit”: rozwiązanie całkowite nie może być lepsze.`,
-      table: tspec(lastLP), hl: score ? [{c: gl.b, tone: 'blue', label: 'ułamki'}] : [{c: gl.b, tone: 'blue', label: 'ułamki'}, {r: gl.zr, c: gl.b, tone: 'gold'}],
+      table: tspec(lastLP, score ? {blank: ['z', 0]} : {}), hl: score ? [{c: gl.b, tone: 'blue', label: 'ułamki'}] : [{c: gl.b, tone: 'blue', label: 'ułamki'}, {r: gl.zr, c: gl.b, tone: 'gold'}],
       q: mode === 'guide' ? {type: 'choice', prompt: 'Czy to rozwiązanie spełnia wymóg całkowitości?', tag: {t: 'lpfrac'}, options: [{t: 'nie', ok: true}, {t: 'tak', why: `Spójrz na kolumnę b: ${valsOf(lastLP)} – są tam ułamki.`}], explain: 'Ułamkowe zmienne bazowe – potrzebne odcięcie.'}
         : score ? {type: 'number', prompt: 'Ile wynosi Z relaksacji LP?', answer: FR.toNum(G.lpValue), score, tag: {t: 'lpz'}, explain: `Z<sub>LP</sub> = ${fr(G.lpValue)} – wynik całkowity będzie co najwyżej taki.`} : undefined});
     // 3. odcięcia
@@ -78,8 +78,8 @@ const ILPL = (() => {
         steps.push({id: `wiersz${C.k}`, title: `Odcięcie ${C.k}: który wiersz?`, say: first ? 'Szukam największej części ułamkowej.' : 'Znów ułamki – kolejny płot!',
           text: `Część ułamkowa f = a − ⌊a⌋ to „to, co wystaje ponad liczbę całkowitą”: ${exPos(C)}. ${first ? `Uwaga przy ujemnych: ${exNeg(C)}. ` : ''}Odcięcie budujemy z wiersza o największym f – zwykle tnie najgłębiej${tie ? '; przy remisie OptiLab bierze pierwszy taki wiersz' : ''}.`,
           table: {head: [[{v: 'Zmienna bazowa', c: 0}, {v: 'wartość b', c: 1}, {v: '⌊b⌋', c: 2}, {v: 'f = b − ⌊b⌋', c: 3}]],
-            rows: C.cand.map(o => [{v: vn(o.v), th: true}, fr(o.b), fr(FR.floor(o.b)), {v: mode === 'test' && o.v === C.srcVar && tie ? '<b>?</b>' : fr(o.f), cls: o.v === C.srcVar && mode !== 'test' ? 'pivot' : ''}])},
-          hl: mode === 'test' ? [] : [{r: C.cand.findIndex(o => o.v === C.srcVar), c: 3, tone: 'gold', label: tie ? 'pierwszy z remisu' : 'największe f'}],
+            rows: C.cand.map(o => [{v: vn(o.v), th: true}, fr(o.b), fr(FR.floor(o.b)), {v: exam ? '<b>?</b>' : fr(o.f), cls: o.v === C.srcVar && !exam ? 'pivot' : ''}])},
+          hl: exam ? [] : [{r: C.cand.findIndex(o => o.v === C.srcVar), c: 3, tone: 'gold', label: tie ? 'pierwszy z remisu' : 'największe f'}],
           q: mode === 'watch' && !first ? undefined : tie || mode === 'watch'
             ? {type: 'number', prompt: `Ile wynosi część ułamkowa f<sub>0</sub> wiersza ${vn(C.srcVar)} (b = ${fr(C.srcB)})?`, answer: FR.toNum(C.f0), score, tag: {t: 'f0', k: C.k},
               wrong: [{v: FR.toNum(FR.floor(C.srcB)), why: `${fr(FR.floor(C.srcB))} to część całkowita ⌊b⌋. Część ułamkowa to b − ⌊b⌋.`}, {v: 1 - FR.toNum(C.f0), why: 'Odwrotnie: f to odległość od liczby całkowitej W DÓŁ (b − ⌊b⌋), a nie do następnej liczby całkowitej.'}].filter(w => !near(w.v, FR.toNum(C.f0))),
@@ -138,22 +138,23 @@ const ILPL = (() => {
         const L = uGom(C.steps[C.steps.length - 1]), gL = geo(L);
         steps.push({title: `Po odcięciu ${C.k}`, say: G.cuts.length > q + 1 ? 'Lepiej, ale jeszcze nie całkowite.' : 'Same liczby całkowite!', mood: G.cuts.length > q + 1 ? 'explain' : 'happy',
           text: score && q === G.cuts.length - 1 ? 'Tablica znów jest dopuszczalna, a wszystkie zmienne bazowe są całkowite – to optimum zadania całkowitoliczbowego.' : `Tablica znów jest dopuszczalna: ${valsOf(L)}, Z = ${nf(L.z.a)}. ${G.cuts.length > q + 1 ? 'Wciąż są ułamki – potrzebne następne odcięcie.' : 'Wszystkie zmienne bazowe są całkowite – to optimum zadania całkowitoliczbowego.'}`,
-          table: tspec(L), hl: score && q === G.cuts.length - 1 ? [{c: gL.b, tone: 'green'}] : [{c: gL.b, tone: G.cuts.length > q + 1 ? 'blue' : 'green'}, {r: gL.zr, c: gL.b, tone: 'gold', label: 'Z = ' + nf(L.z.a)}],
+          table: tspec(L, score && q === G.cuts.length - 1 ? {blank: ['z', 0]} : {}), hl: score && q === G.cuts.length - 1 ? [{c: gL.b, tone: 'green'}] : [{c: gL.b, tone: G.cuts.length > q + 1 ? 'blue' : 'green'}, {r: gL.zr, c: gL.b, tone: 'gold', label: 'Z = ' + nf(L.z.a)}],
           q: score && q === G.cuts.length - 1 ? {type: 'number', prompt: 'Ile wynosi Z po ostatnim odcięciu?', answer: L.z.a, score, tag: {t: 'zcut', k: C.k}, explain: `Z = ${nf(L.z.a)}.`} : undefined});
       }
       // e) ZNIKANIE WIERSZY I KOLUMN – odcięcia nieaktywne (C.dropped)
       (C.dropped || []).forEach(dn => {
         const Lb = uGom(C.steps[C.steps.length - 1]), j = C.steps[C.steps.length - 1].names.indexOf(dn), i = Lb.basis.indexOf(j), g = geo(Lb), val = Lb.b[i], dv = vn(dn), k0 = dn.slice(1);
-        steps.push({id: `plot${C.k}${dn}`, title: `Odcięcie ${k0} już nie przeszkadza`, mood: 'point', say: 'Ten płot stoi daleko – zakreślam go!',
-          text: `Zmienna ${dv} weszła do bazy i ma wartość ${nf(val)} > 0: to zapas odcięcia ${k0}, czyli odległość od niego. Odcięcie jest jak płot, który stoi daleko od nas – nie dotyka obecnego rozwiązania i niczego już nie ogranicza. Jego kolumna to „czysta jedynka”: 1 w jego własnym wierszu, 0 wszędzie indziej (także w c<sub>j</sub> − z<sub>j</sub>).`,
-          table: tspec(Lb), hl: [{r: i, tone: 'green', label: `${dv} = ${nf(val)} > 0`}, {c: g.col(j), tone: 'blue', label: 'czysta jedynka'}, {r: i, c: g.col(j), tone: 'gold'}],
+        steps.push({id: `plot${C.k}${dn}`, title: exam ? `Odcięcie ${k0} – co z nim?` : `Odcięcie ${k0} już nie przeszkadza`, mood: 'point', say: exam ? 'Zakreślam wiersz i kolumnę odcięcia.' : 'Ten płot stoi daleko – zakreślam go!',
+          text: exam ? `Zmienna ${dv} – zapas odcięcia ${k0}, czyli odległość od niego – weszła do bazy. Spójrz na jej wiersz i kolumnę: ile wynosi zapas i co to znaczy dla odcięcia?`
+            : `Zmienna ${dv} weszła do bazy i ma wartość ${nf(val)} > 0: to zapas odcięcia ${k0}, czyli odległość od niego. Odcięcie jest jak płot, który stoi daleko od nas – nie dotyka obecnego rozwiązania i niczego już nie ogranicza. Jego kolumna to „czysta jedynka”: 1 w jego własnym wierszu, 0 wszędzie indziej (także w c<sub>j</sub> − z<sub>j</sub>).`,
+          table: tspec(Lb), hl: exam ? [{r: i, tone: 'green'}, {c: g.col(j), tone: 'blue'}] : [{r: i, tone: 'green', label: `${dv} = ${nf(val)} > 0`}, {c: g.col(j), tone: 'blue', label: 'czysta jedynka'}, {r: i, c: g.col(j), tone: 'gold'}],
           q: {type: 'choice', prompt: `Czy odcięcie ${k0} ogranicza teraz rozwiązanie?`, score, tag: {t: 'inactive', k: C.k, v: dn},
             options: [{t: 'nie – stoi daleko (zapas > 0)', ok: true}, {t: 'tak – jest w tablicy, więc ogranicza', why: `Ograniczenie „trzyma” rozwiązanie tylko wtedy, gdy jego zapas jest równy 0. Tu ${dv} = ${nf(val)} > 0 – rozwiązanie nawet go nie dotyka.`}],
-            explain: `${dv} = ${nf(val)} > 0 – odcięcie nieaktywne.`}});
+            explain: `${dv} = ${nf(val)} > 0 – odcięcie nieaktywne: jak płot, który stoi daleko od nas, nie dotyka rozwiązania i niczego nie ogranicza. Jego kolumna to „czysta jedynka” (1 tylko we własnym wierszu).`}});
         const La = withoutVar(Lb, j), ga = geo(La);
-        steps.push({id: `zdejmij${C.k}${dn}`, title: 'Zdejmujemy płot: wiersz i kolumna znikają', mood: 'point', say: 'Ciach! Tablica mniejsza, wynik ten sam.',
+        steps.push({id: `zdejmij${C.k}${dn}`, title: 'Zdejmujemy płot: wiersz i kolumna znikają', mood: 'point', say: exam ? 'Ciach! Wiersz i kolumna znikają.' : 'Ciach! Tablica mniejsza, wynik ten sam.',
           text: `Usuwamy wiersz i kolumnę ${dv}. Kolumna miała jedynkę tylko we własnym wierszu, więc żaden inny wiersz ani c<sub>j</sub> − z<sub>j</sub> się nie zmienia${score ? '' : `: nadal ${valsOf(La)}, a Z = ${nf(La.z.a)}`}. Tablica nie puchnie przy kolejnych odcięciach.`,
-          table: tspec(La), hl: [{c: ga.b, tone: 'blue', label: 'te same wartości'}, ...(score ? [] : [{r: ga.zr, c: ga.b, tone: 'gold', label: 'Z = ' + nf(La.z.a)}])],
+          table: tspec(La, score ? {blank: ['z', 0]} : {}), hl: [{c: ga.b, tone: 'blue', label: 'te same wartości'}, ...(score ? [] : [{r: ga.zr, c: ga.b, tone: 'gold', label: 'Z = ' + nf(La.z.a)}])],
           q: mode === 'watch' ? undefined : {type: 'number', prompt: 'Ile wynosi Z po usunięciu wiersza i kolumny?', answer: La.z.a, score, tag: {t: 'zdrop', k: C.k, v: dn},
             wrong: [{v: La.z.a - val, why: `Nie odejmujemy wartości ${dv}: ta zmienna ma koszt 0, więc nie wpływała na Z.`}].filter(w => !near(w.v, La.z.a)), explain: `Z bez zmian: ${nf(La.z.a)}.`}});
         steps.push({id: `wolno${C.k}${dn}`, title: 'Czy wolno tak zrobić?', mood: 'surprise', say: 'Ciekawostka: płot zawsze można postawić z powrotem.',
@@ -162,10 +163,10 @@ const ILPL = (() => {
     });
     // 4. wynik i kontrola metodą podziału i ograniczeń
     steps.push({id: 'kontrola', title: 'Kontrola: podział i ograniczenia', mood: 'surprise', say: 'Ciekawostka: inna metoda, ten sam wynik!',
-      text: score ? 'Metoda podziału i ograniczeń to zupełnie inna droga do wyniku. Jeśli da to samo Z, usuwanie nieaktywnych odcięć niczego nie zepsuło.' : `Metoda podziału i ograniczeń (zupełnie inna droga) daje Z = ${nf(BB.bestZ)}${BB.best.some((v, j) => !near(v, x[j])) ? ` przy x = (${BB.best.map(nf).join('; ')}) – to inne rozwiązanie o tej samej wartości` : ' przy tych samych x'}. Usuwanie nieaktywnych odcięć nie zepsuło więc wyniku.`,
-      ...(score ? {} : {formula: `odcięcia Gomory'ego: Z = <b>${nf(z)}</b><br>podział i ograniczenia: Z = <b>${nf(BB.bestZ)}</b>`}),
+      text: exam ? 'Metoda podziału i ograniczeń to zupełnie inna droga do wyniku. Jeśli da to samo Z, usuwanie nieaktywnych odcięć niczego nie zepsuło.' : `Metoda podziału i ograniczeń (zupełnie inna droga) daje Z = ${nf(BB.bestZ)}${BB.best.some((v, j) => !near(v, x[j])) ? ` przy x = (${BB.best.map(nf).join('; ')}) – to inne rozwiązanie o tej samej wartości` : ' przy tych samych x'}. Usuwanie nieaktywnych odcięć nie zepsuło więc wyniku.`,
+      ...(exam ? {} : {formula: `odcięcia Gomory'ego: Z = <b>${nf(z)}</b><br>podział i ograniczenia: Z = <b>${nf(BB.bestZ)}</b>`}),
       q: {type: 'number', prompt: 'Ile wynosi optymalne Z całkowite?', answer: z, score, tag: {t: 'z'},
-        wrong: [{v: FR.toNum(G.lpValue), why: `${fr(G.lpValue)} to wynik relaksacji LP (z ułamkami). Wynik całkowity jest niższy.`}].filter(w => !near(w.v, z)), explain: `Z = ${nf(z)}.`}});
+        wrong: [{v: FR.toNum(G.lpValue), why: `${fr(G.lpValue)} to wynik relaksacji LP (z ułamkami). Wynik całkowity jest niższy.`}].filter(w => !near(w.v, z)), explain: `Odcięcia Gomory'ego: Z = ${nf(z)}; podział i ograniczenia: Z = ${nf(BB.bestZ)} – to samo.`}});
     steps.push({title: 'Jak liczy OptiLab?', say: 'Zdradzę Ci, co robię w środku.',
       text: `Liczę na dokładnych ułamkach (bez zaokrągleń), mnożę ograniczenia przez NWW, wybieram wiersz o największej części ułamkowej i dualnym simpleksem przywracam dopuszczalność. Nieaktywne odcięcia usuwam, a wynik sprawdzam metodą podziału i ograniczeń; limit to ${GOM_OPT.maxCuts} odcięć – po nim nie podaję wyniku.`,
       action: {label: 'Wczytaj to zadanie do zakładki Całkowite', tab: 'ilp', data: toData(M), sets: {'ilp-method': 'gom'}}});
@@ -227,7 +228,7 @@ const ILPL = (() => {
       pts: nd.r.status === 'optimal' ? [{x: nd.r.x[0], y: nd.r.x[1], t: `LP: (${nf(nd.r.x[0])}; ${nf(nd.r.x[1])})`, key: 'lp', cls: 'lp'}] : [], ...extra});
   }
   function bb(level) {
-    const M = imodel(ILPL_TASKS.bb[level]), mode = MODE[level], score = mode === 'test', two = M.n === 2, sg = M.maxi ? 1 : -1;
+    const M = imodel(ILPL_TASKS.bb[level]), mode = MODE[level], score = mode === 'test', exam = mode !== 'guide', two = M.n === 2, sg = M.maxi ? 1 : -1;
     const R = ilpSolve(M, {rule: 'first', search: 'dfs'});            // ustawienia domyślne zakładki Całkowite
     if (R.status !== 'optimal') throw new Error('zadanie lekcji: B&B bez wyniku (' + R.status + ')');
     const ev = bbEvents(R, M), steps = [], st = {}, z = R.bestZ, x = R.best.slice(), root = R.root;
@@ -239,20 +240,22 @@ const ILPL = (() => {
     // relaksacja = granica
     const fj = root.r.x.findIndex(v => Math.abs(v - Math.round(v)) > 1e-6), fv = root.r.x[fj], fl = Math.floor(fv + 1e-9);
     steps.push({id: 'granica', title: 'Relaksacja LP – granica z góry', mood: 'point', say: M.maxi ? 'To nasz „sufit” – wyżej się nie da!' : 'To nasza „podłoga” – niżej się nie da!',
-      text: `Najpierw pomijamy całkowitość i liczymy zwykłe LP: x = (${root.r.x.map(nf).join('; ')}), Z = ${nf(root.r.z)}. Punkty całkowite leżą wewnątrz tego samego obszaru, więc żaden nie da Z ${better} niż ${nf(root.r.z)} – to ${M.maxi ? 'górne' : 'dolne'} ograniczenie. Drugie ograniczenie to najlepsze znalezione rozwiązanie całkowite – na razie żadnego.`,
+      text: exam ? `Najpierw pomijamy całkowitość i liczymy zwykłe LP: x = (${root.r.x.map(nf).join('; ')}), Z = ${nf(root.r.z)}. Co ta liczba mówi o rozwiązaniach całkowitych?`
+        : `Najpierw pomijamy całkowitość i liczymy zwykłe LP: x = (${root.r.x.map(nf).join('; ')}), Z = ${nf(root.r.z)}. Punkty całkowite leżą wewnątrz tego samego obszaru, więc żaden nie da Z ${better} niż ${nf(root.r.z)} – to ${M.maxi ? 'górne' : 'dolne'} ograniczenie. Drugie ograniczenie to najlepsze znalezione rozwiązanie całkowite – na razie żadnego.`,
       ...(two ? {svg: nodeSVG(M, root, L)} : {}), hl: two ? [{el: 'lp'}] : [],
       q: {type: 'choice', prompt: `Czy jakieś rozwiązanie całkowite może mieć Z ${better} niż ${nf(root.r.z)}?`, score, tag: {t: 'bound0'},
         options: [{t: 'nie', ok: true}, {t: 'tak', why: `Każdy punkt całkowity spełnia te same ograniczenia, a LP szukało najlepszego punktu w całym obszarze. Skoro LP dało ${nf(root.r.z)}, punkt całkowity nie może być lepszy.`}],
-        explain: `Z całkowite ≤ ${nf(root.r.z)} – wartość LP to granica.`}});
+        explain: `Punkty całkowite leżą w tym samym obszarze, więc żaden nie da Z ${better} niż ${nf(root.r.z)} – wartość LP to ${M.maxi ? 'górne' : 'dolne'} ograniczenie. Drugie to najlepsze znalezione rozwiązanie całkowite (rekord).`}});
     st[root.id] = 'branch';
     steps.push({id: 'podzial', title: 'Rozgałęzienie', mood: 'point', say: 'Tnę pas, w którym nie ma liczb całkowitych!',
-      text: `x${sub(fj + 1)} = ${nf(fv)} jest ułamkiem. Dzielimy zadanie na dwie gałęzie: x${sub(fj + 1)} ≤ ${fl} oraz x${sub(fj + 1)} ≥ ${fl + 1}. Wycinamy tylko pas ${fl} < x${sub(fj + 1)} < ${fl + 1}, w którym nie ma żadnej liczby całkowitej – nic dobrego nie tracimy.`,
-      ...(two ? {svg: graphSVG(M, {L, lines: M.A.map((_, i) => i), region: true, lattice: true, strip: [fj, fl, fl + 1], pts: [{x: root.r.x[0], y: root.r.x[1], t: 'LP', key: 'lp', cls: 'lp'}]})} : {}), hl: two ? [{el: 'pas'}] : [],
+      text: exam ? `x${sub(fj + 1)} = ${nf(fv)} jest ułamkiem, więc dzielimy zadanie na dwie gałęzie. Granice gałęzi wybieramy tak, żeby nie zgubić żadnego punktu całkowitego.`
+        : `x${sub(fj + 1)} = ${nf(fv)} jest ułamkiem. Dzielimy zadanie na dwie gałęzie: x${sub(fj + 1)} ≤ ${fl} oraz x${sub(fj + 1)} ≥ ${fl + 1}. Wycinamy tylko pas ${fl} < x${sub(fj + 1)} < ${fl + 1}, w którym nie ma żadnej liczby całkowitej – nic dobrego nie tracimy.`,
+      ...(two ? {svg: graphSVG(M, {L, lines: M.A.map((_, i) => i), region: true, lattice: true, ...(exam ? {} : {strip: [fj, fl, fl + 1]}), pts: [{x: root.r.x[0], y: root.r.x[1], t: 'LP', key: 'lp', cls: 'lp'}]})} : {}), hl: two ? [{el: 'pas'}] : [],
       q: mode === 'watch' ? undefined : {type: 'choice', prompt: `Na jakie gałęzie dzielimy x${sub(fj + 1)} = ${nf(fv)}?`, score, tag: {t: 'split', j: fj, lo: fl},
         options: [{t: `x${sub(fj + 1)} ≤ ${fl} i x${sub(fj + 1)} ≥ ${fl + 1}`, ok: true},
           {t: `x${sub(fj + 1)} ≤ ${fl} i x${sub(fj + 1)} ≥ ${fl}`, why: `Wtedy druga gałąź nadal zawierałaby ułamkowy punkt LP x${sub(fj + 1)} = ${nf(fv)}, a wartość ${fl} należałaby do obu gałęzi. Druga gałąź zaczyna się od następnej liczby całkowitej: ${fl + 1}.`},
           {t: `x${sub(fj + 1)} ≤ ${nf(fv)} i x${sub(fj + 1)} ≥ ${nf(fv)}`, why: `Wtedy punkt LP x${sub(fj + 1)} = ${nf(fv)} zostałby w obu gałęziach – nic byśmy nie odcięli. Dzielimy na liczbach całkowitych ${fl} i ${fl + 1}.`}],
-        explain: `Pas ${fl} < x${sub(fj + 1)} < ${fl + 1} nie zawiera liczb całkowitych.`}});
+        explain: `Gałęzie x${sub(fj + 1)} ≤ ${fl} i x${sub(fj + 1)} ≥ ${fl + 1}: wycinamy tylko pas ${fl} < x${sub(fj + 1)} < ${fl + 1}, w którym nie ma żadnej liczby całkowitej.`}});
     // kolejne zdarzenia (bez korzenia)
     const DEC = {int: 'zapisujemy – nowy rekord (całkowite)', inf: 'odcinamy – brak rozwiązań', bound: 'odcinamy – nie pobije rekordu', open: 'zostawiamy do zbadania (podział)'};
     const decQ = (e, prompt) => ({type: 'choice', prompt, score, tag: {t: 'node', id: e.nd.id, type: e.type},
@@ -282,7 +285,8 @@ const ILPL = (() => {
         st[nd.id] = 'branch';
         const j = nd.r.x.findIndex((v, q) => Math.abs(v - Math.round(v)) > 1e-6), v = nd.r.x[j], f = Math.floor(v + 1e-9), fracs = nd.r.x.map((u, q) => q).filter(q => Math.abs(nd.r.x[q] - Math.round(nd.r.x[q])) > 1e-6);
         steps.push({id: `p${nd.id}`, title: `Badamy W${nd.id}: podział`, mood: 'point', say: 'W głąb! Najpierw gałąź „≤”.',
-          text: `Przeszukujemy w głąb: bierzemy ostatnio utworzony węzeł do zbadania (W${nd.id}). x${sub(j + 1)} = ${nf(v)} to pierwsza ułamkowa zmienna, więc dzielimy na x${sub(j + 1)} ≤ ${f} i x${sub(j + 1)} ≥ ${f + 1}.`,
+          text: score ? `Przeszukujemy w głąb: bierzemy ostatnio utworzony węzeł do zbadania (W${nd.id}). Jego LP: x = (${nd.r.x.map(nf).join('; ')}). Trzeba go podzielić.`
+            : `Przeszukujemy w głąb: bierzemy ostatnio utworzony węzeł do zbadania (W${nd.id}). x${sub(j + 1)} = ${nf(v)} to pierwsza ułamkowa zmienna, więc dzielimy na x${sub(j + 1)} ≤ ${f} i x${sub(j + 1)} ≥ ${f + 1}.`,
           svg: treeSVG(R, st, nd.id, M), hl: [{el: 'n' + nd.id}],
           q: score && fracs.length + nd.r.x.length > 2 ? {type: 'choice', prompt: `Po której zmiennej dzielimy W${nd.id} (reguła: pierwsza ułamkowa)?`, score, tag: {t: 'branchvar', id: nd.id, j},
             options: nd.r.x.map((u, q) => ({t: `x${sub(q + 1)} = ${nf(u)}`, ok: q === j, why: Math.abs(u - Math.round(u)) <= 1e-6 ? `x${sub(q + 1)} jest już całkowite – po niej nie dzielimy.` : `x${sub(q + 1)} też jest ułamkowa, ale reguła „pierwsza ułamkowa” wybiera x${sub(j + 1)} (wcześniejszą).`})),
@@ -301,8 +305,8 @@ const ILPL = (() => {
         explain: 'Granica LP gałęzi nie bije rekordu → odcinamy.'} : undefined});
     const bestEv = ev.filter(e => e.type === 'int').pop(), fin = {}; Object.keys(st).forEach(id => { fin[id] = st[id]; }); fin[bestEv.nd.id] = 'best';
     steps.push({id: 'koniec', title: 'Koniec: drzewo zbadane', mood: 'happy', say: 'Wszystkie gałęzie zamknięte!',
-      text: score ? `Nie ma już węzłów do zbadania, więc najlepszy zapisany rekord jest optimum. Zbadaliśmy ${R.count} węzłów zamiast sprawdzać wszystkie punkty całkowite.` : `Nie ma już węzłów do zbadania, więc rekord jest optimum: x = (${x.map(nf).join('; ')}), Z = ${nf(z)}. Zbadaliśmy ${R.count} węzłów zamiast sprawdzać wszystkie punkty całkowite.`,
-      svg: treeSVG(R, score ? st : fin, score ? -1 : bestEv.nd.id, M), hl: score ? [] : [{el: 'n' + bestEv.nd.id}],
+      text: exam ? `Nie ma już węzłów do zbadania, więc najlepszy zapisany rekord jest optimum. Zbadaliśmy ${R.count} węzłów zamiast sprawdzać wszystkie punkty całkowite.` : `Nie ma już węzłów do zbadania, więc rekord jest optimum: x = (${x.map(nf).join('; ')}), Z = ${nf(z)}. Zbadaliśmy ${R.count} węzłów zamiast sprawdzać wszystkie punkty całkowite.`,
+      svg: treeSVG(R, exam ? st : fin, exam ? -1 : bestEv.nd.id, M), hl: exam ? [] : [{el: 'n' + bestEv.nd.id}],
       q: {type: 'number', prompt: 'Ile wynosi optymalne Z całkowite?', answer: z, score, tag: {t: 'z'},
         wrong: [{v: root.r.z, why: `${nf(root.r.z)} to wynik relaksacji LP w korzeniu (z ułamkami), a pytam o najlepsze rozwiązanie całkowite.`}].filter(w => !near(w.v, z)), explain: `Z = ${nf(z)} (węzeł W${bestEv.nd.id}).`}});
     const G = M.A.flat().concat(M.b).every(Number.isInteger) && M.rel.every(r => r === '<=') ? gomSolve(M, GOM_OPT) : null;

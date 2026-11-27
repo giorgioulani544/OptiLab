@@ -45,10 +45,12 @@ html.ls-lock,html.ls-lock body{overflow:hidden}
 @keyframes pv-twinkle{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.22) rotate(18deg)}}
 @keyframes pv-fade{0%,100%{opacity:1}50%{opacity:.35}}
 .ls-bubble{position:relative;flex:1;min-width:0;background:#fff;border:1.5px solid var(--or-soft);border-radius:18px;padding:10px 14px;font-weight:600;line-height:1.35;margin-bottom:26px;box-shadow:0 2px 8px -4px rgba(190,90,40,.35)}
-.ls-bubble::before{content:"";position:absolute;left:-9px;bottom:16px;width:16px;height:16px;background:#fff;border-left:1.5px solid var(--or-soft);border-bottom:1.5px solid var(--or-soft);transform:rotate(45deg)}
+.ls-tail{position:absolute;left:-12.5px;bottom:12px;width:14px;height:22px;overflow:visible}
+.ls-tail .f{fill:#fff}.ls-tail .s{fill:none;stroke:var(--or-soft);stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.ls-say{display:block;position:relative}
 .ls-ov.nopv .ls-pivot{display:none}
 .ls-ov.nopv .ls-bubble{margin-bottom:0;border-radius:12px;background:var(--or-pale)}
-.ls-ov.nopv .ls-bubble::before{display:none}
+.ls-ov.nopv .ls-tail{display:none}
 /* Karta */
 .ls-h{margin:4px 0 10px}
 .ls-card h3{margin:0 0 6px;font-size:1.12rem}
@@ -109,8 +111,12 @@ html.ls-lock,html.ls-lock body{overflow:hidden}
 .ls-opt.good{border-color:var(--ok);background:#e7f5ef;color:#1d5a22;opacity:1}
 .ls-opt:disabled:not(.good):not(.bad){opacity:.55}
 .ls-num{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.ls-num input{width:140px;font-size:1.05rem;text-align:right}
-.ls-num input.good{border-color:var(--ok);background:#e7f5ef}
+.ls-frac{display:inline-flex;flex-direction:column;align-items:stretch;gap:3px}
+.ls-frac input{width:118px;font-size:1.05rem;text-align:center;min-height:44px}
+.ls-frac i{display:block;height:2.5px;border-radius:2px;background:var(--ink);margin:0 4px}
+.ls-frac input.good{border-color:var(--ok);background:#e7f5ef;opacity:1}
+.ls-frac .ls-dd::placeholder{color:#b8b2a8}
+.ls-numhint{flex-basis:100%;margin:2px 0 0;font-size:.8rem;color:#6f6a63}
 .ls-fb{margin:8px 0 0;min-height:0}
 .ls-fb:empty{display:none}
 .ls-fb.bad{background:#fdecea;border:1.5px solid var(--err);color:#8e1b1b;padding:8px 12px;border-radius:10px}
@@ -129,8 +135,8 @@ html.ls-lock,html.ls-lock body{overflow:hidden}
 .ls-topic.ext{margin-left:22px;width:calc(100% - 22px)}
 .ls-ext{display:inline-block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--or-deep);background:var(--or-pale);border:1px solid var(--or-soft);border-radius:999px;padding:1px 7px;vertical-align:1px}
 .ls-lvl.rec{border-color:var(--or);box-shadow:0 0 0 3px rgba(232,145,92,.25)}
-.ls-rec{font-size:.72rem;color:#fff;background:var(--or-deep);border-radius:999px;padding:1px 8px;vertical-align:2px}
-.ls-done{font-size:.78rem;color:var(--ok)}
+.ls-lvl .ls-rec{font-size:.72rem;font-weight:700;color:#fff;background:var(--or-deep);border-radius:999px;padding:1px 8px;vertical-align:2px}
+.ls-lvl .ls-done{font-size:.78rem;font-weight:700;color:var(--ok)}
 .ls-end .ls-score{font-size:1.4rem;margin:6px 0}
 @media(hover:hover){.ls-topic:not(:disabled):hover,.ls-lvl:hover,.ls-opt:not(:disabled):hover{background:var(--or-pale);border-color:var(--or-soft)}}
 /* Telefon: pełny ekran, mniejszy Pivot obok dymka */
